@@ -63,20 +63,21 @@ By prioritizing \textbf{customer convenience}, these platforms have successfully
 
 \subsection*{Project Goals}
 
-This project aims to develop a delivery-focused Android mobile application that assists couriers in efficiently handling deliveries while ensuring a seamless and informed working experience. To support the app’s functionality, we'll be implementing two separate web APIs:
+This project aims to develop a delivery-focused Android mobile application that assists couriers in handling deliveries efficiently while ensuring a seamless working experience. To support the app’s functionality, we’ll be implementing two separate web APIs:
 
 \begin{itemize}
-    \item \textbf{Courier API} -  A backend service that powers the mobile app, handling real-time courier updates, order assignments, and safety features.
+    \item \textbf{Courier API} - A backend service that powers the mobile app, handling real-time courier updates, order assignments, and safety features.
     \item \textbf{Client Simulation API} - A backend service designed to simulate client orders.
 \end{itemize}
 
-By leveraging this architecture, we will enhance the delivery experience through the following key objectives:
-
+Leveraging this architecture, we aim to enhance the delivery experience with the following key objectives:  
 \begin{itemize}
-    \item \textbf{Real-time demand insights} - Using heat maps to highlight high-order density areas, helping couriers make informed decisions.
-    \item \textbf{Courier safety measures} - Implementing a neighborhood safety rating system to alert couriers about high-risk locations.
-    \item \textbf{Optimized order assignment} - Assigning orders efficiently based on proximity, fairness, and traffic conditions.
-    \item \textbf{(Optional) Earnings tracking} - Providing insights into income and performance trends.
+    \item \textbf{Authentication and user management}, supporting secure courier and client registration with token-based authentication. 
+    \item \textbf{Real-time demand insights} through heat maps showing high-order density areas to help couriers position themselves effectively.
+    \item \textbf{New order pop-ups}, sending real-time notifications to couriers when new delivery requests are available, allowing them to accept or decline orders.
+    \item \textbf{Optimized order assignment} based on proximity, fairness, and traffic conditions. 
+    \item \textbf{Courier safety measures}, including a neighborhood safety rating system that alerts couriers about high-risk locations and nighttime safety measures highlighting risk-prone areas for late-night deliveries.   
+    \item \textbf{Earnings tracking} (optional), providing insights into income and performance trends.   
 \end{itemize}
 
 \section*{Scope}
@@ -89,7 +90,7 @@ Developing a mobile application focused on delivery presents challenges, particu
     \item \textbf{Event-Driven Server-Sent Events (SSE)} – The server pushes updates to clients as they occur, enabling real-time communication without the inefficiencies of constant polling. This is well-suited for unidirectional data flow (server-to-client updates).
 \end{itemize}
 
-Given the requirements of this project, we chose SSE as the preferred method for real-time updates due to its simplicity, maintainability, and efficient handling of one-way event streams. To implement SSE on Android, we will use OkHttp since Android lacks native SSE support.
+Given the requirements of this project, we chose \textbf{SSE} as the preferred method for real-time updates due to its simplicity, maintainability, and efficient handling of one-way event streams. To implement SSE on Android, we will use OkHttp since Android lacks native SSE support.
 
 \vspace{2mm}
 
@@ -121,7 +122,7 @@ The chosen tech stack was selected to meet the needs of a \textbf{courier-focuse
 
 \textbf{PostgreSQL} was chosen for its \textbf{geospatial query support}, enabling efficient location-based order assignments. The backend is containerized with \textbf{Docker} and deployed on \textbf{Render} to facilitate \textbf{scalability and cloud-based deployment}.  
 
-\subsection*{Challenges Ahead}
+\section*{Challenges Ahead}
 
 Although our project aims to improve the courier experience through innovative features, several challenges must be addressed during development and deployment.
 
@@ -138,30 +139,6 @@ Although our project aims to improve the courier experience through innovative f
 \end{itemize}
 
 Addressing these challenges proactively will be crucial to delivering a robust and effective mobile application that meets the demands of both couriers and users alike.
-
-\section*{Features}
-
-The \textbf{LiftDrop} mobile app is designed to enhance the delivery experience for couriers by providing a seamless, real-time, and secure workflow. The key features of the app include:
-
-\begin{itemize}
-    \item \textbf{Safety and Security}
-    \begin{itemize}
-        \item \textbf{Neighborhood Safety Ratings}: Allows couriers to rate delivery areas based on their experiences, helping others avoid high-risk zones.
-        \item \textbf{Risk Alerts}: Sends notifications warning couriers about potentially unsafe locations.
-        \item \textbf{Nighttime Safety Measures}: Provides additional safety insights for late-night deliveries.
-    \end{itemize}
-
-    \item \textbf{Courier Performance Insights}
-    \begin{itemize}
-        \item \textbf{Earnings Tracking}: Displays detailed breakdowns of income over time.
-        \item \textbf{Delivery Statistics}: Provides performance trends to help couriers optimize their workflow.
-    \end{itemize}
-
-    \item \textbf{Real-Time Demand Insights}
-    \begin{itemize}
-        \item \textbf{Heatmaps}: Displays visual indicators highlighting high-order density areas, helping couriers position themselves more effectively.
-    \end{itemize}
-\end{itemize}
 
 }
 
