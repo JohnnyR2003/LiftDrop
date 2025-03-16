@@ -1,14 +1,8 @@
 package pt.isel.pipeline
 
-sealed class User (
+data class User (
    val id: Long,
    val email: String,
-   val password: String
+   val password: String,
+   val role: UserRole
 )
-
-class Client(
-    id: Long,
-    email: String,
-    password: String,
-    val name: String,
-) : User(id, email, password)
