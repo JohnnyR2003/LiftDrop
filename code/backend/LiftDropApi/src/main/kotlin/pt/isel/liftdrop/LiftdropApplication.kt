@@ -1,4 +1,4 @@
-package isel.pt.liftdrop
+package pt.isel.liftdrop
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class LiftDropApplication
 
 fun main(args: Array<String>) {
-	runApplication<LiftDropApplication>(*args)
+    runApplication<LiftDropApplication>(*args)
 }

@@ -1,4 +1,4 @@
-package pt.isel.pipeline
+package pt.isel.liftdrop
 
 data class Client(
     val id: Long,

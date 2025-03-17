@@ -1,7 +1,13 @@
-package pt.isel.pipeline
+package pt.isel.liftdrop
 
 enum class OrderStatus {
-    PENDING, ACCEPTED, PICKING_UP, PICKED_UP, DELIVERING, DELIVERED, CANCELLED
+    PENDING,
+    ACCEPTED,
+    PICKING_UP,
+    PICKED_UP,
+    DELIVERING,
+    DELIVERED,
+    CANCELLED,
 }
 
 fun String.parseStatus(): OrderStatus? {
