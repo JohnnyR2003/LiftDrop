@@ -1,0 +1,26 @@
+package pt.isel.im_pipeline
+
+import UserService
+import org.springframework.stereotype.Component
+import pt.isel.liftdrop.AuthenticatedUser
+
+@Component
+class RequestTokenProcessor(
+    private val usersService: UserService,
+) {
+    fun processAuthorizationHeaderValue(authorizationValue: String?): AuthenticatedUser? {
+        if (authorizationValue == null) {
+            return null
+        }
+        return usersService.getUserByToken(authorizationValue)?.let {
+            AuthenticatedUser(
+                it,
+                authorizationValue,
+            )
+        }
+    }
+
+    companion object {
+        const val SCHEME = "bearer"
+    }
+}

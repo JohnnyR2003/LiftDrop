@@ -7,3 +7,4 @@ rootProject.name = "lift-drop"
 include("LiftDropApi")
 include("LiftDropDomain")
 include("LiftDropServices")
+include("LiftDropPipeline")
