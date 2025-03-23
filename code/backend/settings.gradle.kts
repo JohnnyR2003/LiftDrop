@@ -5,4 +5,5 @@ plugins {
 rootProject.name = "lift-drop"
 
 include("LiftDropApi")
-include("LiftDrop_Domain")
+include("LiftDropDomain")
+include("LiftDropServices")
