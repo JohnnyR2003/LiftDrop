@@ -1,6 +1,7 @@
 \documentclass[a4paper,twoside,11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
+\usepackage{subcaption}
 \usepackage{graphicx}
 \usepackage{url}
 \usepackage{titlesec}
@@ -46,7 +47,7 @@
 
 \newpage
 
-\section{Resume} 
+\section {Resume} 
 
 The rise of the \textbf{gig economy} has transformed various industries, particularly the food and package delivery sector. This economic model relies on flexible short-term work arrangements, often facilitated through digital platforms. Companies such as Uber Eats, Glovo, and Bolt Food have leveraged this framework to revolutionize urban logistics, enabling customers to order food and services on demand while offering couriers independent work opportunities.
 
@@ -61,6 +62,34 @@ To address these challenges, LiftDrop proposes a new approach to the gig economy
 \newpage
 
 \section{Introduction}
+The gig economy has revolutionized delivery services, but existing platforms often prioritize customer convenience over courier well-being. LiftDrop addresses this gap by proposing a fairer, more efficient mobile app for deliveries.
+
+\vspace{3mm}
+
+\textbf{Key Goals:}
+
+\begin{itemize}
+    \item Optimize order assignment using real-time data (proximity, traffic, fairness)
+    \item Enhance courier safety with neighborhood ratings and alerts
+    \item Streamline operations via a scalable Android app backed by two APIs:
+    \begin{itemize}
+        \item \textbf{Courier API} (order management, real-time updates via SSE)
+        \item \textbf{Client Simulation API} (mock orders for testing)
+    \end{itemize}
+\end{itemize}
+
+\vspace{5mm}
+
+The diagram below provides a high-level overview of LiftDrop's architecture:
+
+\vspace{3mm}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{LiftDrop_High_level_view.png}
+    \caption{High-level overview of the platform, showing interaction between clients, server, database and external APIs (Google Maps).}
+    \label{fig:high_level}
+\end{figure}
 
 \newpage
 
@@ -121,10 +150,83 @@ To enhance safety, the platform will feature \textbf{neighborhood safety ratings
 
 Additionally, couriers will receive alerts for high-risk areas, and \textbf{nighttime safety measures} will highlight risk-prone locations for late-night deliveries.
 
-
 \newpage 
 
+\section{Interface Design}
+\subsection{User Flow and Mockups}
 
+The LiftDrop application features distinct interfaces for different stages of the delivery process. Below are the key mockups organized by functionality.
 
+\subsubsection{Authentication Flow}
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{registration.png}
+        \caption{User registration screen}
+        \label{fig:registration}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{login.png}
+        \caption{User login screen}
+        \label{fig:login}
+    \end{subfigure}
+    \caption{Authentication flow screens for LiftDrop}
+    \label{fig:auth_flow}
+\end{figure}
+
+\newpage
+
+\subsubsection{Courier Flow}
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{go_screen.png}
+        \caption{Active status screen while courier is idle}
+        \label{fig:go_screen}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{waiting_screen.png}
+        \caption{Waiting screen during order availability check}
+        \label{fig:waiting_screen}
+    \end{subfigure}
+    \caption{Courier status screens showing different working states}
+    \label{fig:courier_status}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{delivery_request.png}
+    \caption{New delivery request notification with order details and action buttons.}
+    \label{fig:delivery_request}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{pickup_order_screen.png}
+        \caption{Order delivery confirmation screen with location details.}
+        \label{fig:pickup_order}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{deliver_order_screen.png}
+        \caption{Order delivery confirmation screen with location details.}
+        \label{fig:deliver_order}
+    \end{subfigure}
+    \caption{Courier delivery journey screens during different phases of the delivery}
+    \label{fig:courier_status}
+\end{figure}
+
+\newpage
 
 \end{document}
