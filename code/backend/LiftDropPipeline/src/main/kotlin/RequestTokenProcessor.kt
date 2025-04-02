@@ -12,12 +12,10 @@ class RequestTokenProcessor(
         if (authorizationValue == null) {
             return null
         }
-        return usersService.getUserByToken(authorizationValue)?.let {
-            AuthenticatedUser(
-                it,
-                authorizationValue,
-            )
-        }
+        return AuthenticatedUser(
+            usersService.getUserByToken(authorizationValue),
+            authorizationValue,
+        )
     }
 
     companion object {

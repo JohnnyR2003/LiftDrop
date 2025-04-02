@@ -9,5 +9,4 @@ package pt.isel.liftdrop
 class AuthenticatedUser(
     val user: User,
     val token: String,
-    role: UserRole
 )
