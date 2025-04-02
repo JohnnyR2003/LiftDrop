@@ -1,4 +1,4 @@
-package pt.isel.liftdrop_domain
+package pt.isel.liftdrop
 
 data class Order(
     val id: Long,

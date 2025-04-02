@@ -1,4 +1,4 @@
-package pt.isel.liftdrop_domain
+package pt.isel.liftdrop
 
 /**
  *  Represents an authenticated user.

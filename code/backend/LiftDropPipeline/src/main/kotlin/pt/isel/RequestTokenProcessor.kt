@@ -1,8 +1,8 @@
 package pt.isel.im_pipeline.pt.isel.pipeline
 
-import pt.isel.liftdrop_services.UserService
+import pt.isel.liftdrop.UserService
 import org.springframework.stereotype.Component
-import pt.isel.liftdrop_domain.AuthenticatedUser
+import pt.isel.liftdrop.AuthenticatedUser
 
 @Component
 class RequestTokenProcessor(

@@ -1,4 +1,4 @@
-package pt.isel.liftdrop_api.controller
+package pt.isel.liftdrop.controller
 
 import org.springframework.web.bind.annotation.RestController
 

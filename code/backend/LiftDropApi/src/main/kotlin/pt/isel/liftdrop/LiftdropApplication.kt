@@ -1,4 +1,4 @@
-package pt.isel.liftdrop_api
+package pt.isel.liftdrop
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

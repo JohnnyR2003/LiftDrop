@@ -1,7 +1,6 @@
-package pt.isel.liftdrop_services
+package pt.isel.liftdrop
 
 import jakarta.inject.Named
-import pt.isel.liftdrop_domain.User
 
 
 @Named
