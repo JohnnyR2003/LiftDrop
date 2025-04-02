@@ -1,7 +1,7 @@
-package pt.isel.liftdrop.controller
+package pt.isel.liftdrop_api.controller
 
 
-import CourierService
+import pt.isel.liftdrop_services.CourierService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping

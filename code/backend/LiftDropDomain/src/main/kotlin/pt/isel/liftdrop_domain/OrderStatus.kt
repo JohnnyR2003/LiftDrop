@@ -1,4 +1,4 @@
-package pt.isel.liftdrop
+package pt.isel.liftdrop_domain
 
 enum class OrderStatus {
     PENDING,

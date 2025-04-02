@@ -1,4 +1,4 @@
-package pt.isel.liftdrop.model
+package pt.isel.liftdrop_api.model
 
 data class OrderInputModel(
     val description: String,

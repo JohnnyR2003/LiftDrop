@@ -1,11 +1,11 @@
-package pt.isel.im_pipeline
+package pt.isel.im_pipeline.pt.isel.pipeline
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.stereotype.Component
 import org.springframework.web.method.HandlerMethod
 import org.springframework.web.servlet.HandlerInterceptor
-import pt.isel.liftdrop.AuthenticatedUser
+import pt.isel.liftdrop_domain.AuthenticatedUser
 
 @Component
 class AuthenticationInterceptor(

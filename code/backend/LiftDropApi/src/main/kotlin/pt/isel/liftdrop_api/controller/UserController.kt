@@ -1,6 +1,5 @@
-package pt.isel.liftdrop.controller
+package pt.isel.liftdrop_api.controller
 
-import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
 
 
