@@ -1,6 +1,6 @@
-package pt.isel.im_pipeline
+package pt.isel.im_pipeline.pt.isel.pipeline
 
-import UserService
+import pt.isel.liftdrop.UserService
 import org.springframework.stereotype.Component
 import pt.isel.liftdrop.AuthenticatedUser
 
@@ -12,12 +12,10 @@ class RequestTokenProcessor(
         if (authorizationValue == null) {
             return null
         }
-        return usersService.getUserByToken(authorizationValue)?.let {
-            AuthenticatedUser(
-                it,
-                authorizationValue,
-            )
-        }
+        return AuthenticatedUser(
+            usersService.getUserByToken(authorizationValue),
+            authorizationValue,
+        )
     }
 
     companion object {

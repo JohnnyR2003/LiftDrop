@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
+    api(project(":LiftDropServices"))
 
     // To use Spring MVC and the Servlet API
     implementation("org.springframework:spring-webmvc:6.1.13")

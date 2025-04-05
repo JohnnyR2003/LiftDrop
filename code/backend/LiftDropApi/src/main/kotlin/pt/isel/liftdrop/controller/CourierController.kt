@@ -1,15 +1,26 @@
 package pt.isel.liftdrop.controller
 
+
+import pt.isel.liftdrop.CourierService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class CourierController {
+@RequestMapping("/courier")
+class CourierController(
+    val courierService: CourierService,
+) {
+
+    @PostMapping("/register")
+    fun registerClient() {
+        TODO()
+    }
     /**
      * Accepts an order and changes the courier's status accordingly.
      */
-    @PostMapping("/courier/acceptOrder")
+    @PostMapping("/acceptOrder")
     fun acceptOrder() {
         TODO()
     }
@@ -17,7 +28,7 @@ class CourierController {
     /**
      * Declines an order, keeping the courier available for new requests.
      */
-    @PostMapping("/courier/declineOrder")
+    @PostMapping("/declineOrder")
     fun declineOrder() {
         TODO()
     }
@@ -25,7 +36,7 @@ class CourierController {
     /**
      * Sets the courier status to waiting for orders.
      */
-    @PostMapping("/courier/waitingOrders")
+    @PostMapping("/waitingOrders")
     fun waitingOrders() {
         TODO()
     }
@@ -34,7 +45,7 @@ class CourierController {
      * Checks if the courier is currently waiting for orders.
      * @return true if the courier is available and waiting for new orders, false otherwise.
      */
-    @GetMapping("/courier/isWaitingOrders")
+    @GetMapping("/isWaitingOrders")
     fun isWaitingOrders() {
         TODO()
     }
@@ -42,7 +53,7 @@ class CourierController {
     /**
      * Cancels an ongoing order and updates the courier's status accordingly.
      */
-    @PostMapping("/courier/cancelOrder")
+    @PostMapping("/cancelOrder")
     fun cancelOrder() {
         TODO()
     }
@@ -50,7 +61,7 @@ class CourierController {
     /**
      * Marks an order as picked up, indicating that the courier has collected it from the sender.
      */
-    @PostMapping("/courier/pickedUpOrder")
+    @PostMapping("/pickedUpOrder")
     fun pickedUpOrder() {
         TODO()
     }
@@ -58,7 +69,7 @@ class CourierController {
     /**
      * Marks an order as delivered, indicating that the courier has successfully handed it to the recipient.
      */
-    @PostMapping("/courier/deliveredOrder")
+    @PostMapping("/deliveredOrder")
     fun deliveredOrder() {
         TODO()
     }
@@ -66,7 +77,7 @@ class CourierController {
     /**
      * Completes an order, performing any necessary final operations (e.g., updating records or notifying the system).
      */
-    @PostMapping("/courier/completeOrder")
+    @PostMapping("/completeOrder")
     fun completeOrder() {
         TODO()
     }

@@ -1,4 +1,4 @@
-package pt.isel.im_pipeline
+package pt.isel.im_pipeline.pt.isel.pipeline
 
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter
