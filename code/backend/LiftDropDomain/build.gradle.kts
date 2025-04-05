@@ -10,6 +10,9 @@ repositories {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+    api("org.springframework.security:spring-security-core:6.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0") // JSON format support
     testImplementation(kotlin("test"))
 }
 
