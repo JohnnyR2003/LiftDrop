@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.25"
 }
 
-group = "pt.isel.services"
+group = "pt.isel.liftdrop"
 version = "unspecified"
 
 repositories {
@@ -11,10 +11,6 @@ repositories {
 
 dependencies {
     api(project(":LiftDropDomain"))
-    api(project(":LiftDropRepository"))
-
-    // To use the named annotation
-    implementation("jakarta.inject:jakarta.inject-api:2.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
     testImplementation(kotlin("test"))
 }

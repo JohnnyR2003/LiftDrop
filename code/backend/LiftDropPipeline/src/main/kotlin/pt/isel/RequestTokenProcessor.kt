@@ -1,6 +1,6 @@
 package pt.isel.im_pipeline.pt.isel.pipeline
 
-import pt.isel.liftdrop.UserService
+import pt.isel.services.UserService
 import org.springframework.stereotype.Component
 import pt.isel.liftdrop.AuthenticatedUser
 
