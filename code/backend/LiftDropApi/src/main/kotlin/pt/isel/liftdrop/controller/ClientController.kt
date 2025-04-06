@@ -6,9 +6,12 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.AuthenticatedUser
 import pt.isel.liftdrop.model.OrderInputModel
+import pt.isel.services.ClientService
 
 @RestController
-class ClientController {
+class ClientController(
+    private val clientService: ClientService,
+) {
     @PostMapping("/client/makeOrder")
     fun makeOrder(
         user: AuthenticatedUser,

@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.25"
 }
 
-group = "liftdrop"
+group = "pt.isel.services"
 version = "unspecified"
 
 repositories {
@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     api(project(":LiftDropDomain"))
-    implementation(project(":LiftDropRepository"))
+    api(project(":LiftDropRepository"))
 
     // To use the named annotation
     implementation("jakarta.inject:jakarta.inject-api:2.0.1")

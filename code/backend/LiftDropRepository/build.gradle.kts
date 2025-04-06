@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.25"
 }
 
-group = "liftdrop"
+group = "pt.isel.liftdrop"
 version = "unspecified"
 
 repositories {
