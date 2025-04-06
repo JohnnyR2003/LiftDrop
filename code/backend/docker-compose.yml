@@ -1,0 +1,24 @@
+services:
+  liftdrop-for-tests:
+    container_name: liftdrop-for-tests
+    build:
+      context: ./
+      dockerfile: ./docker/for-test/Dockerfile
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=liftdrop
+    ports:
+      - 5432:5432
+
+  liftdrop-for-production:
+    container_name: liftdrop-for-production
+    build:
+      context: ./
+      dockerfile: ./docker/for-production/Dockerfile
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=liftdrop
+    ports:
+      - 5432:5432

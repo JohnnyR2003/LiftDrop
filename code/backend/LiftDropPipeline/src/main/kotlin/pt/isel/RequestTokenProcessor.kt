@@ -1,9 +1,8 @@
-package pt.isel.im_pipeline.pt.isel.pipeline
+/*package pt.isel.im_pipeline.pt.isel.pipeline
 
-import pt.isel.liftdrop.UserService
 import org.springframework.stereotype.Component
 import pt.isel.liftdrop.AuthenticatedUser
-
+/*
 @Component
 class RequestTokenProcessor(
     private val usersService: UserService,
@@ -22,3 +21,4 @@ class RequestTokenProcessor(
         const val SCHEME = "bearer"
     }
 }
+*/

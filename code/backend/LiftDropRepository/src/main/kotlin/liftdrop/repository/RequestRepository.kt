@@ -1,4 +1,4 @@
-package com.example
+package liftdrop.repository
 
 interface RequestRepository {
     fun createRequest(
@@ -10,11 +10,10 @@ interface RequestRepository {
     ): Int
 
     fun updateRequest(
-        requestId: Int,
-        courierId: Int?,
-        description: String,
-        requestStatus: String,
-        eta: String,
+        requestId: Long,
+        courierId: Long?,
+        requestStatus: String?,
+        eta: String?,
     ): Boolean
 
     fun deleteRequest(requestId: Int): Boolean

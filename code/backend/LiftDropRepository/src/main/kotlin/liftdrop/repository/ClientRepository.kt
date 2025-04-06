@@ -1,4 +1,4 @@
-package com.example
+package liftdrop.repository
 
 import pt.isel.liftdrop.Client
 

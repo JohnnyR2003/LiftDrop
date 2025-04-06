@@ -5,6 +5,9 @@
 \usepackage{graphicx}
 \usepackage{url}
 \usepackage{titlesec}
+\usepackage{tikz}
+\usetikzlibrary{er}
+\usepackage[justification=centering]{caption}
 
 
 % Redefinição das margens das páginas
@@ -22,7 +25,7 @@
 \vspace{-15mm}
 \begin{figure}[h]
 \begin{center}
-\resizebox{80mm}{!}{\includegraphics{logoISEL.png}}
+\resizebox{80mm}{!}{\includegraphics{images/logoISEL.png}}
 \end{center}
 \end{figure}
 \vspace{-8mm}
@@ -43,190 +46,14 @@
     \textbf{March of 2025}
 \end{center}
 
-\vspace{10mm}
+\include{sections/Resume}
 
-\newpage
+\include{sections/Introduction}
 
-\section {Resume} 
+\include{sections/Scope}
 
-The rise of the \textbf{gig economy} has transformed various industries, particularly the food and package delivery sector. This economic model relies on flexible short-term work arrangements, often facilitated through digital platforms. Companies such as Uber Eats, Glovo, and Bolt Food have leveraged this framework to revolutionize urban logistics, enabling customers to order food and services on demand while offering couriers independent work opportunities.
+\include{sections/Interface Design}
 
-\vspace{5mm}
-
-Although these platforms prioritize customer convenience, they also present significant challenges for couriers. High commission fees, lack of job stability, and inefficiencies in delivery logistics create an imbalance between platform profitability and worker sustainability. In addition, customers often experience delays and inconsistent service quality.
-
-\vspace{5mm}
-
-To address these challenges, LiftDrop proposes a new approach to the gig economy by offering a more fair, efficient, and transparent delivery solution. This mobile app aims to improve courier conditions while enhancing the customer experience through optimized delivery processes and fairer economic policies.
-
-\newpage
-
-\section{Introduction}
-The gig economy has revolutionized delivery services, but existing platforms often prioritize customer convenience over courier well-being. LiftDrop addresses this gap by proposing a fairer, more efficient mobile app for deliveries.
-
-\vspace{3mm}
-
-\textbf{Key Goals:}
-
-\begin{itemize}
-    \item Optimize order assignment using real-time data (proximity, traffic, fairness)
-    \item Enhance courier safety with neighborhood ratings and alerts
-    \item Streamline operations via a scalable Android app backed by two APIs:
-    \begin{itemize}
-        \item \textbf{Courier API} (order management, real-time updates via SSE)
-        \item \textbf{Client Simulation API} (mock orders for testing)
-    \end{itemize}
-\end{itemize}
-
-\vspace{5mm}
-
-The diagram below provides a high-level overview of LiftDrop's architecture:
-
-\vspace{3mm}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{LiftDrop_High_level_view.png}
-    \caption{High-level overview of the platform, showing interaction between clients, server, database and external APIs (Google Maps).}
-    \label{fig:high_level}
-\end{figure}
-
-\newpage
-
-\section{Scope}
-
-\subsection{Scope Features}  
-
-\subsubsection{Client Features}  
-\begin{itemize}
-    \item Place an order by selecting a restaurant and desired items.
-    \item Track the order status and receive estimated time of arrival.
-\end{itemize}
-
-\subsubsection{Courier Features}  
-\begin{itemize}
-    \item Accept or decline incoming orders.
-    \item Set availability by starting or stopping waiting status.
-    \item Update order status after acceptance.
-    \item Cancel an order if needed.
-    \item Confirm delivery upon completion.
-\end{itemize}
-
-\subsubsection{User Features}  
-\begin{itemize}
-    \item Register as either a client or a courier.
-    \item Clients provide personal and contact information during registration.
-    \item Couriers specify their means of transportation upon registration.
-\end{itemize}
-  
-
-\subsection{Real-Time Data Handling and Order Assignment}  
-
-Developing a mobile application focused on delivery presents challenges, particularly in real-time data handling and order assignment. Since multiple couriers interact with the platform simultaneously, the system must manage updates effectively while ensuring a smooth user experience. After research and consideration, we identified three primary approaches to handling real-time updates and concurrency:
-
-\begin{itemize}
-    \item \textbf{Polling-based Request-Response Model} – The client periodically requests updates from the server. While simple to implement, this approach results in unnecessary network requests, increased server load, and delayed updates.
-    \item \textbf{WebSockets} – A bidirectional communication protocol that allows both the client and server to send messages dynamically. While WebSockets are ideal for interactive, two-way communication (e.g., chat applications), SSE offers a simpler and more reliable approach for our needs, focusing on server-driven updates.
-    \item \textbf{Event-Driven Server-Sent Events (SSE)} – The server pushes updates to clients as they occur, enabling real-time communication without the inefficiencies of constant polling. This is well-suited for unidirectional data flow (server-to-client updates).
-\end{itemize}
-
-Given the requirements of this project, we chose \textbf{SSE} as the preferred method for real-time updates due to its simplicity, maintainability, and efficient handling of one-way event streams. To implement SSE on Android, we will use OkHttp since Android lacks native SSE support.
-
-\subsection{Order Assignment Strategy}  
-
-For order assignment, the platform will consider factors such as:
-
-\begin{itemize}
-    \item \textbf{Proximity-based allocation} – Assigning orders based on the courier’s distance from the pickup location.
-    \item \textbf{Fair distribution} – Ensuring a balanced order assignment among available couriers.
-    \item \textbf{Traffic-aware routing} – Taking real-time traffic conditions into account when assigning deliveries.
-\end{itemize}
-
-An external geospatial API will handle location-based calculations (distance, routing, and traffic), simplifying the implementation by reducing the need for complex in-house geospatial logic. We selected the \textbf{Google Maps API} as it offers the most suitable free plan for the required functionalities.
-
-\subsection{Safety Measures}  
-
-To enhance safety, the platform will feature \textbf{neighborhood safety ratings} based on feedback from couriers who have completed deliveries in those areas. Only couriers can submit ratings, ensuring assessments reflect real delivery conditions.  
-
-Additionally, couriers will receive alerts for high-risk areas, and \textbf{nighttime safety measures} will highlight risk-prone locations for late-night deliveries.
-
-\newpage 
-
-\section{Interface Design}
-\subsection{User Flow and Mockups}
-
-The LiftDrop application features distinct interfaces for different stages of the delivery process. Below are the key mockups organized by functionality.
-
-\subsubsection{Authentication Flow}
-
-\begin{figure}[h]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{registration.png}
-        \caption{User registration screen}
-        \label{fig:registration}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{login.png}
-        \caption{User login screen}
-        \label{fig:login}
-    \end{subfigure}
-    \caption{Authentication flow screens for LiftDrop}
-    \label{fig:auth_flow}
-\end{figure}
-
-\newpage
-
-\subsubsection{Courier Flow}
-
-\begin{figure}[h]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{go_screen.png}
-        \caption{Active status screen while courier is idle}
-        \label{fig:go_screen}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{waiting_screen.png}
-        \caption{Waiting screen during order availability check}
-        \label{fig:waiting_screen}
-    \end{subfigure}
-    \caption{Courier status screens showing different working states}
-    \label{fig:courier_status}
-\end{figure}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.7\textwidth]{delivery_request.png}
-    \caption{New delivery request notification with order details and action buttons.}
-    \label{fig:delivery_request}
-\end{figure}
-
-\begin{figure}[h]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{pickup_order_screen.png}
-        \caption{Order delivery confirmation screen with location details.}
-        \label{fig:pickup_order}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{deliver_order_screen.png}
-        \caption{Order delivery confirmation screen with location details.}
-        \label{fig:deliver_order}
-    \end{subfigure}
-    \caption{Courier delivery journey screens during different phases of the delivery}
-    \label{fig:courier_status}
-\end{figure}
-
-\newpage
+\include{sections/System Architecture}
 
 \end{document}

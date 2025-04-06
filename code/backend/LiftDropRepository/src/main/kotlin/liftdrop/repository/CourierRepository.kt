@@ -1,4 +1,4 @@
-package com.example
+package liftdrop.repository
 
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.Location
@@ -15,5 +15,15 @@ interface CourierRepository {
         password: String,
     ): Int?
 
-    fun getCourierByUserId(userId: Int): Courier?
+    fun acceptRequest(
+        requestId: Long,
+        courierId: Long,
+    ): Boolean
+
+    fun getCourierByUserId(userId: Long): Courier?
+
+    fun updateCourierLocation(
+        courierId: Long,
+        newLocation: Location,
+    ): Boolean
 }

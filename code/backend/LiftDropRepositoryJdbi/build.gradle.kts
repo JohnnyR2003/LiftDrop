@@ -1,0 +1,56 @@
+plugins {
+    kotlin("jvm") version "1.9.25"
+}
+
+group = "liftdrop"
+version = "unspecified"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(project(":LiftDropDomain"))
+    implementation(project(":LiftDropRepository"))
+
+    implementation("org.jdbi:jdbi3-core:3.37.1")
+    implementation("org.jdbi:jdbi3-kotlin:3.37.1")
+    implementation("org.jdbi:jdbi3-postgres:3.37.1")
+    implementation("org.postgresql:postgresql:42.7.2")
+
+    implementation("jakarta.inject:jakarta.inject-api:2.0.1")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    workingDir = project.rootDir
+    useJUnitPlatform()
+    if (System.getenv("DB_URL") == null) {
+        environment("DB_URL", "jdbc:postgresql://localhost:5432/liftdrop?user=postgres&password=postgres")
+    }
+    dependsOn("dbTestsWait")
+    finalizedBy("dbTestsDown")
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+val composeFileDir: Directory by parent!!.extra
+val dockerComposePath = composeFileDir.file("docker-compose.yml").toString()
+
+task<Exec>("dbTestsUp") {
+    commandLine("docker", "compose", "-f", dockerComposePath, "up", "-d", "--build", "--force-recreate", "liftdrop-for-tests")
+}
+
+task<Exec>("dbTestsWait") {
+    commandLine("docker", "exec", "liftdrop-for-tests", "/app/bin/wait-for-pg.sh", "localhost")
+    dependsOn("dbTestsUp")
+}
+
+task<Exec>("dbTestsDown") {
+    commandLine("docker", "compose", "-f", dockerComposePath, "down", "liftdrop-for-tests")
+}

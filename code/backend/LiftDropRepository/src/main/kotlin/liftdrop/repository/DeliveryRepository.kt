@@ -1,4 +1,4 @@
-package com.example
+package liftdrop.repository
 
 interface DeliveryRepository {
     fun createDelivery(
