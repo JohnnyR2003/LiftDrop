@@ -9,6 +9,7 @@ import org.springframework.context.annotation.ComponentScan
     basePackages = [
         "pt.isel.services",
         "pt.isel.liftdrop",
+        "liftdrop.repository.jdbi",
     ],
 )
 class LiftDropApplication

@@ -21,8 +21,15 @@ repositories {
 dependencies {
     implementation(project(":LiftDropDomain"))
     implementation(project(":LiftDropServices"))
+    implementation(project(":LiftDropRepositoryJdbi"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+
+    //JDBI dependencies
+    implementation("org.jdbi:jdbi3-core:3.37.1")
+    implementation("org.jdbi:jdbi3-kotlin:3.37.1")
+    implementation("org.jdbi:jdbi3-postgres:3.37.1")
+    implementation("org.postgresql:postgresql:42.7.2")
 
     // Spring MVC and Servlet API
     implementation("org.springframework.boot:spring-boot-starter-web:3.1.0") // Correct version
