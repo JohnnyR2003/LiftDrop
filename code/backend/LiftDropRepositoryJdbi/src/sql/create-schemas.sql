@@ -89,5 +89,6 @@ CREATE TABLE liftdrop.item (
     establishment_location          INT,
     designation                     TEXT,
     price                           NUMERIC,
+    ETA                             INTERVAL,
     FOREIGN KEY (establishment_location) REFERENCES liftdrop.pickup_spot(location_id) ON DELETE CASCADE
 )

@@ -49,8 +49,8 @@ VALUES (1, 40.7128, -74.0060, 1, 'Pickup Spot 1'),
        (2, 34.0522, -118.2437, 2, 'Pickup Spot 2'),
        (3, 37.7749, -122.4194, 3, 'Pickup Spot 3');
 
-INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price)
-VALUES (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99),
-       (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49),
-       (3, 'KFC COLOMBO', 3, 'Zinger', 7.99);
+INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)
+VALUES (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, INTERVAL '30 minutes'),
+       (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, INTERVAL '45 minutes'),
+       (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, INTERVAL '1 hour');
 --deliveries todo
