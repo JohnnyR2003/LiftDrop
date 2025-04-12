@@ -35,7 +35,7 @@ class JdbiUserRepository(
     }
 
     override fun deleteUser(email: String): Int {
-        val user = findUserByEmail(email) ?: return 0
+        findUserByEmail(email) ?: return 0
         return handle
             .createUpdate(
                 """

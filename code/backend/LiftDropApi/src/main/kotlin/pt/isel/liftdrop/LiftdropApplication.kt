@@ -6,16 +6,9 @@ import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.ComponentScan
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
-@SpringBootApplication
-@ComponentScan(
-    basePackages = [
-        "pt.isel.services",
-        "pt.isel.liftdrop",
-    ],
-)
+@SpringBootApplication(scanBasePackages = ["pt.isel.liftdrop", "liftdrop.repository.jdbi", "pt.isel.services"])
 class LiftDropApplication {
     @Bean
     fun jdbi() =

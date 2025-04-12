@@ -1,16 +1,17 @@
 package pt.isel.services
 
-
-import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
-import pt.isel.liftdrop.Courier
+import org.springframework.stereotype.Service
+import pt.isel.liftdrop.Location
+import pt.isel.liftdrop.User
+import pt.isel.liftdrop.UserRole
 
-@Named("CourierService")
+@Service
 class CourierService(
-    private val transactionManager: TransactionManager
+    private val transactionManager: TransactionManager,
 ) {
-    fun registerCourier(courier: Courier): Courier {
-        transactionManager.run {
+    fun registerCourier(courier: User): Int {
+        return transactionManager.run {
             val userRepository = it.usersRepository
             val courierRepository = it.courierRepository
             if (userRepository.findUserByEmail(courier.email) != null) {
@@ -23,36 +24,56 @@ class CourierService(
                 email = courier.email,
                 password = courier.password,
                 name = courier.name,
+                role = UserRole.COURIER,
             )
-            courierRepository.createCourier(
-                userId = courier.id.toInt(),
-                currentLocation = courier.currentLocation,
-                isAvailable = courier.isAvailable,
-            )
+            val courierCreation =
+                courierRepository.createCourier(
+                    userId = courier.id,
+                    currentLocation =
+                        Location(
+                            id = 0,
+                            latitude = 0.0,
+                            longitude = 0.0,
+                            address = null,
+                            name = "Current Location",
+                        ),
+                    isAvailable = false,
+                )
+            return@run courierCreation
         }
-        return courier
     }
 
-    fun loginCourier(email: String, password: String): Courier? {
-        return transactionManager.run {
-            val userRepository = it.usersRepository
+    fun loginCourier(
+        email: String,
+        password: String,
+    ): Int? =
+        transactionManager.run {
             val courierRepository = it.courierRepository
-            val user = userRepository.findUserByEmail(email)
-            if (user != null && user.password == password) {
-                courierRepository.getCourierByUserId(user.id)
+
+            courierRepository.loginCourier(
+                email = email,
+                password = password,
+            ) ?: throw IllegalArgumentException("Invalid email or password")
+        }
+
+    fun deliver(
+        courierId: Int,
+        packageId: Int,
+    ) {
+        transactionManager.run {
+            val courierRepository = it.courierRepository
+            val request = courierRepository.completeDelivery(packageId, courierId)
+            if (!request) {
+                throw IllegalStateException("Package already delivered")
             } else {
-                null
+                println("Package $packageId delivered by courier $courierId")
             }
         }
     }
 
-    fun deliver(packageId: String) {
-
-    }
-
     fun acceptRequest(
-        courierId: Long,
-        requestId: Long,
+        courierId: Int,
+        requestId: Int,
     ) {
         val updated =
             transactionManager.run {

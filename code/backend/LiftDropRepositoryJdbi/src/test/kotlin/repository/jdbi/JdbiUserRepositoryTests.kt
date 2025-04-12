@@ -28,7 +28,7 @@ class JdbiUserRepositoryTests {
                 throw Exception("User should be created")
             } else {
                 // Then: the user should be retrievable from the database
-                val user = userRepository.findUserByEmail(userEmail) ?: throw Exception("User should be created")
+                userRepository.findUserByEmail(userEmail) ?: throw Exception("User should be created")
 
                 // When: finding the user by name
                 val foundUserByName = userRepository.findUserByName(userName)

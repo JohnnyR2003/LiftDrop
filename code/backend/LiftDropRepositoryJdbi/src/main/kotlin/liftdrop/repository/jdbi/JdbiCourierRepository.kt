@@ -13,7 +13,8 @@ class JdbiCourierRepository(
         userId: Int,
         currentLocation: Location,
         isAvailable: Boolean,
-    ): Int { // //Needs further integration with google maps API to get address based on coordinates
+    ): Int {
+        TODO() /* //Needs further integration with google maps API to get address based on coordinates
         val addressId =
             handle
                 .createUpdate(
@@ -54,6 +55,7 @@ class JdbiCourierRepository(
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
+         */
     }
 
     override fun loginCourier(
@@ -75,17 +77,16 @@ class JdbiCourierRepository(
         requestId: Int,
         courierId: Int,
     ): Boolean {
-        val updatedRequest =
-            handle
-                .createUpdate(
-                    """
+        handle
+            .createUpdate(
+                """
         UPDATE liftdrop.request
         SET courier_id = :courierId, request_status = 'ACCEPTED'
         WHERE request_id = :requestId
         """,
-                ).bind("courierId", courierId)
-                .bind("requestId", requestId)
-                .execute()
+            ).bind("courierId", courierId)
+            .bind("requestId", requestId)
+            .execute()
 
         val createdDelivery =
             handle
@@ -122,17 +123,16 @@ class JdbiCourierRepository(
         requestId: Int,
         courierId: Int,
     ): Boolean {
-        val updatedDelivery =
-            handle
-                .createUpdate(
-                    """
+        handle
+            .createUpdate(
+                """
                 UPDATE liftdrop.delivery
                 SET delivery_status = 'CANCELLED'
                 WHERE request_id = :requestId AND courier_id = :courierId
                 """,
-                ).bind("courierId", courierId)
-                .bind("requestId", requestId)
-                .execute()
+            ).bind("courierId", courierId)
+            .bind("requestId", requestId)
+            .execute()
 
         val updatedRequest =
             handle
@@ -153,17 +153,16 @@ class JdbiCourierRepository(
         requestId: Int,
         courierId: Int,
     ): Boolean {
-        val updatedDelivery =
-            handle
-                .createUpdate(
-                    """
+        handle
+            .createUpdate(
+                """
                 UPDATE liftdrop.delivery
                 SET delivery_status = 'COMPLETED'
                 WHERE request_id = :requestId AND courier_id = :courierId
                 """,
-                ).bind("courierId", courierId)
-                .bind("requestId", requestId)
-                .execute()
+            ).bind("courierId", courierId)
+            .bind("requestId", requestId)
+            .execute()
 
         val updatedRequest =
             handle

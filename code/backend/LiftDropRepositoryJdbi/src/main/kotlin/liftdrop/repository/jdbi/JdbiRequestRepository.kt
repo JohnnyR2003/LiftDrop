@@ -15,25 +15,12 @@ class JdbiRequestRepository(
     }
 
     override fun updateRequest(
-        requestId: Long,
-        courierId: Long?,
+        requestId: Int,
+        courierId: Int?,
         requestStatus: String?,
         eta: String?,
     ): Boolean {
-        val result =
-            handle
-                .createUpdate(
-                    """
-                UPDATE request
-                SET courier_id = :courierId, request_status = :requestStatus, eta = :eta
-                WHERE id = :requestId
-                """,
-                ).bind("requestId", requestId)
-                .bind("courierId", courierId)
-                .bind("requestStatus", requestStatus)
-                .bind("eta", eta)
-                .execute()
-        return result > 0
+        TODO("Not yet implemented")
     }
 
     override fun deleteRequest(requestId: Int): Boolean =

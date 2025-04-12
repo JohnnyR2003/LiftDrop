@@ -8,8 +8,8 @@ interface RequestRepository {
     ): Int
 
     fun updateRequest(
-        requestId: Long,
-        courierId: Long?,
+        requestId: Int,
+        courierId: Int?,
         requestStatus: String?,
         eta: String?,
     ): Boolean

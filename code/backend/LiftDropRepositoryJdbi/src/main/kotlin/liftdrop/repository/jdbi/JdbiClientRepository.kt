@@ -61,12 +61,12 @@ class JdbiClientRepository(
         handle
             .createQuery(
                 """
-                SELECT u.user_id, u.email, u.password, u.name, c.address
+                SELECT u.user_id, u.email, u.password, u.name, c.client_id, c.address
                 FROM liftdrop.user u
                 JOIN liftdrop.client c ON u.user_id = c.client_id
-                WHERE u.user_id = :userId
+                WHERE u.user_id = :user_id
                 """,
-            ).bind("userId", userId)
+            ).bind("user_id", userId)
             .mapTo<Client>()
             .singleOrNull()
 }

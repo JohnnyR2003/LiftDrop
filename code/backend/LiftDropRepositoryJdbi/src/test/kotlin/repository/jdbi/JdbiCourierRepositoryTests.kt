@@ -102,7 +102,6 @@ class JdbiCourierRepositoryTests {
 
             // Given: an already created courier
             val courierId = 4 // Replace with an actual courier ID from your database
-            val courier = courierRepository.getCourierByUserId(courierId) ?: throw Exception("Courier should be created")
 
             // Given: the courier's email and password
             val user = userRepository.findUserById(courierId) ?: throw Exception("User should be created")
@@ -135,7 +134,6 @@ class JdbiCourierRepositoryTests {
 
             // Given: an already created courier
             val courierId = 5 // Replace with an actual courier ID from your database
-            val courier = courierRepository.getCourierByUserId(courierId) ?: throw Exception("Courier should be created")
 
             // Given: the courier's email and password
             val user = userRepository.findUserById(courierId) ?: throw Exception("User should be created")
@@ -168,7 +166,6 @@ class JdbiCourierRepositoryTests {
 
             // Given: an already created courier
             val courierId = 6 // Replace with an actual courier ID from your database
-            val courier = courierRepository.getCourierByUserId(courierId) ?: throw Exception("Courier should be created")
 
             // Given: the courier's email and password
             val user = userRepository.findUserById(courierId) ?: throw Exception("User should be created")
@@ -206,7 +203,6 @@ class JdbiCourierRepositoryTests {
 
             // Given: an already created courier
             val courierId = 6 // Replace with an actual courier ID from your database
-            val courier = courierRepository.getCourierByUserId(courierId) ?: throw Exception("Courier should be created")
 
             // Given: the courier's email and password
             val user = userRepository.findUserById(courierId) ?: throw Exception("User should be created")
