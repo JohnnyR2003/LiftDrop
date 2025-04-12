@@ -54,8 +54,13 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test:3.1.0")
     testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
     implementation("org.springframework.boot:spring-boot-starter-webflux:3.1.0")
-    // testImplementation(kotlin("test"))
+    testImplementation(kotlin("test"))
     api(project(":LiftDropServices"))
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

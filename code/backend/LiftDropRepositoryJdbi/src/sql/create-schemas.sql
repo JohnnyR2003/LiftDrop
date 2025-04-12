@@ -48,7 +48,7 @@ CREATE TABLE liftdrop.request (
     client_id                       INT,
     courier_id                      INT,
     created_at                      TIMESTAMP DEFAULT NOW(),
-    request_status                  TEXT CHECK (request_status IN ('PENDING', 'ACCEPTED', 'DECLINED', 'HEADING_TO_PICKUP', 'PICKED_UP', 'COMPLETED')),
+    request_status                  TEXT CHECK (request_status IN ('PENDING', 'PENDING_CANCELLATION', 'ACCEPTED', 'DECLINED', 'HEADING_TO_PICKUP', 'PICKED_UP', 'COMPLETED')),
     ETA                             INTERVAL,
     FOREIGN KEY (client_id) REFERENCES liftdrop.client(client_id) ON DELETE CASCADE,
     FOREIGN KEY (courier_id) REFERENCES liftdrop.courier(courier_id) ON DELETE SET NULL
@@ -66,10 +66,12 @@ CREATE TABLE liftdrop.request_details (
 
 CREATE TABLE liftdrop.delivery (
     delivery_id                     SERIAL PRIMARY KEY,
+    courier_id                      INT,
     request_id                      INT,
     started_at                      TIMESTAMP,
     completed_at                    TIMESTAMP,
     delivery_status                 TEXT CHECK (delivery_status IN ('IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    FOREIGN KEY (courier_id) REFERENCES liftdrop.courier(courier_id) ON DELETE CASCADE,
     FOREIGN KEY (request_id) REFERENCES liftdrop.request(request_id) ON DELETE CASCADE
 );
 

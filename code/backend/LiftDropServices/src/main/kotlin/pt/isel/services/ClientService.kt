@@ -3,33 +3,47 @@ package pt.isel.services
 import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.User
+import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.Address
 
 @Named("ClientService")
 class ClientService(
     private val transactionManager: TransactionManager,
 ) {
-    fun registerClient(client: Client): Client {
+    fun registerClient(
+        client: User,
+        address: Address,
+    ): Int =
         transactionManager.run {
             val userRepository = it.usersRepository
             val clientRepository = it.clientRepository
-            if (userRepository.findUserByEmail(client.email) != null) {
-                throw IllegalArgumentException("User with email ${client.email} already exists")
+
+            val userCreation =
+                userRepository.createUser(
+                    email = client.email,
+                    password = client.password,
+                    name = client.name,
+                    role = UserRole.CLIENT,
+                )
+            if (userCreation == 0) {
+                throw IllegalStateException("User should be created")
             }
-            if (clientRepository.getClientByUserId(client.id.toInt()) != null) {
-                throw IllegalArgumentException("Client with id ${client.id} already exists")
-            }
-            userRepository.createUser(
-                email = client.email,
-                password = client.password,
-                name = client.name,
-            )
+
+            val user = userRepository.findUserByEmail(client.email) ?: throw IllegalStateException("User should be created")
+            val clientId = user.id
+
             clientRepository.createClient(
-                userId = client.id.toInt(),
-                address = client.address,
+                clientId = clientId,
+                address = address,
             )
         }
-        return client
-    }
+
+    fun getClientById(clientId: Int): Client? =
+        transactionManager.run {
+            val clientRepository = it.clientRepository
+            clientRepository.getClientByUserId(clientId)
+        }
 
     fun loginClient(
         email: String,

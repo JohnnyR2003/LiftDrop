@@ -67,4 +67,15 @@ class JdbiUserRepository(
             ).bind("email", email)
             .mapTo<User>()
             .singleOrNull()
+
+    override fun findUserById(id: Int): User? =
+        handle
+            .createQuery(
+                """
+            SELECT * FROM liftdrop.user
+            WHERE user_id = :id
+            """,
+            ).bind("id", id)
+            .mapTo<User>()
+            .singleOrNull()
 }

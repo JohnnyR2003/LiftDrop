@@ -20,17 +20,14 @@ interface CourierRepository {
         courierId: Int,
     ): Boolean
 
-    fun declineRequest(
-        requestId: Int,
-        courierId: Int,
-    ): Boolean
+    fun declineRequest(requestId: Int): Boolean
 
     fun cancelDelivery(
         requestId: Int,
         courierId: Int,
     ): Boolean
 
-    fun completeRequest( // if possible should support external pin for completion
+    fun completeDelivery( // if possible should support external pin for completion
         requestId: Int,
         courierId: Int,
     ): Boolean

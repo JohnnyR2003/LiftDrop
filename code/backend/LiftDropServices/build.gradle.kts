@@ -18,6 +18,12 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+
     testImplementation(kotlin("test"))
     testImplementation("org.jdbi:jdbi3-core:3.37.1")
     testImplementation("org.postgresql:postgresql:42.7.2")
