@@ -13,19 +13,49 @@ class JdbiCourierRepository(
         userId: Int,
         currentLocation: Location,
         isAvailable: Boolean,
-    ): Int =
-        handle
+    ): Int { // first create address based on currentLocation's address then pass its id to create Location and lastly create Courier
+        /*val addressId =
+            handle
+                .createUpdate(
+                    """
+                INSERT INTO liftdrop.address (country, city, street, house_number, floor, zip_code)
+                VALUES (:street, :city, :state, :country, :zipCode)
+                """,
+                ).bind("country", currentLocation.address.)
+                .bind("city", currentLocation.city)
+
+                .executeAndReturnGeneratedKeys()
+                .mapTo<Int>()
+                .one()
+         */
+        // check how to generate address fields based on currentLocation's coordinates using google maps API
+        val locationId =
+            handle
+                .createUpdate(
+                    """
+                INSERT INTO liftdrop.location (latitude, longitude, address)
+                VALUES (:latitude, :longitude, :address)
+                """,
+                ).bind("latitude", currentLocation.latitude)
+                .bind("longitude", currentLocation.longitude)
+                .bind("address", currentLocation.address)
+                .executeAndReturnGeneratedKeys()
+                .mapTo<Int>()
+                .one()
+
+        return handle
             .createUpdate(
                 """
-                INSERT INTO courier (user_id, current_location, is_available)
-                VALUES (:userId, :currentLocation, :isAvailable)
-                """,
-            ).bind("userId", userId)
-            .bind("currentLocation", currentLocation)
-            .bind("isAvailable", isAvailable)
+            INSERT INTO liftdrop.courier (courier_id, current_location, is_available)
+            VALUES (:courier_id, :current_location, :is_available)
+            """,
+            ).bind("courier_id", userId)
+            .bind("current_location", locationId)
+            .bind("is_available", isAvailable)
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
+    }
 
     override fun loginCourier(
         email: String,
@@ -34,8 +64,8 @@ class JdbiCourierRepository(
         handle
             .createQuery(
                 """
-                SELECT id FROM courier
-                WHERE email = :email AND password = :password AND is_courier = true
+                SELECT user_id FROM liftdrop.user
+                WHERE email = :email AND password = :password AND role = 'COURIER'
                 """,
             ).bind("email", email)
             .bind("password", password)
@@ -43,16 +73,16 @@ class JdbiCourierRepository(
             .singleOrNull()
 
     override fun acceptRequest(
-        requestId: Long,
-        courierId: Long,
+        requestId: Int,
+        courierId: Int,
     ): Boolean {
         val result =
             handle
                 .createUpdate(
                     """
-                UPDATE request
+                UPDATE liftdrop.request
                 SET courier_id = :courierId
-                WHERE id = :requestId
+                WHERE request_id = :requestId
                 """,
                 ).bind("courierId", courierId)
                 .bind("requestId", requestId)
@@ -61,7 +91,28 @@ class JdbiCourierRepository(
         return result > 0
     }
 
-    override fun getCourierByUserId(userId: Long): Courier? =
+    override fun declineRequest(
+        requestId: Int,
+        courierId: Int,
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun cancelDelivery(
+        requestId: Int,
+        courierId: Int,
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun completeRequest(
+        requestId: Int,
+        courierId: Int,
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun getCourierByUserId(userId: Int): Courier? =
         handle
             .createQuery(
                 """
@@ -73,7 +124,7 @@ class JdbiCourierRepository(
             .singleOrNull()
 
     override fun updateCourierLocation(
-        courierId: Long,
+        courierId: Int,
         newLocation: Location,
     ): Boolean {
         TODO()

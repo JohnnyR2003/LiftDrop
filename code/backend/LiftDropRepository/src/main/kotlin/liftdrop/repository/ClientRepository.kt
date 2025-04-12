@@ -1,11 +1,12 @@
 package liftdrop.repository
 
 import pt.isel.liftdrop.Client
+import pt.isel.pipeline.pt.isel.liftdrop.Address
 
 interface ClientRepository {
     fun createClient(
-        userId: Int,
-        address: String,
+        clientId: Int,
+        address: Address,
     ): Int
 
     fun loginClient(

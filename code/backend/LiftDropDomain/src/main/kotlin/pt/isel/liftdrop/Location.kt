@@ -1,23 +1,20 @@
 package pt.isel.liftdrop
 
-sealed class Location(
-    val id: Long,
+import pt.isel.pipeline.pt.isel.liftdrop.Address
+
+data class Location(
+    val id: Int,
     val latitude: Double,
     val longitude: Double,
-    val address: String,
+    val address: Address,
+    val name: String,
 )
 
-class PickupSpot(
-    id: Long,
-    latitude: Double,
-    longitude: Double,
-    address: String,
-    val name: String,
-) : Location(id, latitude, longitude, address)
+data class PickupSpot(
+    val locationId: Int,
+)
 
 class DropoffSpot(
-    id: Long,
-    latitude: Double,
-    longitude: Double,
-    address: String,
-) : Location(id, latitude, longitude, address)
+    locationId: Int,
+    clientId: Int,
+)

@@ -54,3 +54,9 @@ VALUES (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, INTERVAL '30 minutes'),
        (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, INTERVAL '45 minutes'),
        (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, INTERVAL '1 hour');
 --deliveries todo
+
+SELECT setval(pg_get_serial_sequence('liftdrop.user', 'user_id'), (SELECT MAX(user_id) FROM liftdrop.user));
+
+SELECT setval(pg_get_serial_sequence('liftdrop.address', 'address_id'), (SELECT MAX(address_id) FROM liftdrop.address));
+
+SELECT setval(pg_get_serial_sequence('liftdrop.location', 'location_id'), (SELECT MAX(location_id) FROM liftdrop.location));

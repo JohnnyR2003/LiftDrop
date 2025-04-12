@@ -16,14 +16,29 @@ interface CourierRepository {
     ): Int?
 
     fun acceptRequest(
-        requestId: Long,
-        courierId: Long,
+        requestId: Int,
+        courierId: Int,
     ): Boolean
 
-    fun getCourierByUserId(userId: Long): Courier?
+    fun declineRequest(
+        requestId: Int,
+        courierId: Int,
+    ): Boolean
+
+    fun cancelDelivery(
+        requestId: Int,
+        courierId: Int,
+    ): Boolean
+
+    fun completeRequest( // if possible should support external pin for completion
+        requestId: Int,
+        courierId: Int,
+    ): Boolean
+
+    fun getCourierByUserId(userId: Int): Courier?
 
     fun updateCourierLocation(
-        courierId: Long,
+        courierId: Int,
         newLocation: Location,
     ): Boolean
 }

@@ -2,7 +2,7 @@ package liftdrop.repository.jdbi
 
 import liftdrop.repository.DeliveryRepository
 import org.jdbi.v3.core.Handle
-import org.jdbi.v3.core.kotlin.mapTo
+import pt.isel.liftdrop.Status
 
 class JdbiDeliveryRepository(
     private val handle: Handle,
@@ -11,21 +11,16 @@ class JdbiDeliveryRepository(
         requestId: Int,
         startTime: String,
         endTime: String,
-        deliveryStatus: String,
-    ): Int =
-        handle
-            .createUpdate(
-                """
-                INSERT INTO delivery (request_id, start_time, end_time, delivery_status)
-                VALUES (:requestId, :startTime, :endTime, :deliveryStatus)
-                """,
-            ).bind("requestId", requestId)
-            .bind("startTime", startTime)
-            .bind("endTime", endTime)
-            .bind("deliveryStatus", deliveryStatus)
-            .executeAndReturnGeneratedKeys()
-            .mapTo<Int>()
-            .one()
+    ): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateDeliveryStatus(
+        deliveryId: Int,
+        status: Status,
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
 
     override fun completeDelivery(deliveryId: Int): Boolean =
         handle

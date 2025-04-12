@@ -12,6 +12,7 @@ repositories {
 dependencies {
     api(project(":LiftDropDomain"))
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+    implementation("org.jdbi:jdbi3-sqlobject:3.43.0")
     testImplementation(kotlin("test"))
 }
 

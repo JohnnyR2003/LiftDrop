@@ -25,7 +25,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
-    //JDBI dependencies
+    // JDBI dependencies
     implementation("org.jdbi:jdbi3-core:3.37.1")
     implementation("org.jdbi:jdbi3-kotlin:3.37.1")
     implementation("org.jdbi:jdbi3-postgres:3.37.1")
@@ -54,15 +54,15 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test:3.1.0")
     testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
     implementation("org.springframework.boot:spring-boot-starter-webflux:3.1.0")
-    testImplementation(kotlin("test"))
-	api(project(":LiftDropServices"))
+    // testImplementation(kotlin("test"))
+    api(project(":LiftDropServices"))
 
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 kotlin {

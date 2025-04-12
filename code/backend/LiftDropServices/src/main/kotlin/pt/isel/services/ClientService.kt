@@ -4,10 +4,9 @@ import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Client
 
-
 @Named("ClientService")
 class ClientService(
-    private val transactionManager: TransactionManager
+    private val transactionManager: TransactionManager,
 ) {
     fun registerClient(client: Client): Client {
         transactionManager.run {
@@ -26,12 +25,16 @@ class ClientService(
             )
             clientRepository.createClient(
                 userId = client.id.toInt(),
-                address = client.address.toString(),
+                address = client.address,
             )
         }
         return client
     }
-    fun loginClient(email: String, password: String) {
+
+    fun loginClient(
+        email: String,
+        password: String,
+    ) {
         transactionManager.run {
             val clientRepository = it.clientRepository
             clientRepository.loginClient(

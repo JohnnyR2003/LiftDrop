@@ -2,7 +2,6 @@ package liftdrop.repository.jdbi
 
 import liftdrop.repository.RequestRepository
 import org.jdbi.v3.core.Handle
-import org.jdbi.v3.core.kotlin.mapTo
 
 class JdbiRequestRepository(
     private val handle: Handle,
@@ -10,22 +9,10 @@ class JdbiRequestRepository(
     override fun createRequest(
         clientId: Int,
         description: String,
-        requestStatus: String,
         eta: String,
-    ): Int =
-        handle
-            .createUpdate(
-                """
-                INSERT INTO request (client_id, description, request_status, eta)
-                VALUES (:clientId, :description, :requestStatus, :eta)
-                """,
-            ).bind("clientId", clientId)
-            .bind("description", description)
-            .bind("requestStatus", requestStatus)
-            .bind("eta", eta)
-            .executeAndReturnGeneratedKeys()
-            .mapTo<Int>()
-            .one()
+    ): Int {
+        TODO("Not yet implemented")
+    }
 
     override fun updateRequest(
         requestId: Long,
