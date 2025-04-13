@@ -16,6 +16,9 @@ dependencies {
     // To use the named annotation
     implementation("jakarta.inject:jakarta.inject-api:2.0.1")
 
+    // Spring Encoder
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
