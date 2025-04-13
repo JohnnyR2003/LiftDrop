@@ -5,7 +5,8 @@ VALUES (1, 'john.doe@example.com', 'hashed_password_1', 'John Doe', 'CLIENT'),
        (3, 'michael.jones@example.com', 'hashed_password_3', 'Michael Jones', 'CLIENT'),
        (4, 'john.doe2@example.com', 'hashed_password_4', 'John Doe2', 'COURIER'),
        (5, 'jane.smith2@example.com', 'hashed_password_5', 'Jane Smith2', 'COURIER'),
-       (6, 'michael.jones2@example.com', 'hashed_password_6', 'Michael Jones2', 'COURIER');
+       (6, 'michael.jones2@example.com', 'hashed_password_6', 'Michael Jones2', 'COURIER'),
+       (7, 'courier7@example.com', 'hashed_password_7', 'Courier Seven', 'COURIER');
 
 
 
@@ -19,7 +20,10 @@ VALUES (1, 'USA', 'New York', '5th Avenue', '123', '2nd', '10001'),
 INSERT INTO liftdrop."location" (location_id, latitude, longitude, address, name)
 VALUES (1, 40.7128, -74.0060, 1, 'New York City'),
        (2, 34.0522, -118.2437, 2, 'Los Angeles'),
-       (3, 37.7749, -122.4194, 3, 'San Francisco');
+       (3, 37.7749, -122.4194, 3, 'San Francisco'),
+       (4, 40.7306, -73.9352, 1, 'New York City'),
+       (5, 34.0522, -118.2437, 2, 'Los Angeles'),
+       (6, 37.7749, -122.4194, 3, 'San Francisco');
 
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
@@ -29,9 +33,10 @@ VALUES (1, 1),
 
 -- Insert couriers (depends on Users and Location)
 INSERT INTO liftdrop."courier" (courier_id, current_location, is_available)
-VALUES (4, 1, false),
+VALUES (4, 1, true),
        (5, 2, false),
-       (6, 3, false);
+       (6, 3, false),
+       (7, 4, false);
 
 -- Insert requests (depends on Clients and Couriers)
 INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, request_status, ETA)
@@ -56,12 +61,15 @@ VALUES (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, INTERVAL '30 minutes'),
 --deliveries todo
 
 INSERT INTO liftdrop."delivery" (delivery_id, courier_id, request_id, started_at, completed_at, ETA, delivery_status)
---VALUES (1, 4, 1, NOW(), NULL, INTERVAL '30 minutes', 'IN_PROGRESS');
+VALUES (1, 4, 3, NOW(), NULL, INTERVAL '30 minutes', 'IN_PROGRESS');
 --      (2, 5, 2, NOW(), NULL, INTERVAL '45 minutes', 'IN_PROGRESS'),
 --      (3, 6, 3, NOW(), NULL, INTERVAL '1 hour', 'IN_PROGRESS');
-
 SELECT setval(pg_get_serial_sequence('liftdrop.user', 'user_id'), (SELECT MAX(user_id) FROM liftdrop.user));
 
 SELECT setval(pg_get_serial_sequence('liftdrop.address', 'address_id'), (SELECT MAX(address_id) FROM liftdrop.address));
 
 SELECT setval(pg_get_serial_sequence('liftdrop.location', 'location_id'), (SELECT MAX(location_id) FROM liftdrop.location));
+
+SELECT setval(pg_get_serial_sequence('liftdrop.request', 'request_id'), (SELECT MAX(request_id) FROM liftdrop.request));
+
+SELECT setval(pg_get_serial_sequence('liftdrop.delivery', 'delivery_id'), (SELECT MAX(delivery_id) FROM liftdrop.delivery));

@@ -101,7 +101,7 @@ class JdbiCourierRepositoryTests {
             val userRepository = JdbiUserRepository(handle)
 
             // Given: an already created courier
-            val courierId = 4 // Replace with an actual courier ID from your database
+            val courierId = 7 // Replace with an actual courier ID from your database
 
             // Given: the courier's email and password
             val user = userRepository.findUserById(courierId) ?: throw Exception("User should be created")

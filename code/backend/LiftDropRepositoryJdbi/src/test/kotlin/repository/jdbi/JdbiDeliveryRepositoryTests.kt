@@ -16,7 +16,7 @@ class JdbiDeliveryRepositoryTests {
             val courierRepository = JdbiCourierRepository(handle)
 
             val courierId = 4
-            val requestId = 1
+            val requestId = 3
             // Given: a new delivery resulting from an accepted request
             courierRepository.acceptRequest(requestId, courierId)
             // Given: the delivery ID and the new status

@@ -3,8 +3,7 @@ package liftdrop.repository
 interface RequestRepository {
     fun createRequest(
         clientId: Int,
-        description: String,
-        eta: String,
+        eta: Long?,
     ): Int
 
     fun updateRequest(
