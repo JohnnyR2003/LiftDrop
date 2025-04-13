@@ -2,7 +2,7 @@ package pt.isel.liftdrop
 
 data class RequestStatus(
     val status: Status,
-    val orderETA: Long,
+    val orderETA: Long?,
 )
 
 enum class Status {

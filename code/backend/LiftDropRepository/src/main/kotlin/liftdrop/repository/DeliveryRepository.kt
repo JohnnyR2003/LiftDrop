@@ -1,20 +1,12 @@
 package liftdrop.repository
 
-import pt.isel.liftdrop.Status
+import pt.isel.liftdrop.RequestStatus
 
 interface DeliveryRepository {
-    fun createDelivery(
-        requestId: Int,
-        startTime: String,
-        endTime: String,
-    ): Int
-
     fun updateDeliveryStatus(
         deliveryId: Int,
-        status: Status,
+        status: RequestStatus,
     ): Boolean
 
-    fun completeDelivery(deliveryId: Int): Boolean
-
-    fun deleteDelivery(deliveryId: Int): Boolean // for cancelled deliveries
+    fun deleteDelivery(courierId: Int, deliveryId: Int): Boolean // for cancelled deliveries
 }

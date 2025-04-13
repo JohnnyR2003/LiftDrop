@@ -9,6 +9,15 @@ import pt.isel.liftdrop.Location
 class JdbiCourierRepository(
     private val handle: Handle,
 ) : CourierRepository {
+    /**
+     * Creates a new courier in the database.
+     *
+     * @param userId The ID of the user associated with the courier.
+     * @param currentLocation The current location of the courier.
+     * @param isAvailable Indicates whether the courier is available for requests.
+     * @return The ID of the newly created courier.
+     */
+    @Suppress("ktlint:standard:comment-wrapping")
     override fun createCourier(
         userId: Int,
         currentLocation: Location,
@@ -58,6 +67,13 @@ class JdbiCourierRepository(
          */
     }
 
+    /**
+     * Logs in a courier using their email and password.
+     *
+     * @param email The email of the courier.
+     * @param password The password of the courier.
+     * @return The ID of the logged-in courier, or null if the login failed.
+     */
     override fun loginCourier(
         email: String,
         password: String,
@@ -73,6 +89,13 @@ class JdbiCourierRepository(
             .mapTo<Int>()
             .singleOrNull()
 
+    /**
+     * Accepts a delivery request for a courier.
+     *
+     * @param requestId The ID of the delivery request.
+     * @param courierId The ID of the courier accepting the request.
+     * @return true if the request was accepted successfully, false otherwise.
+     */
     override fun acceptRequest(
         requestId: Int,
         courierId: Int,
@@ -92,8 +115,8 @@ class JdbiCourierRepository(
             handle
                 .createUpdate(
                     """
-                INSERT INTO liftdrop.delivery (courier_id, request_id, started_at, completed_at, delivery_status)
-                VALUES (:courierId, :requestId, NOW(), NULL, 'IN_PROGRESS')
+                INSERT INTO liftdrop.delivery (courier_id, request_id, started_at, completed_at, ETA, delivery_status)
+                VALUES (:courierId, :requestId, NOW(), NULL, NULL, 'PENDING')
                 """,
                 ).bind("courierId", courierId)
                 .bind("requestId", requestId)
@@ -104,6 +127,12 @@ class JdbiCourierRepository(
         return createdDelivery > 0
     }
 
+    /**
+     * Declines a delivery request for a courier.
+     *
+     * @param requestId The ID of the delivery request.
+     * @return true if the request was declined successfully, false otherwise.
+     */
     override fun declineRequest(requestId: Int): Boolean {
         val result =
             handle
@@ -119,6 +148,13 @@ class JdbiCourierRepository(
         return result > 0
     }
 
+    /**
+     * Cancels a delivery for a courier.
+     *
+     * @param requestId The ID of the delivery request.
+     * @param courierId The ID of the courier cancelling the delivery.
+     * @return true if the delivery was cancelled successfully, false otherwise.
+     */
     override fun cancelDelivery(
         requestId: Int,
         courierId: Int,
@@ -142,13 +178,20 @@ class JdbiCourierRepository(
                 SET request_status = 'PENDING_CANCELLATION'
                 WHERE request_id = :requestId AND courier_id = :courierId
                 """,
-                ).bind("courierId", courierId)
-                .bind("requestId", requestId)
+                ).bind("requestId", requestId)
+                .bind("courierId", courierId)
                 .execute()
 
         return updatedRequest > 0
     }
 
+    /**
+     * Completes a delivery for a courier.
+     *
+     * @param requestId The ID of the delivery request.
+     * @param courierId The ID of the courier completing the delivery.
+     * @return true if the delivery was completed successfully, false otherwise.
+     */
     override fun completeDelivery(
         requestId: Int,
         courierId: Int,
@@ -179,6 +222,12 @@ class JdbiCourierRepository(
         return updatedRequest > 0
     }
 
+    /**
+     * Retrieves a courier by their user ID.
+     *
+     * @param userId The ID of the user associated with the courier.
+     * @return The Courier if found, null otherwise.
+     */
     override fun getCourierByUserId(userId: Int): Courier? =
         handle
             .createQuery(
@@ -190,6 +239,13 @@ class JdbiCourierRepository(
             .mapTo<Courier>()
             .singleOrNull()
 
+    /**
+     * Updates the location of a courier.
+     *
+     * @param courierId The ID of the courier.
+     * @param newLocation The new location of the courier.
+     * @return true if the location was updated successfully, false otherwise.
+     */
     override fun updateCourierLocation(
         courierId: Int,
         newLocation: Location,

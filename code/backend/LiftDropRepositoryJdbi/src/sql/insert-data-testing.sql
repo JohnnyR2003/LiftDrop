@@ -55,6 +55,11 @@ VALUES (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, INTERVAL '30 minutes'),
        (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, INTERVAL '1 hour');
 --deliveries todo
 
+INSERT INTO liftdrop."delivery" (delivery_id, courier_id, request_id, started_at, completed_at, ETA, delivery_status)
+--VALUES (1, 4, 1, NOW(), NULL, INTERVAL '30 minutes', 'IN_PROGRESS');
+--      (2, 5, 2, NOW(), NULL, INTERVAL '45 minutes', 'IN_PROGRESS'),
+--      (3, 6, 3, NOW(), NULL, INTERVAL '1 hour', 'IN_PROGRESS');
+
 SELECT setval(pg_get_serial_sequence('liftdrop.user', 'user_id'), (SELECT MAX(user_id) FROM liftdrop.user));
 
 SELECT setval(pg_get_serial_sequence('liftdrop.address', 'address_id'), (SELECT MAX(address_id) FROM liftdrop.address));

@@ -70,7 +70,8 @@ CREATE TABLE liftdrop.delivery (
     request_id                      INT,
     started_at                      TIMESTAMP,
     completed_at                    TIMESTAMP,
-    delivery_status                 TEXT CHECK (delivery_status IN ('IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    ETA                             INTERVAL,
+    delivery_status                 TEXT CHECK (delivery_status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED','PICKED_UP','PICKING_UP')),
     FOREIGN KEY (courier_id) REFERENCES liftdrop.courier(courier_id) ON DELETE CASCADE,
     FOREIGN KEY (request_id) REFERENCES liftdrop.request(request_id) ON DELETE CASCADE
 );

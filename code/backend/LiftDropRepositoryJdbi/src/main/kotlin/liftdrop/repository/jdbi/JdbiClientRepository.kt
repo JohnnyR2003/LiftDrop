@@ -9,6 +9,13 @@ import pt.isel.pipeline.pt.isel.liftdrop.Address
 class JdbiClientRepository(
     private val handle: Handle,
 ) : ClientRepository {
+    /**
+     * Creates a new client in the database.
+     *
+     * @param clientId The ID of the client to create.
+     * @param address The address of the client.
+     * @return The ID of the created client.
+     */
     override fun createClient(
         clientId: Int,
         address: Address,
@@ -42,6 +49,13 @@ class JdbiClientRepository(
             .let { clientId }
     }
 
+    /**
+     * Logs in a client using their email and password.
+     *
+     * @param email The email of the client.
+     * @param password The password of the client.
+     * @return The ID of the authenticated client, or null if authentication fails.
+     */
     override fun loginClient(
         email: String,
         password: String,
@@ -57,6 +71,12 @@ class JdbiClientRepository(
             .mapTo<Int>()
             .singleOrNull()
 
+    /**
+     * Gets a client by their user ID.
+     *
+     * @param userId The ID of the user to get.
+     * @return The client with the specified user ID, or null if not found.
+     */
     override fun getClientByUserId(userId: Int): Client? =
         handle
             .createQuery(

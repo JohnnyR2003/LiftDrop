@@ -16,22 +16,21 @@ class JdbiLocationRepository(
         handle
             .createUpdate(
                 """
-                INSERT INTO location (courier_id, delivery_id, latitude, longitude)
-                VALUES (:courierId, :deliveryId, :latitude, :longitude)
+                INSERT INTO liftdrop.location (latitude, longitude, address)
+                VALUES (:latitude, :longitude, :address)
                 """,
-            ).bind("courierId", courierId)
-            .bind("deliveryId", deliveryId)
-            .bind("latitude", location.latitude)
+            ).bind("latitude", location.latitude)
             .bind("longitude", location.longitude)
+            .bind("address", location.address!!.id)
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
 
     override fun deleteDeliveryPath(deliveryId: Int): Boolean =
-        handle
+        handle // requires major changes in the db schema in order to be supported
             .createUpdate(
                 """
-                DELETE FROM location WHERE delivery_id = :deliveryId
+                DELETE FROM liftdrop.location WHERE location_id = :deliveryId
                 """,
             ).bind("deliveryId", deliveryId)
             .execute() > 0

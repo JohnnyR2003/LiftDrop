@@ -9,6 +9,15 @@ import pt.isel.liftdrop.UserRole
 class JdbiUserRepository(
     private val handle: Handle,
 ) : UserRepository {
+    /**
+     * Creates a new user in the database.
+     *
+     * @param email The email of the user to create.
+     * @param password The password of the user to create.
+     * @param name The name of the user to create.
+     * @param role The role of the user to create.
+     * @return The ID of the created user, or 0 if a user with the same email already exists.
+     */
     override fun createUser(
         email: String,
         password: String,
@@ -34,6 +43,12 @@ class JdbiUserRepository(
             .one()
     }
 
+    /**
+     * Deletes a user from the database(Admin only).
+     *
+     * @param email The email of the user to delete.
+     * @return The number of rows affected by the delete operation.
+     */
     override fun deleteUser(email: String): Int {
         findUserByEmail(email) ?: return 0
         return handle
@@ -46,6 +61,12 @@ class JdbiUserRepository(
             .execute()
     }
 
+    /**
+     * Gets a user by their name.
+     *
+     * @param name The name of the user to get.
+     * @return The user with the given name, or null if no such user exists.
+     */
     override fun findUserByName(name: String): User? =
         handle
             .createQuery(
@@ -57,6 +78,12 @@ class JdbiUserRepository(
             .mapTo<User>()
             .singleOrNull()
 
+    /**
+     * Gets a user by their email.
+     *
+     * @param email The email of the user to get.
+     * @return The user with the given email, or null if no such user exists.
+     */
     override fun findUserByEmail(email: String): User? =
         handle
             .createQuery(
@@ -68,6 +95,12 @@ class JdbiUserRepository(
             .mapTo<User>()
             .singleOrNull()
 
+    /**
+     * Gets a user by their ID.
+     *
+     * @param id The ID of the user to get.
+     * @return The user with the given ID, or null if no such user exists.
+     */
     override fun findUserById(id: Int): User? =
         handle
             .createQuery(
