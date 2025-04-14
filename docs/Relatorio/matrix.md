@@ -1,4 +1,4 @@
-|---                | Domain             | Repository  | RepositoryJdbi | Services | Controller |
+|                   | Domain             | Repository  | RepositoryJdbi | Services | Controller |
 |-------------------|:------------------:|:-----------:|:--------------:|:--------:|:----------:|
 | Address           | :white_check_mark: |   	       |   	            |   	   |   	        |
 | AuthenticatedUser | :white_check_mark: |   	       |   	            |   	   |   	        |

@@ -17,7 +17,7 @@ dependencies {
     implementation("jakarta.inject:jakarta.inject-api:2.0.1")
 
     // Spring Encoder
-    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-security:3.4.4")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
