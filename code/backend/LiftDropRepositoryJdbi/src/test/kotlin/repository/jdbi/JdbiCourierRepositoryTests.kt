@@ -230,4 +230,33 @@ class JdbiCourierRepositoryTests {
             assert(isCompleted) { "Delivery should be completed" }
         }
     }
+
+    @Test
+    fun `courier should successfully change his availability status`() {
+        testWithHandleAndRollback { handle ->
+            // Given: repositories for client and user operations
+            val courierRepository = JdbiCourierRepository(handle)
+            val userRepository = JdbiUserRepository(handle)
+
+            // Given: an already created courier
+            val courierId = 6
+
+            // Given: the courier's email and password
+            val user = userRepository.findUserById(courierId) ?: throw Exception("User should be created")
+            val userEmail = user.email
+            val userPassword = user.password
+
+            // When: logging in with the user's email and password
+            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
+
+            // Then: the logged-in client's ID should match the expected client ID
+            assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+
+            // When: toggling availability status
+            val isToggled = courierRepository.toggleAvailability(courierId)
+
+            // Then: the availability status should be toggled successfully
+            assert(isToggled) { "Availability status should be toggled" }
+        }
+    }
 }

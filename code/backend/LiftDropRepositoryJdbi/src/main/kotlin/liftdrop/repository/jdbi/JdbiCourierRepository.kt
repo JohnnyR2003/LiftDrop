@@ -282,4 +282,19 @@ class JdbiCourierRepository(
 
         return updatedCourier > 0
     }
+
+    override fun toggleAvailability(courierId: Int): Boolean {
+        val updatedCourier =
+            handle
+                .createUpdate(
+                    """
+                UPDATE liftdrop.courier
+                SET is_available = NOT is_available
+                WHERE courier_id = :courier_id
+                """,
+                ).bind("courier_id", courierId)
+                .execute()
+
+        return updatedCourier > 0
+    }
 }

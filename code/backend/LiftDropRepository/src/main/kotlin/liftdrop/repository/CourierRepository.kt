@@ -38,4 +38,6 @@ interface CourierRepository {
         courierId: Int,
         newLocation: Location,
     ): Boolean
+
+    fun toggleAvailability(courierId: Int): Boolean
 }
