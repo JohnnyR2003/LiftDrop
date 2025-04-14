@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.Location
 import pt.isel.liftdrop.UserRole
-import pt.isel.services.utils.Codify
 import pt.isel.services.utils.Codify.codifyPassword
+import pt.isel.services.utils.Codify.matchesPassword
 
 sealed class CourierError {
     data object CourierNotFound : CourierError()
@@ -60,17 +60,18 @@ class CourierService(
     fun loginCourier(
         email: String,
         password: String,
-    ): Either<CourierError, Int> {
+    ): Either<CourierError, Boolean> {
         return transactionManager.run {
-            val courierRepository = it.courierRepository
+            val userRepository = it.usersRepository
 
-            val c =
-                courierRepository.loginCourier(
-                    email = email,
-                    password = password.codifyPassword(),
-                ) ?: return@run failure(CourierError.InvalidEmailOrPassword)
+            val user =
+                userRepository.findUserByEmail(email) ?: return@run failure(CourierError.InvalidEmailOrPassword)
 
-            success(c)
+            if (user.role != UserRole.COURIER || matchesPassword(password, user.password)) {
+                return@run failure(CourierError.InvalidEmailOrPassword)
+            }
+
+            success(true)
         }
     }
 

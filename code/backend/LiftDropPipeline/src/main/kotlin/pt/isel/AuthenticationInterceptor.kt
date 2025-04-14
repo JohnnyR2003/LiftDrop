@@ -1,11 +1,14 @@
-package pt.isel.im_pipeline.pt.isel.pipeline
+package pt.isel
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.stereotype.Component
 import org.springframework.web.method.HandlerMethod
 import org.springframework.web.servlet.HandlerInterceptor
+import pt.isel.liftdrop.AuthenticatedClient
+import pt.isel.liftdrop.AuthenticatedCourier
 import pt.isel.liftdrop.AuthenticatedUser
+import pt.isel.liftdrop.UserRole
 
 @Component
 class AuthenticationInterceptor(
@@ -18,21 +21,44 @@ class AuthenticationInterceptor(
     ): Boolean {
         if (handler is HandlerMethod &&
             handler.methodParameters.any {
-                it.parameterType == AuthenticatedUser::class.java
+                it.parameterType == AuthenticatedClient::class.java ||
+                        it.parameterType == AuthenticatedCourier::class.java
             }
         ) {
             val authCookie = request.cookies?.find { it.name == "auth_token" }
-            // enforce authentication
-            val user =
-                authorizationHeaderProcessor
-                    .processAuthorizationHeaderValue(authCookie?.value)
-            return if (user == null) {
-                response.status = 401
-                response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
-                false
-            } else {
-                AuthenticatedUserArgumentResolver.addUserTo(user, request)
-                true
+
+            // Check for AuthorizedClient
+            if (handler.methodParameters.any {
+                    it.parameterType == AuthenticatedClient::class.java
+                }) {
+                val client = authorizationHeaderProcessor
+                    .processClientAuthorizationHeaderValue(authCookie?.value)
+
+                return if (client == null) {
+                    response.status = 401
+                    response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
+                    false
+                } else {
+                    AuthenticatedClientArgumentResolver.addClientTo(client, request)
+                    true
+                }
+            }
+
+            // Check for AuthorizedCourier
+            if (handler.methodParameters.any {
+                    it.parameterType == AuthenticatedCourier::class.java
+                }) {
+                val courier = authorizationHeaderProcessor
+                    .processCourierAuthorizationHeaderValue(authCookie?.value)
+
+                return if (courier == null) {
+                    response.status = 401
+                    response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
+                    false
+                } else {
+                    AuthenticatedCourierArgumentResolver.addCourierTo(courier, request)
+                    true
+                }
             }
         }
 
@@ -40,7 +66,7 @@ class AuthenticationInterceptor(
     }
 
     companion object {
-        const val NAME_AUTHORIZATION_HEADER = "Authorization"
         private const val NAME_WWW_AUTHENTICATE_HEADER = "WWW-Authenticate"
     }
 }
+

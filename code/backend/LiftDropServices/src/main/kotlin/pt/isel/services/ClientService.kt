@@ -57,4 +57,17 @@ class ClientService(
             )
         }
     }
+
+    fun makeRequest(
+        clientId: Int,
+        address: Address,
+    ) {
+        transactionManager.run {
+            val requestRepository = it.requestRepository
+            requestRepository.createRequest(
+                clientId = clientId,
+                eta = 0,
+            )
+        }
+    }
 }
