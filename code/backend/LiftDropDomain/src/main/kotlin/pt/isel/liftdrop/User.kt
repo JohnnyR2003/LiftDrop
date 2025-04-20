@@ -9,12 +9,12 @@ data class User(
 )
 
 data class Client(
-    val userId: Int,
+    val user: User,
     val address: Int? = null,
 )
 
 data class Courier(
-    val userId: Int,
+    val user: User,
     val currentLocation: Int?,
     val isAvailable: Boolean,
 )

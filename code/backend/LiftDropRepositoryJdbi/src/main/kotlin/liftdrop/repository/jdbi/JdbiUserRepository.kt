@@ -3,8 +3,11 @@ package liftdrop.repository.jdbi
 import liftdrop.repository.UserRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
+import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
+import java.sql.ResultSet
 
 class JdbiUserRepository(
     private val handle: Handle,
@@ -111,4 +114,73 @@ class JdbiUserRepository(
             ).bind("id", id)
             .mapTo<User>()
             .singleOrNull()
+
+    override fun findClientByToken(token: String): Client? =
+        handle
+            .createQuery(
+                """
+            SELECT 
+                u.user_id, u.email, u.password, u.name, u.role,
+                c.address
+            FROM liftdrop.sessions s
+            JOIN liftdrop.user u ON s.user_id = u.user_id
+            JOIN liftdrop.client c ON u.user_id = c.client_id
+            WHERE s.session_token = :token
+            """.trimIndent()
+            )
+            .bind("token", token)
+            .map { rs, _ ->
+                val user = mapToUser(rs)
+                val address = rs.getInt("address").takeIf { !rs.wasNull() }
+
+                Client(user = user, address = address)
+            }
+            .singleOrNull()
+
+
+    override fun findCourierByToken(token: String): Courier? =
+        handle
+            .createQuery(
+                """
+            SELECT 
+                u.user_id, u.email, u.password, u.name, u.role,
+                c.current_location, c.is_available
+            FROM liftdrop.sessions s
+            JOIN liftdrop.user u ON s.user_id = u.user_id
+            JOIN liftdrop.courier c ON u.user_id = c.courier_id
+            WHERE s.session_token = :token
+            """.trimIndent()
+            )
+            .bind("token", token)
+            .map { rs, _ ->
+                val user = User(
+                    id = rs.getInt("user_id"),
+                    email = rs.getString("email"),
+                    password = rs.getString("password"),
+                    name = rs.getString("name"),
+                    role = UserRole.valueOf(rs.getString("role")),
+                )
+
+                val currentLocation = rs.getInt("current_location").takeIf { !rs.wasNull() }
+                val isAvailable = rs.getBoolean("is_available")
+
+                Courier(
+                    user = user,
+                    currentLocation = currentLocation,
+                    isAvailable = isAvailable
+                )
+            }
+            .singleOrNull()
+
+
+}
+
+private fun mapToUser(rs: ResultSet): User {
+    return User(
+        id = rs.getInt("user_id"),
+        email = rs.getString("email"),
+        password = rs.getString("password"),
+        name = rs.getString("name"),
+        role = UserRole.valueOf(rs.getString("role")),
+    )
 }

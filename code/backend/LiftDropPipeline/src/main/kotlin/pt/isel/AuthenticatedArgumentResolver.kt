@@ -10,7 +10,6 @@ import org.springframework.web.method.support.ModelAndViewContainer
 import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.AuthenticatedCourier
 
-
 @Component
 class AuthenticatedCourierArgumentResolver : HandlerMethodArgumentResolver {
     override fun supportsParameter(parameter: MethodParameter) = parameter.parameterType == AuthenticatedCourier::class.java
@@ -20,9 +19,10 @@ class AuthenticatedCourierArgumentResolver : HandlerMethodArgumentResolver {
         mavContainer: ModelAndViewContainer?,
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?,
-    ): Any? {
-        val request = webRequest.getNativeRequest(HttpServletRequest::class.java)
-            ?: throw IllegalStateException("Does not have a HttpServletRequest")
+    ): Any {
+        val request =
+            webRequest.getNativeRequest(HttpServletRequest::class.java)
+                ?: throw IllegalStateException("Does not have a HttpServletRequest")
 
         return getCourierFrom(request) ?: throw IllegalStateException("No AuthenticatedCourier in request")
     }
@@ -51,9 +51,10 @@ class AuthenticatedClientArgumentResolver : HandlerMethodArgumentResolver {
         mavContainer: ModelAndViewContainer?,
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?,
-    ): Any? {
-        val request = webRequest.getNativeRequest(HttpServletRequest::class.java)
-            ?: throw IllegalStateException("Does not have a HttpServletRequest")
+    ): Any {
+        val request =
+            webRequest.getNativeRequest(HttpServletRequest::class.java)
+                ?: throw IllegalStateException("Does not have a HttpServletRequest")
 
         return getClientFrom(request) ?: throw IllegalStateException("No AuthenticatedClient in request")
     }

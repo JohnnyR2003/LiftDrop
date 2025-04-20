@@ -6,7 +6,7 @@ package pt.isel.liftdrop
  *  @property token The authentication token.
  * */
 
-class AuthenticatedUser(
+data class AuthenticatedUser(
     val user: User,
     val token: String,
 )

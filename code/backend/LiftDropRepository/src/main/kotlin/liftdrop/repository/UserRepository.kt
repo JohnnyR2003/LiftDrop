@@ -1,5 +1,7 @@
 package liftdrop.repository
 
+import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
 
@@ -18,4 +20,8 @@ interface UserRepository {
     fun findUserByEmail(email: String): User?
 
     fun findUserById(id: Int): User?
+
+    fun findClientByToken(token: String): Client?
+
+    fun findCourierByToken(token: String): Courier?
 }

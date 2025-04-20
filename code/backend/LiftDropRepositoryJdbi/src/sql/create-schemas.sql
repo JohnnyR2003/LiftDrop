@@ -94,13 +94,13 @@ CREATE TABLE liftdrop.item (
     price                           NUMERIC,
     ETA                             INTERVAL,
     FOREIGN KEY (establishment_location) REFERENCES liftdrop.pickup_spot(location_id) ON DELETE CASCADE
-)
+);
 
 CREATE TABLE liftdrop.sessions (
     session_id                      SERIAL PRIMARY KEY,
     user_id                         INT,
     session_token                   TEXT NOT NULL,
     created_at                      TIMESTAMP DEFAULT NOW(),
---     expires_at                      TIMESTAMP DEFAULT NOW() + INTERVAL '1 hour',
+--     expires_at TIMESTAMP DEFAULT NOW() + INTERVAL '1 hour',
     FOREIGN KEY (user_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE
 );

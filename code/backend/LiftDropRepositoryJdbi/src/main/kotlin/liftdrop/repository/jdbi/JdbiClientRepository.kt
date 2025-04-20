@@ -4,6 +4,8 @@ import liftdrop.repository.ClientRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.User
+import pt.isel.liftdrop.UserRole
 import pt.isel.pipeline.pt.isel.liftdrop.Address
 
 class JdbiClientRepository(
@@ -81,12 +83,27 @@ class JdbiClientRepository(
         handle
             .createQuery(
                 """
-                SELECT u.user_id, u.email, u.password, u.name, c.client_id, c.address
-                FROM liftdrop.user u
-                JOIN liftdrop.client c ON u.user_id = c.client_id
-                WHERE u.user_id = :user_id
-                """,
-            ).bind("user_id", userId)
-            .mapTo<Client>()
+            SELECT 
+                u.user_id, u.email, u.password, u.name, u.role,
+                c.address
+            FROM liftdrop.user u
+            JOIN liftdrop.client c ON u.user_id = c.client_id
+            WHERE u.user_id = :userId
+            """.trimIndent()
+            )
+            .bind("userId", userId)
+            .map { rs, _ ->
+                val user = User(
+                    id = rs.getInt("user_id"),
+                    email = rs.getString("email"),
+                    password = rs.getString("password"),
+                    name = rs.getString("name"),
+                    role = UserRole.valueOf(rs.getString("role")),
+                )
+                val address = rs.getInt("address").takeIf { !rs.wasNull() }
+
+                Client(user = user, address = address)
+            }
             .singleOrNull()
+
 }

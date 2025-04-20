@@ -1,5 +1,6 @@
 package pt.isel.services
 
+import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
 import org.springframework.stereotype.Service
 import pt.isel.liftdrop.Client
@@ -7,7 +8,7 @@ import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
 import pt.isel.pipeline.pt.isel.liftdrop.Address
 
-@Service
+@Named
 class ClientService(
     private val transactionManager: TransactionManager,
 ) {
