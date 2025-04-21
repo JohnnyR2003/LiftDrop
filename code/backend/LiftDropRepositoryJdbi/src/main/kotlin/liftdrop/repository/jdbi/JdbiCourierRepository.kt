@@ -3,9 +3,7 @@ package liftdrop.repository.jdbi
 import liftdrop.repository.CourierRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
-import pt.isel.liftdrop.Courier
-import pt.isel.liftdrop.CourierWithLocation
-import pt.isel.liftdrop.Location
+import pt.isel.liftdrop.*
 
 class JdbiCourierRepository(
     private val handle: Handle,
@@ -24,16 +22,20 @@ class JdbiCourierRepository(
         currentLocation: Location,
         isAvailable: Boolean,
     ): Int {
-        TODO() /* //Needs further integration with google maps API to get address based on coordinates
+        // Needs further integration with google maps API to get address based on coordinates
         val addressId =
             handle
                 .createUpdate(
                     """
                 INSERT INTO liftdrop.address (country, city, street, house_number, floor, zip_code)
-                VALUES (:street, :city, :state, :country, :zipCode)
+                VALUES (:country, :city, :street, :house_number, :floor, :zip_code)
                 """,
-                ).bind("country", currentLocation.address)
-                .bind("city", currentLocation.address)
+                ).bind("country", currentLocation.address?.country ?: "")
+                .bind("city", currentLocation.address?.city ?: "")
+                .bind("street", currentLocation.address?.street ?: "")
+                .bind("house_number", currentLocation.address?.streetNumber ?: "")
+                .bind("floor", currentLocation.address?.floor ?: "")
+                .bind("zip_code", currentLocation.address?.zipCode ?: "")
                 .executeAndReturnGeneratedKeys()
                 .mapTo<Int>()
                 .one()
@@ -48,12 +50,12 @@ class JdbiCourierRepository(
                 """,
                 ).bind("latitude", currentLocation.latitude)
                 .bind("longitude", currentLocation.longitude)
-                .bind("address", currentLocation.address)
+                .bind("address", addressId)
                 .executeAndReturnGeneratedKeys()
                 .mapTo<Int>()
                 .one()
 
-        return handle
+        handle
             .createUpdate(
                 """
             INSERT INTO liftdrop.courier (courier_id, current_location, is_available)
@@ -65,7 +67,8 @@ class JdbiCourierRepository(
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
-         */
+
+        return userId
     }
 
     /**
@@ -233,12 +236,24 @@ class JdbiCourierRepository(
         handle
             .createQuery(
                 """
-                SELECT * FROM liftdrop.courier
-                WHERE courier_id = :courier_id
+                SELECT * FROM liftdrop.courier c join liftdrop."user" u on u.user_id = c.courier_id
+                WHERE c.courier_id = :courier_id
                 """,
             ).bind("courier_id", userId)
-            .mapTo<Courier>()
-            .singleOrNull()
+            .map { rs, _ ->
+                Courier(
+                    user =
+                        User(
+                            id = rs.getInt("user_id"),
+                            email = rs.getString("email"),
+                            password = rs.getString("password"),
+                            name = rs.getString("name"),
+                            role = UserRole.valueOf(rs.getString("role")),
+                        ),
+                    currentLocation = rs.getInt("current_location"),
+                    isAvailable = rs.getBoolean("is_available"),
+                )
+            }.singleOrNull()
 
     /**
      * Updates the location of a courier.

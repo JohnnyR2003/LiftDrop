@@ -4,6 +4,7 @@ import liftdrop.repository.jdbi.JdbiCourierRepository
 import liftdrop.repository.jdbi.JdbiUserRepository
 import pt.isel.liftdrop.UserRole
 import repositoryJdbi.JdbiTestUtils.newTestEmail
+import repositoryJdbi.JdbiTestUtils.newTestLocation
 import repositoryJdbi.JdbiTestUtils.newTestPassword
 import repositoryJdbi.JdbiTestUtils.newTestUserName
 import repositoryJdbi.JdbiTestUtils.testWithHandleAndRollback
@@ -12,56 +13,55 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class JdbiCourierRepositoryTests {
-    /*
-     @Test
-     fun `should create courier account and successfully authenticate`() {
-         testWithHandleAndRollback { handle ->
-             // Given: repositories for client and user operations
-             val courierRepository = JdbiCourierRepository(handle)
-             val userRepository = JdbiUserRepository(handle)
+    @Test
+    fun `should create courier account and successfully authenticate`() {
+        testWithHandleAndRollback { handle ->
+            // Given: repositories for client and user operations
+            val courierRepository = JdbiCourierRepository(handle)
+            val userRepository = JdbiUserRepository(handle)
 
-             // Given: user information for creating a new user
-             val userEmail = newTestEmail()
-             val userPassword = newTestPassword()
-             val userName = newTestUserName()
-             val role: UserRole = UserRole.COURIER
+            // Given: user information for creating a new user
+            val userEmail = newTestEmail()
+            val userPassword = newTestPassword()
+            val userName = newTestUserName()
+            val role: UserRole = UserRole.COURIER
 
-             // When: creating a new user
-             val userCreation = userRepository.createUser(userEmail, userPassword, userName, role)
+            // When: creating a new user
+            val userCreation = userRepository.createUser(userEmail, userPassword, userName, role)
 
-             if (userCreation == 0) {
-                 throw Exception("User should be created")
-             } else {
-                 // Then: the user should be retrievable from the database
-                 val user = userRepository.findUserByEmail(userEmail) ?: throw Exception("User should be created")
+            if (userCreation == 0) {
+                throw Exception("User should be created")
+            } else {
+                // Then: the user should be retrievable from the database
+                val user = userRepository.findUserByEmail(userEmail) ?: throw Exception("User should be created")
 
-                 // Given: the client id and an address for the client
-                 val courierId = user.id
-                 val currentLocation = newTestLocation()
+                // Given: the client id and an address for the client
+                val courierId = user.id
+                val currentLocation = newTestLocation()
 
-                 // When: creating a new client associated with the user
-                 val courierCreation = courierRepository.createCourier(courierId, currentLocation, true)
+                // When: creating a new client associated with the user
+                val courierCreation = courierRepository.createCourier(courierId, currentLocation, true)
 
-                 if (courierCreation == 0) {
-                     throw Exception("Client should be created")
-                 } else {
-                     // Then: the created client should be retrievable from the database
-                     val createdClient = courierRepository.getCourierByUserId(courierId)
-                     assert(createdClient != null) { "Client should be created" }
+                if (courierCreation == 0) {
+                    throw Exception("Client should be created")
+                } else {
+                    // Then: the created client should be retrievable from the database
+                    val createdClient = courierRepository.getCourierByUserId(courierId)
+                    assert(createdClient != null) { "Client should be created" }
 
-                     // Given: the client's email and password
-                     val courierEmail = userEmail
-                     val courierPassword = userPassword
+                    // Given: the client's email and password
+                    val courierEmail = userEmail
+                    val courierPassword = userPassword
 
-                     // When: logging in with the user's email and password
-                     val loggedInClientId = courierRepository.loginCourier(courierEmail, courierPassword)
-                     // Then: the logged-in client's ID should match the expected client ID
-                     assert(loggedInClientId == courierId) { "Logged in client ID should match" }
-                 }
-             }
-         }
-     }
-     */
+                    // When: logging in with the user's email and password
+                    val loggedInClientId = courierRepository.loginCourier(courierEmail, courierPassword)
+                    // Then: the logged-in client's ID should match the expected client ID
+                    assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+                }
+            }
+        }
+    }
+
     @Test
     fun `should successfully authenticate courier account`() {
         testWithHandleAndRollback { handle ->
