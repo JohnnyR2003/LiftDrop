@@ -299,23 +299,39 @@ class JdbiCourierRepository(
         return updatedCourier > 0
     }
 
-    override fun getAvailableCouriersWithLocation(): List<CourierWithLocation> {
-        return handle.createQuery(
-            """
-        SELECT c.courier_id, l.latitude, l.longitude
-        FROM liftdrop.courier c
-        JOIN liftdrop.location l ON c.current_location = l.location_id
-        WHERE c.is_available = TRUE
-        """
-        )
+    override fun getClosestCouriersAvailable(
+        pickupLat: Double,
+        pickupLng: Double,
+    ): List<CourierWithLocation> =
+        handle
+            .createQuery(
+                """
+            SELECT
+                c.courier_id,
+                l.latitude,
+                l.longitude,
+                ST_Distance(
+                    ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
+                ) AS distance_meters
+            FROM liftdrop.courier c
+            JOIN liftdrop.location l ON c.current_location = l.location_id
+            WHERE c.is_available = TRUE
+            AND ST_Distance(
+                    ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
+                ) < 5000  -- This filters couriers with a distance less than 5000 meters
+            ORDER BY distance_meters ASC
+            LIMIT 5;
+            """,
+            ).bind("pickupLat", pickupLat)
+            .bind("pickupLon", pickupLng)
             .map { rs, _ ->
                 CourierWithLocation(
                     courierId = rs.getInt("courier_id"),
                     latitude = rs.getDouble("latitude"),
                     longitude = rs.getDouble("longitude"),
+                    distanceMeters = rs.getDouble("distance_meters"),
                 )
-            }
-            .list()
-    }
-
+            }.list()
 }

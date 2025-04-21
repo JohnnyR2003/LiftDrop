@@ -8,6 +8,8 @@ import repositoryJdbi.JdbiTestUtils.newTestPassword
 import repositoryJdbi.JdbiTestUtils.newTestUserName
 import repositoryJdbi.JdbiTestUtils.testWithHandleAndRollback
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class JdbiCourierRepositoryTests {
     /*
@@ -257,6 +259,39 @@ class JdbiCourierRepositoryTests {
 
             // Then: the availability status should be toggled successfully
             assert(isToggled) { "Availability status should be toggled" }
+        }
+    }
+
+    @Test
+    fun `closest couriers should be successfully fetched`() {
+        testWithHandleAndRollback { handle ->
+            // Given: repository for the couriers
+            val courierRepository = JdbiCourierRepository(handle)
+
+            // Given: A pickup location
+            val pickupLat = 38.75598
+            val pickupLon = -9.11446
+
+            // When: Fetching the closest couriers available to a certain pickup spot
+            val result = courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon)
+            println("Closest couriers:")
+            result.forEach {
+                println("Courier ${it.courierId} - Distance: ${"%.2f".format(it.distanceMeters)} meters")
+            }
+
+            // ✅ Ensure no more than 5 results
+            assertTrue(result.size <= 5, "Expected at most 5 couriers, got ${result.size}")
+
+            // ✅ Ensure all distances are sorted
+            val sorted = result.sortedBy { it.distanceMeters }
+            assertEquals(sorted, result, "Couriers should be sorted by ascending distance")
+
+            assertTrue(result.first().courierId == 8)
+            assertTrue(result[1].courierId == 9)
+            assertTrue(result[2].courierId == 10)
+
+            // ✅ Optional: Ensure all couriers are within a reasonable range (e.g. Manhattan ~ 3km)
+            assertTrue(result.all { it.distanceMeters < 5000.0 }, "All couriers should be within 5km")
         }
     }
 }
