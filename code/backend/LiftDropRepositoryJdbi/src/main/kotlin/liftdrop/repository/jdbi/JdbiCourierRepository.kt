@@ -3,7 +3,13 @@ package liftdrop.repository.jdbi
 import liftdrop.repository.CourierRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
-import pt.isel.liftdrop.*
+import pt.isel.liftdrop.Courier
+import pt.isel.liftdrop.CourierWithLocation
+import pt.isel.liftdrop.Location
+import pt.isel.liftdrop.Status
+import pt.isel.liftdrop.User
+import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.RequestDTO
 
 class JdbiCourierRepository(
     private val handle: Handle,
@@ -104,6 +110,21 @@ class JdbiCourierRepository(
         requestId: Int,
         courierId: Int,
     ): Boolean {
+        val request =
+            handle
+                .createQuery(
+                    """
+                SELECT * FROM liftdrop.request
+                WHERE request_id = :requestId
+                """,
+                ).bind("requestId", requestId)
+                .mapTo<RequestDTO>()
+                .singleOrNull()
+
+        if (request == null || request.requestStatus != Status.PENDING) {
+            return false
+        }
+
         handle
             .createUpdate(
                 """

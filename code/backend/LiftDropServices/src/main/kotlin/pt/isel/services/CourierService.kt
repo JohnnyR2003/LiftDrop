@@ -72,7 +72,7 @@ class CourierService(
             val user =
                 userRepository.findUserByEmail(email) ?: return@run failure(CourierError.InvalidEmailOrPassword)
 
-            if (user.role != UserRole.COURIER || matchesPassword(password, user.password)) {
+            if (user.role != UserRole.COURIER || !matchesPassword(password, user.password)) {
                 return@run failure(CourierError.InvalidEmailOrPassword)
             }
 

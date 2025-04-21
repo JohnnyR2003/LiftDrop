@@ -1,5 +1,6 @@
 package pt.isel.pipeline.pt.isel.liftdrop
 
+import kotlinx.datetime.Instant
 import pt.isel.liftdrop.RequestStatus
 
 data class Request(
@@ -7,6 +8,6 @@ data class Request(
     val clientId: Int,
     val courierId: Int?,
     val requestStatus: RequestStatus,
-    val createdAt: Int,
+    val createdAt: Instant,
     val details: RequestDetails,
 )

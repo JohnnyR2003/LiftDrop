@@ -9,7 +9,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=liftdrop
     ports:
-      - 5432:5432  # Changed to avoid conflict
+      - 5432:5432
 
   liftdrop-for-production:
     container_name: liftdrop-for-production

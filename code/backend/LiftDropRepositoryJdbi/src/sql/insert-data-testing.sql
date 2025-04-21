@@ -54,7 +54,8 @@ VALUES (4, 1, true),
 INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, request_status, ETA)
 VALUES (1, 1, NULL, NOW(), 'PENDING', INTERVAL '30 minutes'),
        (2, 2, NULL, NOW(), 'PENDING', INTERVAL '45 minutes'),
-       (3, 3, NULL, NOW(), 'PENDING', INTERVAL '1 hour');
+       (3, 3, NULL, NOW(), 'PENDING', INTERVAL '1 hour'),
+       (4, 1, 4, NOW(), 'PENDING', INTERVAL '30 minutes');
 
 -- Insert request details (depends on Request and Location)
 INSERT INTO liftdrop."request_details" (request_id, description, pickup_location, dropoff_location)
