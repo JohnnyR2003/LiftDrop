@@ -9,13 +9,13 @@ CREATE TABLE liftdrop.user (
 );
 
 CREATE TABLE liftdrop.address (
-                                  address_id SERIAL PRIMARY KEY,
-                                  country TEXT NOT NULL,
-                                  city TEXT NOT NULL,
-                                  street TEXT NOT NULL,
-                                  house_number TEXT,
-                                  floor TEXT,
-                                  zip_code TEXT NOT NULL
+    address_id SERIAL PRIMARY KEY,
+    country TEXT NOT NULL,
+    city TEXT NOT NULL,
+    street TEXT NOT NULL,
+    house_number TEXT,
+    floor TEXT,
+    zip_code TEXT NOT NULL
 );
 
 CREATE TABLE liftdrop.location (

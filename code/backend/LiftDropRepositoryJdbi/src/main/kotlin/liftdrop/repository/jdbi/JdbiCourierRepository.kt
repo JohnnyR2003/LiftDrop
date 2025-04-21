@@ -4,6 +4,7 @@ import liftdrop.repository.CourierRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.liftdrop.Courier
+import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.liftdrop.Location
 
 class JdbiCourierRepository(
@@ -297,4 +298,24 @@ class JdbiCourierRepository(
 
         return updatedCourier > 0
     }
+
+    override fun getAvailableCouriersWithLocation(): List<CourierWithLocation> {
+        return handle.createQuery(
+            """
+        SELECT c.courier_id, l.latitude, l.longitude
+        FROM liftdrop.courier c
+        JOIN liftdrop.location l ON c.current_location = l.location_id
+        WHERE c.is_available = TRUE
+        """
+        )
+            .map { rs, _ ->
+                CourierWithLocation(
+                    courierId = rs.getInt("courier_id"),
+                    latitude = rs.getDouble("latitude"),
+                    longitude = rs.getDouble("longitude"),
+                )
+            }
+            .list()
+    }
+
 }

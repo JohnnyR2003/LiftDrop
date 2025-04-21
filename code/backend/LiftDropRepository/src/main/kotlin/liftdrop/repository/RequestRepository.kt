@@ -6,6 +6,13 @@ interface RequestRepository {
         eta: Long?,
     ): Int
 
+    fun createRequestDetails(
+        requestId: Int,
+        description: String,
+        pickupLocationId: Int,
+        dropoffLocationId: Int,
+    ): Int
+
     fun updateRequest(
         requestId: Int,
         courierId: Int?,

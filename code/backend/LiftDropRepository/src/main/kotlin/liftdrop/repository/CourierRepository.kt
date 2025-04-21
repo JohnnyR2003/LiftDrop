@@ -1,6 +1,8 @@
 package liftdrop.repository
 
+import org.jdbi.v3.core.Handle
 import pt.isel.liftdrop.Courier
+import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.liftdrop.Location
 
 interface CourierRepository {
@@ -40,4 +42,6 @@ interface CourierRepository {
     ): Boolean
 
     fun toggleAvailability(courierId: Int): Boolean
+
+    fun getAvailableCouriersWithLocation(): List<CourierWithLocation>
 }

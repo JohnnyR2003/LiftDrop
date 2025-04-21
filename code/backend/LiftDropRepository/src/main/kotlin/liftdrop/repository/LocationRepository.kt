@@ -10,4 +10,6 @@ interface LocationRepository {
     ): Int
 
     fun deleteDeliveryPath(deliveryId: Int): Boolean // for cancelled deliveries or deliveries that were marked as successfully delivered
+
+    
 }

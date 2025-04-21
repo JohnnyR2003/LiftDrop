@@ -27,6 +27,28 @@ class JdbiRequestRepository(
             .one()
     }
 
+    override fun createRequestDetails(
+        requestId: Int,
+        description: String,
+        pickupLocationId: Int,
+        dropoffLocationId: Int,
+    ): Int {
+        return handle
+            .createUpdate(
+                """
+            INSERT INTO liftdrop.request_details (request_id, description, pickup_location, dropoff_location)
+            VALUES (:request_id, :description, :pickup_location, :dropoff_location)
+            """
+            )
+            .bind("request_id", requestId)
+            .bind("description", description)
+            .bind("pickup_location", pickupLocationId)
+            .bind("dropoff_location", dropoffLocationId)
+            .executeAndReturnGeneratedKeys()
+            .mapTo<Int>()
+            .one()
+    }
+
     override fun updateRequest(
         requestId: Int,
         courierId: Int?,

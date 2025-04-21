@@ -2,6 +2,7 @@ package pt.isel.services
 
 import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
+import org.springframework.context.annotation.Description
 import org.springframework.stereotype.Service
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.User
@@ -60,14 +61,23 @@ class ClientService(
     }
 
     fun makeRequest(
-        clientId: Int,
-        address: Address,
+        client: Client,
+        description: String,
+        pickupLocationId: Int,
+        dropOffLocationId: Int,
     ) {
         transactionManager.run {
             val requestRepository = it.requestRepository
-            requestRepository.createRequest(
-                clientId = clientId,
+            val requestId = requestRepository.createRequest(
+                clientId = client.user.id,
                 eta = 0,
+            )
+
+            requestRepository.createRequestDetails(
+                requestId = requestId,
+                description = description,
+                pickupLocationId = pickupLocationId,
+                dropoffLocationId = dropOffLocationId,
             )
         }
     }
