@@ -151,24 +151,18 @@ class CourierService(
         return transactionManager.run {
             val courierRepository = it.courierRepository
 
-            // 1. Get all available couriers and their locations
+            // 1. Get all available couriers and their locations(already sorted by distance)
             val couriers = courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon)
             if (couriers.isEmpty()) {
                 return@run failure(CourierError.NoAvailableCouriers)
             }
 
-            // 2. Sort couriers by distance
-            val sortedCouriers =
-                couriers.sortedBy { courier ->
-                    calculateDistance(pickupLat, pickupLon, courier.latitude, courier.longitude)
-                }
-
-            // 3. Pick a courier at the offset index
-            if (offset >= sortedCouriers.size) {
+            // 2. Pick a courier at the offset index
+            if (offset >= couriers.size) {
                 return@run failure(CourierError.NoCourierAvailable)
             }
 
-            val selectedCourier = sortedCouriers[offset]
+            val selectedCourier = couriers[offset]
             return@run success(selectedCourier)
         }
     }
