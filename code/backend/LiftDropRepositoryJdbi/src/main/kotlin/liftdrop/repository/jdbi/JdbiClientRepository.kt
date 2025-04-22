@@ -3,10 +3,10 @@ package liftdrop.repository.jdbi
 import liftdrop.repository.ClientRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
+import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
-import pt.isel.pipeline.pt.isel.liftdrop.Address
 
 class JdbiClientRepository(
     private val handle: Handle,

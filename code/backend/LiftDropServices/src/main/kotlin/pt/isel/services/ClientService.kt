@@ -1,13 +1,21 @@
 package pt.isel.services
 
+import com.example.utils.Either
+import com.example.utils.failure
+import com.example.utils.success
 import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
-import org.springframework.context.annotation.Description
-import org.springframework.stereotype.Service
+import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
-import pt.isel.pipeline.pt.isel.liftdrop.Address
+
+sealed class ClientError {
+    data object UserNotFound : ClientError()
+    data object InvalidEmailOrPassword : ClientError()
+    data object UserAlreadyExists : ClientError()
+    data object RequestNotAccepted : ClientError()
+}
 
 @Named
 class ClientService(
@@ -16,7 +24,7 @@ class ClientService(
     fun registerClient(
         client: User,
         address: Address,
-    ): Int =
+    ): Either<ClientError, Int> =
         transactionManager.run {
             val userRepository = it.usersRepository
             val clientRepository = it.clientRepository
@@ -28,23 +36,16 @@ class ClientService(
                     name = client.name,
                     role = UserRole.CLIENT,
                 )
+            println("User creation result: $userCreation")
             if (userCreation == 0) {
-                throw IllegalStateException("User should be created")
+                failure(ClientError.UserAlreadyExists)
             }
 
-            val user = userRepository.findUserByEmail(client.email) ?: throw IllegalStateException("User should be created")
-            val clientId = user.id
-
-            clientRepository.createClient(
-                clientId = clientId,
+            val id = clientRepository.createClient(
+                clientId = userCreation,
                 address = address,
             )
-        }
-
-    fun getClientById(clientId: Int): Client? =
-        transactionManager.run {
-            val clientRepository = it.clientRepository
-            clientRepository.getClientByUserId(clientId)
+            success(id)
         }
 
     fun loginClient(
@@ -60,25 +61,45 @@ class ClientService(
         }
     }
 
+    fun getClientById(clientId: Int): Client? =
+        transactionManager.run {
+            val clientRepository = it.clientRepository
+            clientRepository.getClientByUserId(clientId)
+        }
+
     fun makeRequest(
         client: Client,
         description: String,
         pickupLocationId: Int,
         dropOffLocationId: Int,
-    ) {
-        transactionManager.run {
-            val requestRepository = it.requestRepository
-            val requestId = requestRepository.createRequest(
-                clientId = client.user.id,
-                eta = 0,
-            )
+    ): Either<ClientError, Int> {
+        return try {
+            transactionManager.run { trx ->
+                val requestRepository = trx.requestRepository
+                val locationRepository = trx.locationRepository
 
-            requestRepository.createRequestDetails(
-                requestId = requestId,
-                description = description,
-                pickupLocationId = pickupLocationId,
-                dropoffLocationId = dropOffLocationId,
-            )
+                // Step 1: Create a new request
+                val requestId = requestRepository.createRequest(
+                    clientId = client.user.id,
+                    eta = 0, // Set ETA to null for now, you can change this if needed
+                )
+
+                // Step 2: Create request details (pickup and drop-off)
+                requestRepository.createRequestDetails(
+                    requestId = requestId,
+                    description = description,
+                    pickupLocationId = pickupLocationId,
+                    dropoffLocationId = dropOffLocationId,
+                )
+
+                // Return the created request ID on success
+                success(requestId)
+            }
+        } catch (e: Exception) {
+            println("Error creating request: ${e.message}")
+            // Handle possible exceptions and return the appropriate ClientError
+            failure(ClientError.RequestNotAccepted)
         }
     }
+
 }

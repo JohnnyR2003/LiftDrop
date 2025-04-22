@@ -1,7 +1,7 @@
 package liftdrop.repository.jdbi.mappers
 
 import org.jdbi.v3.core.mapper.RowMapper
-import pt.isel.pipeline.pt.isel.liftdrop.Address
+import pt.isel.liftdrop.Address
 
 class AddressMapper : RowMapper<Address> {
     override fun map(

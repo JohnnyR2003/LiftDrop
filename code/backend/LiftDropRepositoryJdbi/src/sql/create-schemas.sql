@@ -28,7 +28,7 @@ CREATE TABLE liftdrop.location (
 );
 
 CREATE TABLE liftdrop.client(
-    client_id                         INT PRIMARY KEY,
+    client_id                       INT PRIMARY KEY,
     address                         INT,
     FOREIGN KEY (client_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE,
     FOREIGN KEY (address) REFERENCES liftdrop.address(address_id) ON DELETE SET NULL

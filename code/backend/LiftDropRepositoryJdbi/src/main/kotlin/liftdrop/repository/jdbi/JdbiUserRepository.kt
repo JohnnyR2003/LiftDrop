@@ -28,7 +28,9 @@ class JdbiUserRepository(
         role: UserRole,
     ): Int { // check first if there's already a user with that email and or name
         val existingUser = findUserByEmail(email)
+        println("Existing user: $existingUser")
         if (existingUser != null && existingUser.email == email) {
+            println("User with email $email already exists.")
             return 0
         }
         return handle

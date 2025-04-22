@@ -1,8 +1,13 @@
 package liftdrop.repository.jdbi
 
+import kotlinx.datetime.Instant
 import liftdrop.repository.RequestRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
+import pt.isel.liftdrop.RequestStatus
+import pt.isel.liftdrop.Status
+import pt.isel.liftdrop.Request
+import pt.isel.pipeline.pt.isel.liftdrop.RequestDetails
 
 class JdbiRequestRepository(
     private val handle: Handle,
@@ -90,4 +95,61 @@ class JdbiRequestRepository(
                 """,
             ).bind("requestId", requestId)
             .execute() > 0
+
+    override fun getAllRequestsForClient(clientId: Int): List<Request> {
+        return handle.createQuery(
+            """
+        SELECT 
+            r.request_id,
+            r.client_id,
+            r.courier_id,
+            r.created_at,
+            r.request_status,
+            EXTRACT(EPOCH FROM r.ETA) AS eta_seconds,
+            d.description,
+            d.pickup_location,
+            d.dropoff_location,
+            est.establishment AS restaurant_name
+        FROM liftdrop.request r
+        JOIN liftdrop.request_details d ON r.request_id = d.request_id
+        LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
+        WHERE r.client_id = :clientId
+        ORDER BY r.created_at DESC
+        """
+        )
+            .bind("clientId", clientId)
+            .mapTo<Request>()
+            .list()
+    }
+
+
+    override fun getRequestById(id: Int): Request? {
+        return handle.createQuery(
+            """
+        SELECT 
+            r.request_id,
+            r.client_id,
+            r.courier_id,
+            r.created_at,
+            r.request_status,
+            EXTRACT(EPOCH FROM r.ETA) AS eta_seconds,
+            d.description,
+            d.pickup_location,
+            d.dropoff_location,
+            est.establishment AS restaurant_name
+        FROM liftdrop.request r
+        JOIN liftdrop.request_details d ON r.request_id = d.request_id
+        LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
+        WHERE r.request_id = :id
+        LIMIT 1
+        """
+        )
+            .bind("id", id)
+            .mapTo<Request>()
+            .findOne()
+            .orElse(null)
+    }
+
+
+
 }

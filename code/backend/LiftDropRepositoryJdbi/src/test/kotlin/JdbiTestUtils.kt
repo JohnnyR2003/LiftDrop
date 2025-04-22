@@ -6,7 +6,7 @@ import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
 import org.postgresql.ds.PGSimpleDataSource
 import pt.isel.liftdrop.Location
-import pt.isel.pipeline.pt.isel.liftdrop.Address
+import pt.isel.liftdrop.Address
 import kotlin.math.abs
 import kotlin.random.Random
 

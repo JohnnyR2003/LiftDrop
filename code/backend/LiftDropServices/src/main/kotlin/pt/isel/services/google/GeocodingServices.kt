@@ -4,7 +4,7 @@ import com.google.gson.JsonParser
 import jakarta.inject.Named
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import pt.isel.pipeline.pt.isel.liftdrop.Address
+import pt.isel.liftdrop.Address
 
 @Named("GeocodingServices")
 class GeocodingServices {

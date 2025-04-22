@@ -1,6 +1,6 @@
 package pt.isel.liftdrop
 
-import pt.isel.pipeline.pt.isel.liftdrop.Address
+
 
 data class Location(
     val id: Int,
