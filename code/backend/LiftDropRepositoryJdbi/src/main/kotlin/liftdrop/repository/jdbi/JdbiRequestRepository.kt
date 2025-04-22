@@ -4,6 +4,7 @@ import liftdrop.repository.RequestRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.liftdrop.Request
+import pt.isel.liftdrop.RequestDTO
 
 class JdbiRequestRepository(
     private val handle: Handle,
@@ -92,7 +93,7 @@ class JdbiRequestRepository(
             ).bind("requestId", requestId)
             .execute() > 0
 
-    override fun getAllRequestsForClient(clientId: Int): List<Request> {
+    override fun getAllRequestsForClient(clientId: Int): List<RequestDTO> {
         return handle.createQuery(
             """
         SELECT 
@@ -114,12 +115,12 @@ class JdbiRequestRepository(
         """
         )
             .bind("clientId", clientId)
-            .mapTo<Request>()
+            .mapTo<RequestDTO>()
             .list()
     }
 
 
-    override fun getRequestById(id: Int): Request? {
+    override fun getRequestById(id: Int): RequestDTO? {
         return handle.createQuery(
             """
         SELECT 
@@ -141,11 +142,8 @@ class JdbiRequestRepository(
         """
         )
             .bind("id", id)
-            .mapTo<Request>()
+            .mapTo<RequestDTO>()
             .findOne()
             .orElse(null)
     }
-
-
-
 }

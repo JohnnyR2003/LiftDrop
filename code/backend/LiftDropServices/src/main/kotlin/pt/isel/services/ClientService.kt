@@ -1,12 +1,13 @@
 package pt.isel.services
 
 import com.example.utils.Either
+import com.example.utils.failure
 import com.example.utils.success
 import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.UserRole
-import pt.isel.pipeline.pt.isel.liftdrop.Address
+import pt.isel.liftdrop.Address
 
 sealed class ClientError {
     data object ClientNotFound : ClientError()
@@ -76,7 +77,7 @@ class ClientService(
         description: String,
         pickupLocationId: Int,
         dropOffLocationId: Int,
-    ) {
+    ): Either<ClientError, Int> =
         transactionManager.run {
             val requestRepository = it.requestRepository
             val requestId =
@@ -85,12 +86,14 @@ class ClientService(
                     eta = 0,
                 )
 
+
             requestRepository.createRequestDetails(
                 requestId = requestId,
                 description = description,
                 pickupLocationId = pickupLocationId,
                 dropoffLocationId = dropOffLocationId,
             )
+            return@run success(requestId)
+
         }
-    }
 }

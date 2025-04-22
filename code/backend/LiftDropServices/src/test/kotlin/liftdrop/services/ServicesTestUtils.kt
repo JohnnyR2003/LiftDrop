@@ -5,7 +5,7 @@ import liftdrop.repository.jdbi.configureWithAppRequirements
 import org.jdbi.v3.core.Jdbi
 import org.postgresql.ds.PGSimpleDataSource
 import pt.isel.liftdrop.Location
-import pt.isel.pipeline.pt.isel.liftdrop.Address
+import pt.isel.liftdrop.Address
 import pt.isel.services.ClientService
 import pt.isel.services.CourierService
 import pt.isel.services.UserService

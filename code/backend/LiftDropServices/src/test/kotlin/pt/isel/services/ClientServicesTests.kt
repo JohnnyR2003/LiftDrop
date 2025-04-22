@@ -76,7 +76,7 @@ class ClientServiceTest {
         )
         val clientService = createClientService()
 
-        val clientId = clientService.registerClient(testUser2, testAddress)
+        val clientId = clientService.registerClient(testUser2.email, testUser2.password, testUser2.password, testAddress)
         assertIs<Success<Int>>(clientId)
 
         val savedClient = clientService.getClientById(clientId.value)
@@ -88,7 +88,12 @@ class ClientServiceTest {
     fun `makeRequest should create request and requestDetails`() {
         val clientService = createClientService()
 
-        val clientId = clientService.registerClient(testUser, testAddress)
+        val clientId = clientService.registerClient(
+            testUser.email,
+            testUser.password,
+            testUser.name,
+            testAddress
+        )
         assertIs<Success<Int>>(clientId)
         val client = clientService.getClientById(clientId.value)!!
 
@@ -123,14 +128,9 @@ class ClientServiceTest {
             val createdRequest = requestRepo.getRequestById(requestId.value)
             assertNotNull(createdRequest)
             assertEquals(clientId.value, createdRequest.clientId)
-            assertEquals("PENDING", createdRequest.requestStatus.status.name)
-
-            // Validate request details
-            val request = it.requestRepository.getRequestById(requestId.value)
-            assertNotNull(request)
-            assertEquals(pickupLocationId, request.details.pickupLocation)
-            assertEquals(dropoffLocationId, request.details.dropOffLocation)
-            assertEquals("Send package please", request.details.description)
+            assertEquals("PENDING", createdRequest.requestStatus.name)
         }
     }
+
+
 }

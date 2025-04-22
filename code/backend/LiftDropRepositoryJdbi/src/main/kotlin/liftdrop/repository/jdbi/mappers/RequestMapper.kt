@@ -2,7 +2,7 @@ package liftdrop.repository.jdbi.mappers
 
 import org.jdbi.v3.core.mapper.RowMapper
 import pt.isel.liftdrop.Status
-import pt.isel.pipeline.pt.isel.liftdrop.RequestDTO
+import pt.isel.liftdrop.RequestDTO
 
 class RequestMapper : RowMapper<RequestDTO> {
     override fun map(

@@ -9,7 +9,7 @@ import pt.isel.liftdrop.Location
 import pt.isel.liftdrop.Status
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
-import pt.isel.pipeline.pt.isel.liftdrop.RequestDTO
+import pt.isel.liftdrop.RequestDTO
 
 class JdbiCourierRepository(
     private val handle: Handle,

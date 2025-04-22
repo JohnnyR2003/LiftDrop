@@ -1,7 +1,7 @@
-package pt.isel.pipeline.pt.isel.liftdrop
+package pt.isel.liftdrop
 
 import kotlinx.datetime.Instant
-import pt.isel.liftdrop.RequestStatus
+import pt.isel.pipeline.pt.isel.liftdrop.RequestDetails
 
 data class Request(
     val id: Int,

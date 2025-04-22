@@ -1,6 +1,4 @@
-package pt.isel.pipeline.pt.isel.liftdrop
-
-import pt.isel.liftdrop.Status
+package pt.isel.liftdrop
 
 data class RequestDTO(
     val id: Int,

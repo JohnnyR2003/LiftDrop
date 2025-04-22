@@ -1,6 +1,7 @@
 package liftdrop.repository
 
 import pt.isel.liftdrop.Request
+import pt.isel.liftdrop.RequestDTO
 
 interface RequestRepository {
     fun createRequest(
@@ -24,7 +25,7 @@ interface RequestRepository {
 
     fun deleteRequest(requestId: Int): Boolean
 
-    fun getAllRequestsForClient(clientId: Int): List<Request>
+    fun getAllRequestsForClient(clientId: Int): List<RequestDTO>
 
-    fun getRequestById(id: Int): Request?
+    fun getRequestById(id: Int): RequestDTO?
 }
