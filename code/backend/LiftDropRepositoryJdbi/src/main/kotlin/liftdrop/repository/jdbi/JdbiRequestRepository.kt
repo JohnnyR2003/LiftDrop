@@ -1,13 +1,9 @@
 package liftdrop.repository.jdbi
 
-import kotlinx.datetime.Instant
 import liftdrop.repository.RequestRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
-import pt.isel.liftdrop.RequestStatus
-import pt.isel.liftdrop.Status
 import pt.isel.liftdrop.Request
-import pt.isel.pipeline.pt.isel.liftdrop.RequestDetails
 
 class JdbiRequestRepository(
     private val handle: Handle,
