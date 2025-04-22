@@ -6,7 +6,10 @@ VALUES (1, 'john.doe@example.com', 'hashed_password_1', 'John Doe', 'CLIENT'),
        (4, 'john.doe2@example.com', 'hashed_password_4', 'John Doe2', 'COURIER'),
        (5, 'jane.smith2@example.com', 'hashed_password_5', 'Jane Smith2', 'COURIER'),
        (6, 'michael.jones2@example.com', 'hashed_password_6', 'Michael Jones2', 'COURIER'),
-       (7, 'courier7@example.com', 'hashed_password_7', 'Courier Seven', 'COURIER');
+       (7, 'courier7@example.com', 'hashed_password_7', 'Courier Seven', 'COURIER'),
+       (8, 'courier8@example.com', 'hashed_password_8', 'Courier Eight', 'COURIER'),
+       (9, 'courier9@example.com', 'hashed_password_9', 'Courier Nine', 'COURIER'),
+       (10, 'courier10@example.com', 'hashed_password_10', 'Courier Ten', 'COURIER');
 
 
 
@@ -23,7 +26,12 @@ VALUES (1, 40.7128, -74.0060, 1, 'New York City'),
        (3, 37.7749, -122.4194, 3, 'San Francisco'),
        (4, 40.7306, -73.9352, 1, 'New York City'),
        (5, 34.0522, -118.2437, 2, 'Los Angeles'),
-       (6, 37.7749, -122.4194, 3, 'San Francisco');
+       (6, 37.7749, -122.4194, 3, 'San Francisco'),
+       (7, 38.73908, -9.12461, 1, 'Olaias'),
+       (8, 38.74362, -9.13896, 1, 'Avenida de Roma'),
+       (9, 38.74140, -9.14667, 1, 'Campo Pequeno');
+
+
 
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
@@ -36,13 +44,18 @@ INSERT INTO liftdrop."courier" (courier_id, current_location, is_available)
 VALUES (4, 1, true),
        (5, 2, false),
        (6, 3, false),
-       (7, 4, false);
+       (7, 4, false),
+       (8, 7, true),
+       (9, 8, true),
+       (10, 9, true);
+
 
 -- Insert requests (depends on Clients and Couriers)
 INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, request_status, ETA)
 VALUES (1, 1, NULL, NOW(), 'PENDING', INTERVAL '30 minutes'),
        (2, 2, NULL, NOW(), 'PENDING', INTERVAL '45 minutes'),
-       (3, 3, NULL, NOW(), 'PENDING', INTERVAL '1 hour');
+       (3, 3, NULL, NOW(), 'PENDING', INTERVAL '1 hour'),
+       (4, 1, 4, NOW(), 'PENDING', INTERVAL '30 minutes');
 
 -- Insert request details (depends on Request and Location)
 INSERT INTO liftdrop."request_details" (request_id, description, pickup_location, dropoff_location)

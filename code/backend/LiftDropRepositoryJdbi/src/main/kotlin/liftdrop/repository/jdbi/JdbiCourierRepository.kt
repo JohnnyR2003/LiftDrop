@@ -6,6 +6,10 @@ import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.liftdrop.Location
+import pt.isel.liftdrop.Status
+import pt.isel.liftdrop.User
+import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.RequestDTO
 
 class JdbiCourierRepository(
     private val handle: Handle,
@@ -24,16 +28,20 @@ class JdbiCourierRepository(
         currentLocation: Location,
         isAvailable: Boolean,
     ): Int {
-        TODO() /* //Needs further integration with google maps API to get address based on coordinates
+        // Needs further integration with google maps API to get address based on coordinates
         val addressId =
             handle
                 .createUpdate(
                     """
                 INSERT INTO liftdrop.address (country, city, street, house_number, floor, zip_code)
-                VALUES (:street, :city, :state, :country, :zipCode)
+                VALUES (:country, :city, :street, :house_number, :floor, :zip_code)
                 """,
-                ).bind("country", currentLocation.address)
-                .bind("city", currentLocation.address)
+                ).bind("country", currentLocation.address?.country ?: "")
+                .bind("city", currentLocation.address?.city ?: "")
+                .bind("street", currentLocation.address?.street ?: "")
+                .bind("house_number", currentLocation.address?.streetNumber ?: "")
+                .bind("floor", currentLocation.address?.floor ?: "")
+                .bind("zip_code", currentLocation.address?.zipCode ?: "")
                 .executeAndReturnGeneratedKeys()
                 .mapTo<Int>()
                 .one()
@@ -48,12 +56,12 @@ class JdbiCourierRepository(
                 """,
                 ).bind("latitude", currentLocation.latitude)
                 .bind("longitude", currentLocation.longitude)
-                .bind("address", currentLocation.address)
+                .bind("address", addressId)
                 .executeAndReturnGeneratedKeys()
                 .mapTo<Int>()
                 .one()
 
-        return handle
+        handle
             .createUpdate(
                 """
             INSERT INTO liftdrop.courier (courier_id, current_location, is_available)
@@ -65,7 +73,8 @@ class JdbiCourierRepository(
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
-         */
+
+        return userId
     }
 
     /**
@@ -101,6 +110,21 @@ class JdbiCourierRepository(
         requestId: Int,
         courierId: Int,
     ): Boolean {
+        val request =
+            handle
+                .createQuery(
+                    """
+                SELECT * FROM liftdrop.request
+                WHERE request_id = :requestId
+                """,
+                ).bind("requestId", requestId)
+                .mapTo<RequestDTO>()
+                .singleOrNull()
+
+        if (request == null || request.requestStatus != Status.PENDING) {
+            return false
+        }
+
         handle
             .createUpdate(
                 """
@@ -233,12 +257,24 @@ class JdbiCourierRepository(
         handle
             .createQuery(
                 """
-                SELECT * FROM liftdrop.courier
-                WHERE courier_id = :courier_id
+                SELECT * FROM liftdrop.courier c join liftdrop."user" u on u.user_id = c.courier_id
+                WHERE c.courier_id = :courier_id
                 """,
             ).bind("courier_id", userId)
-            .mapTo<Courier>()
-            .singleOrNull()
+            .map { rs, _ ->
+                Courier(
+                    user =
+                        User(
+                            id = rs.getInt("user_id"),
+                            email = rs.getString("email"),
+                            password = rs.getString("password"),
+                            name = rs.getString("name"),
+                            role = UserRole.valueOf(rs.getString("role")),
+                        ),
+                    currentLocation = rs.getInt("current_location"),
+                    isAvailable = rs.getBoolean("is_available"),
+                )
+            }.singleOrNull()
 
     /**
      * Updates the location of a courier.
@@ -299,23 +335,39 @@ class JdbiCourierRepository(
         return updatedCourier > 0
     }
 
-    override fun getAvailableCouriersWithLocation(): List<CourierWithLocation> {
-        return handle.createQuery(
-            """
-        SELECT c.courier_id, l.latitude, l.longitude
-        FROM liftdrop.courier c
-        JOIN liftdrop.location l ON c.current_location = l.location_id
-        WHERE c.is_available = TRUE
-        """
-        )
+    override fun getClosestCouriersAvailable(
+        pickupLat: Double,
+        pickupLng: Double,
+    ): List<CourierWithLocation> =
+        handle
+            .createQuery(
+                """
+            SELECT
+                c.courier_id,
+                l.latitude,
+                l.longitude,
+                ST_Distance(
+                    ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
+                ) AS distance_meters
+            FROM liftdrop.courier c
+            JOIN liftdrop.location l ON c.current_location = l.location_id
+            WHERE c.is_available = TRUE
+            AND ST_Distance(
+                    ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
+                ) < 5000  -- This filters couriers with a distance less than 5000 meters
+            ORDER BY distance_meters ASC
+            LIMIT 5;
+            """,
+            ).bind("pickupLat", pickupLat)
+            .bind("pickupLon", pickupLng)
             .map { rs, _ ->
                 CourierWithLocation(
                     courierId = rs.getInt("courier_id"),
                     latitude = rs.getDouble("latitude"),
                     longitude = rs.getDouble("longitude"),
+                    distanceMeters = rs.getDouble("distance_meters"),
                 )
-            }
-            .list()
-    }
-
+            }.list()
 }

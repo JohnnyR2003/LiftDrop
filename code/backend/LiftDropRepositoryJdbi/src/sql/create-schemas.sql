@@ -1,5 +1,9 @@
 drop schema if exists liftdrop cascade;
+CREATE EXTENSION IF NOT EXISTS cube;
+CREATE EXTENSION IF NOT EXISTS earthdistance;
 create schema liftdrop;
+SET search_path TO liftdrop;
+
 CREATE TABLE liftdrop.user (
     user_id                         SERIAL UNIQUE PRIMARY KEY,
     email                           TEXT UNIQUE NOT NULL,
