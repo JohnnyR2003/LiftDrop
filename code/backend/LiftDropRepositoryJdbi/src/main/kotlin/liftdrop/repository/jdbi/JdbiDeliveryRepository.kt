@@ -26,7 +26,7 @@ class JdbiDeliveryRepository(
                 """
                 UPDATE liftdrop.delivery
                 SET delivery_status = :status,
-                    ETA = CAST(:eta AS INTERVAL)
+                    ETA = CAST(:eta AS BIGINT)
                 WHERE delivery_id = :delivery_id
                 """.trimIndent(),
             ).bind("status", statusString)

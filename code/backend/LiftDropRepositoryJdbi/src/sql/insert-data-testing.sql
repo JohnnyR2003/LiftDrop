@@ -52,10 +52,10 @@ VALUES (4, 1, true),
 
 -- Insert requests (depends on Clients and Couriers)
 INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, request_status, ETA)
-VALUES (1, 1, NULL, NOW(), 'PENDING', INTERVAL '30 minutes'),
-       (2, 2, NULL, NOW(), 'PENDING', INTERVAL '45 minutes'),
-       (3, 3, NULL, NOW(), 'PENDING', INTERVAL '1 hour'),
-       (4, 1, 4, NOW(), 'PENDING', INTERVAL '30 minutes');
+VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800),
+       (2, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700),
+       (3, 3, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 3600),
+       (4, 1, 4, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800);
 
 -- Insert request details (depends on Request and Location)
 INSERT INTO liftdrop."request_details" (request_id, description, pickup_location, dropoff_location)
@@ -68,13 +68,14 @@ VALUES (1, 40.7128, -74.0060, 1, 'Pickup Spot 1'),
        (3, 37.7749, -122.4194, 3, 'Pickup Spot 3');
 
 INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)
-VALUES (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, INTERVAL '30 minutes'),
-       (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, INTERVAL '45 minutes'),
-       (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, INTERVAL '1 hour');
+VALUES (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, 1800),
+       (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, 2700),
+       (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, 3600);
 --deliveries todo
 
 INSERT INTO liftdrop."delivery" (delivery_id, courier_id, request_id, started_at, completed_at, ETA, delivery_status)
-VALUES (1, 4, 3, NOW(), NULL, INTERVAL '30 minutes', 'IN_PROGRESS');
+VALUES (1, 4, 3, EXTRACT(EPOCH FROM NOW()), NULL, 1800, 'IN_PROGRESS');
+--      (2, 4, 1, NOW(), NULL, INTERVAL '30 minutes', 'IN_PROGRESS'),
 --      (2, 5, 2, NOW(), NULL, INTERVAL '45 minutes', 'IN_PROGRESS'),
 --      (3, 6, 3, NOW(), NULL, INTERVAL '1 hour', 'IN_PROGRESS');
 SELECT setval(pg_get_serial_sequence('liftdrop.user', 'user_id'), (SELECT MAX(user_id) FROM liftdrop.user));

@@ -195,7 +195,7 @@ class CourierServiceTests {
         assertTrue(acceptRequestResult is Either.Left)
     }
 
-    /*@Test
+   /* @Test
     fun `courier should deliver package successfully`() {
         val courierService = createCourierService()
         val clientService = createClientService()
@@ -236,7 +236,7 @@ class CourierServiceTests {
 
         if (acceptRequestResult is Either.Left) fail("Unexpected error")
 
-        val packageId = 2 // Assuming you have a valid package ID to deliver
+        val packageId = 1 // Assuming you have a valid package ID to deliver
 
         println(courierRegistration)
         val deliverResult =

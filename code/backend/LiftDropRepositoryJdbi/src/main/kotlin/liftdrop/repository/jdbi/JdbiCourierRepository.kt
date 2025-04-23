@@ -128,10 +128,10 @@ class JdbiCourierRepository(
         handle
             .createUpdate(
                 """
-        UPDATE liftdrop.request
-        SET courier_id = :courierId, request_status = 'ACCEPTED'
-        WHERE request_id = :requestId
-        """,
+            UPDATE liftdrop.request
+            SET courier_id = :courierId, request_status = 'ACCEPTED'
+            WHERE request_id = :requestId
+            """,
             ).bind("courierId", courierId)
             .bind("requestId", requestId)
             .execute()
@@ -141,7 +141,7 @@ class JdbiCourierRepository(
                 .createUpdate(
                     """
                 INSERT INTO liftdrop.delivery (courier_id, request_id, started_at, completed_at, ETA, delivery_status)
-                VALUES (:courierId, :requestId, NOW(), NULL, NULL, 'PENDING')
+                VALUES (:courierId, :requestId, EXTRACT(EPOCH FROM NOW()), NULL, NULL, 'PENDING')
                 """,
                 ).bind("courierId", courierId)
                 .bind("requestId", requestId)

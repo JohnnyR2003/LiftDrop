@@ -3,7 +3,6 @@ package liftdrop.repository.jdbi
 import liftdrop.repository.RequestRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
-import pt.isel.liftdrop.Request
 import pt.isel.liftdrop.RequestDTO
 
 class JdbiRequestRepository(
@@ -12,44 +11,39 @@ class JdbiRequestRepository(
     override fun createRequest(
         clientId: Int,
         eta: Long?,
-    ): Int {
-        val etaF = eta.let { "$it milliseconds" }
-
-        return handle
+    ): Int =
+        handle
             .createUpdate(
                 """
             INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta)
-            VALUES (:client_id, NULL, NOW(), :request_status, CAST(:eta AS INTERVAL))
+            VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, CAST(:eta AS BIGINT))
             """,
             ).bind("client_id", clientId)
             .bind("request_status", "PENDING")
-            .bind("eta", etaF)
+            .bind("eta", eta)
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
-    }
 
     override fun createRequestDetails(
         requestId: Int,
         description: String,
         pickupLocationId: Int,
         dropoffLocationId: Int,
-    ): Int {
-        return handle
+    ): Int =
+        handle
             .createUpdate(
                 """
             INSERT INTO liftdrop.request_details (request_id, description, pickup_location, dropoff_location)
             VALUES (:request_id, :description, :pickup_location, :dropoff_location)
-            """
-            )
-            .bind("request_id", requestId)
+            """,
+            ).bind("request_id", requestId)
             .bind("description", description)
             .bind("pickup_location", pickupLocationId)
             .bind("dropoff_location", dropoffLocationId)
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
-    }
 
     override fun updateRequest(
         requestId: Int,
@@ -93,16 +87,17 @@ class JdbiRequestRepository(
             ).bind("requestId", requestId)
             .execute() > 0
 
-    override fun getAllRequestsForClient(clientId: Int): List<RequestDTO> {
-        return handle.createQuery(
-            """
+    override fun getAllRequestsForClient(clientId: Int): List<RequestDTO> =
+        handle
+            .createQuery(
+                """
         SELECT 
             r.request_id,
             r.client_id,
             r.courier_id,
             r.created_at,
             r.request_status,
-            EXTRACT(EPOCH FROM r.ETA) AS eta_seconds,
+            r.ETA AS eta_seconds,
             d.description,
             d.pickup_location,
             d.dropoff_location,
@@ -112,24 +107,22 @@ class JdbiRequestRepository(
         LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
         WHERE r.client_id = :clientId
         ORDER BY r.created_at DESC
-        """
-        )
-            .bind("clientId", clientId)
+        """,
+            ).bind("clientId", clientId)
             .mapTo<RequestDTO>()
             .list()
-    }
 
-
-    override fun getRequestById(id: Int): RequestDTO? {
-        return handle.createQuery(
-            """
+    override fun getRequestById(id: Int): RequestDTO? =
+        handle
+            .createQuery(
+                """
         SELECT 
             r.request_id,
             r.client_id,
             r.courier_id,
             r.created_at,
             r.request_status,
-            EXTRACT(EPOCH FROM r.ETA) AS eta_seconds,
+            r.ETA AS eta_seconds,
             d.description,
             d.pickup_location,
             d.dropoff_location,
@@ -139,11 +132,9 @@ class JdbiRequestRepository(
         LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
         WHERE r.request_id = :id
         LIMIT 1
-        """
-        )
-            .bind("id", id)
+        """,
+            ).bind("id", id)
             .mapTo<RequestDTO>()
             .findOne()
             .orElse(null)
-    }
 }
