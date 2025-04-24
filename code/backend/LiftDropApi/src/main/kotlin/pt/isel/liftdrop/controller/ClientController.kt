@@ -17,8 +17,7 @@ import pt.isel.liftdrop.AuthenticatedUser
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.LoginOutputModel
 import pt.isel.liftdrop.model.OrderInputModel
-import pt.isel.liftdrop.model.RegisterInputModel
-import pt.isel.services.ClientError
+import pt.isel.liftdrop.model.RegisterClientInputModel
 import pt.isel.services.ClientService
 
 /**
@@ -51,23 +50,24 @@ class ClientController(
 
     @PostMapping
     fun registerClient(
-        @RequestBody registerInput: RegisterInputModel
+        @RequestBody registerInput: RegisterClientInputModel,
     ): ResponseEntity<Any> {
-        val register = clientService
-            .registerClient(
-                registerInput.email,
-                registerInput.password,
-                registerInput.name,
-                Address(
-                    0,
-                    registerInput.address.country,
-                    registerInput.address.city,
-                    registerInput.address.street,
-                    registerInput.address.streetNumber,
-                    registerInput.address.floor,
-                    registerInput.address.zipcode,
+        val register =
+            clientService
+                .registerClient(
+                    registerInput.email,
+                    registerInput.password,
+                    registerInput.name,
+                    Address(
+                        0,
+                        registerInput.address.country,
+                        registerInput.address.city,
+                        registerInput.address.street,
+                        registerInput.address.streetNumber,
+                        registerInput.address.floor,
+                        registerInput.address.zipcode,
+                    ),
                 )
-            )
 
         return when (register) {
             is Success -> {
@@ -92,11 +92,12 @@ class ClientController(
         if (input.email.isBlank() || input.password.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid input")
         }
-        val result = clientService
-            .loginClient(
-                input.email,
-                input.password,
-            )
+        val result =
+            clientService
+                .loginClient(
+                    input.email,
+                    input.password,
+                )
 
         return when (result) {
             is Either.Right -> {
@@ -122,6 +123,5 @@ class ClientController(
                     .body("Invalid email or password")
             }
         }
-
     }
 }
