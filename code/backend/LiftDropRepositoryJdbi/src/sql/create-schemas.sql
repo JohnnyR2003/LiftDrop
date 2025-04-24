@@ -105,6 +105,7 @@ CREATE TABLE liftdrop.sessions (
                                    user_id                         INT,
                                    session_token                   TEXT NOT NULL,
                                    created_at                      BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
+                                   role                            TEXT CHECK (role IN ('ADMIN', 'CLIENT', 'COURIER')) NOT NULL,
 --     expires_at TIMESTAMP DEFAULT NOW() + INTERVAL '1 hour',
                                    FOREIGN KEY (user_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE
 );

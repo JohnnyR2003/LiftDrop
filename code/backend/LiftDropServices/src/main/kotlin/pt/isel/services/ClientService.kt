@@ -8,6 +8,8 @@ import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.UserRole
 import pt.isel.liftdrop.Address
+import pt.isel.services.utils.Codify.matchesPassword
+import java.util.UUID
 
 sealed class ClientError {
     data object ClientNotFound : ClientError()
@@ -62,15 +64,34 @@ class ClientService(
     fun loginClient(
         email: String,
         password: String,
-    ) {
+    ): Either<ClientError, String> =
         transactionManager.run {
             val clientRepository = it.clientRepository
-            clientRepository.loginClient(
+            val userRepository = it.usersRepository
+            val passwordFromDatabase = clientRepository.loginClient(
                 email = email,
                 password = password,
-            )
+            ) ?: return@run failure(ClientError.InvalidEmailOrPassword)
+            val userId = userRepository.findUserByEmail(email)?.id
+                ?: return@run failure(ClientError.UserNotFound)
+            val sessionToken = UUID.randomUUID().toString()
+
+            clientRepository
+                .createClientSession(
+                    userId,
+                    sessionToken
+                )
+
+            when(matchesPassword(password, passwordFromDatabase)) {
+                true -> {
+                    return@run success(sessionToken)
+                }
+                false -> {
+                    return@run failure(ClientError.InvalidEmailOrPassword)
+                }
+            }
         }
-    }
+
 
     fun makeRequest(
         client: Client,

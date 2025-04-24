@@ -61,16 +61,16 @@ class JdbiClientRepository(
     override fun loginClient(
         email: String,
         password: String,
-    ): Int? =
+    ): String? =
         handle
             .createQuery(
                 """
-                SELECT user_id FROM liftdrop.user
-                WHERE email = :email AND password = :password AND role = 'CLIENT'
+                SELECT email FROM liftdrop.user
+                WHERE email = :email AND role = 'CLIENT'
                 """,
-            ).bind("email", email)
-            .bind("password", password)
-            .mapTo<Int>()
+            )
+            .bind("email", email)
+            .mapTo<String>()
             .singleOrNull()
 
     /**
@@ -106,4 +106,18 @@ class JdbiClientRepository(
             }
             .singleOrNull()
 
+
+    override fun createClientSession(userId: Int, sessionToken: String): Int? =
+        handle.createUpdate("""
+            INSERT INTO liftdrop.sessions (user_id, session_token, created_at, role)
+            VALUES (:userId, :sessionToken, EXTRACT(EPOCH FROM NOW()))
+            RETURNING session_token
+        """.trimIndent()
+        )
+            .bind("userId", userId)
+            .bind("sessionToken", sessionToken)
+            .bind("role", UserRole.CLIENT.name)
+            .executeAndReturnGeneratedKeys()
+            .mapTo<Int>()
+            .singleOrNull()
 }

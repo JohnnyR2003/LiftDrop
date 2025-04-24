@@ -12,7 +12,9 @@ interface ClientRepository {
     fun loginClient(
         email: String,
         password: String,
-    ): Int?
+    ): String?
 
     fun getClientByUserId(userId: Int): Client?
+
+    fun createClientSession(userId: Int, sessionToken: String): Int?
 }
