@@ -31,8 +31,6 @@ VALUES (1, 40.7128, -74.0060, 1, 'New York City'),
        (8, 38.74362, -9.13896, 1, 'Avenida de Roma'),
        (9, 38.74140, -9.14667, 1, 'Campo Pequeno');
 
-
-
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
 VALUES (1, 1),

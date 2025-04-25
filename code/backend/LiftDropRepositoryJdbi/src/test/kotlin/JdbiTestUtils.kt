@@ -5,8 +5,8 @@ import liftdrop.repository.jdbi.configureWithAppRequirements
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
 import org.postgresql.ds.PGSimpleDataSource
-import pt.isel.liftdrop.Location
 import pt.isel.liftdrop.Address
+import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -47,12 +47,9 @@ object JdbiTestUtils {
         )
 
     fun newTestLocation() =
-        Location(
-            id = newTestId(),
+        LocationDTO(
             latitude = Random.nextDouble(-90.0, 90.0),
             longitude = Random.nextDouble(-180.0, 180.0),
-            address = newTestAddress(),
-            name = "location-${abs(Random.nextLong())}",
         )
 
     fun newTokenValidationData() = "token-${abs(Random.nextLong())}"

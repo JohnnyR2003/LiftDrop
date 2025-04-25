@@ -41,7 +41,7 @@ CREATE TABLE liftdrop.client(
 
 CREATE TABLE liftdrop.courier (
                                   courier_id                         INT PRIMARY KEY,
-                                  current_location                INT,
+                                  current_location                INT DEFAULT NULL,
                                   is_available                    BOOLEAN DEFAULT FALSE,
                                   FOREIGN KEY (courier_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE,
                                   FOREIGN KEY (current_location)  REFERENCES liftdrop.location (location_id) ON DELETE SET NULL

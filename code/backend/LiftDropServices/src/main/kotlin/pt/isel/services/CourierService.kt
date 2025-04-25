@@ -39,7 +39,6 @@ class CourierService(
         email: String,
         password: String,
         name: String,
-        location: Location,
     ): Either<CourierError, Int> =
         transactionManager.run {
             val userRepository = it.usersRepository
@@ -57,7 +56,6 @@ class CourierService(
             val courierCreation =
                 courierRepository.createCourier(
                     userId = id,
-                    currentLocation = location,
                     isAvailable = false,
                 )
             success(courierCreation)

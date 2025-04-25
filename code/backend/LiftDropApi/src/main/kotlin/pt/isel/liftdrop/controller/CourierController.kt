@@ -7,7 +7,11 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.LoginOutputModel
 import pt.isel.liftdrop.model.RegisterCourierInputModel
@@ -18,7 +22,7 @@ import pt.isel.services.CourierService
 class CourierController(
     val courierService: CourierService,
 ) {
-    @PostMapping
+    @PostMapping("/register")
     fun registerCourier(
         @RequestBody registerInput: RegisterCourierInputModel,
     ): ResponseEntity<Any> {
@@ -28,7 +32,6 @@ class CourierController(
                     email = registerInput.email,
                     password = registerInput.password,
                     name = registerInput.name,
-                    location = registerInput.location,
                 )
 
         return when (register) {

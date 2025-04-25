@@ -22,6 +22,7 @@ dependencies {
     implementation(project(":LiftDropDomain"))
     implementation(project(":LiftDropServices"))
     implementation(project(":LiftDropRepositoryJdbi"))
+    implementation(project(":LiftDropRepository"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 

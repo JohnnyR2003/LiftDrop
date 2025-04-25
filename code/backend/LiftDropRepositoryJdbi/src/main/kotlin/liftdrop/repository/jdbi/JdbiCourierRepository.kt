@@ -25,50 +25,19 @@ class JdbiCourierRepository(
     @Suppress("ktlint:standard:comment-wrapping")
     override fun createCourier(
         userId: Int,
-        currentLocation: Location,
         isAvailable: Boolean,
     ): Int {
-        // Needs further integration with google maps API to get address based on coordinates
-        val addressId =
-            handle
-                .createUpdate(
-                    """
-                INSERT INTO liftdrop.address (country, city, street, house_number, floor, zip_code)
-                VALUES (:country, :city, :street, :house_number, :floor, :zip_code)
-                """,
-                ).bind("country", currentLocation.address?.country ?: "")
-                .bind("city", currentLocation.address?.city ?: "")
-                .bind("street", currentLocation.address?.street ?: "")
-                .bind("house_number", currentLocation.address?.streetNumber ?: "")
-                .bind("floor", currentLocation.address?.floor ?: "")
-                .bind("zip_code", currentLocation.address?.zipCode ?: "")
-                .executeAndReturnGeneratedKeys()
-                .mapTo<Int>()
-                .one()
-
-        // check how to generate address fields based on currentLocation's coordinates using google maps API
-        val locationId =
-            handle
-                .createUpdate(
-                    """
-                INSERT INTO liftdrop.location (latitude, longitude, address)
-                VALUES (:latitude, :longitude, :address)
-                """,
-                ).bind("latitude", currentLocation.latitude)
-                .bind("longitude", currentLocation.longitude)
-                .bind("address", addressId)
-                .executeAndReturnGeneratedKeys()
-                .mapTo<Int>()
-                .one()
-
+        /*val address= LocationServices.getAddressFromCoordinates(
+            latitude = currentLocation.latitude,
+            longitude = currentLocation.longitude,
+        )*/
         handle
             .createUpdate(
                 """
-            INSERT INTO liftdrop.courier (courier_id, current_location, is_available)
-            VALUES (:courier_id, :current_location, :is_available)
+            INSERT INTO liftdrop.courier (courier_id, is_available)
+            VALUES (:courier_id, :is_available)
             """,
             ).bind("courier_id", userId)
-            .bind("current_location", locationId)
             .bind("is_available", isAvailable)
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()

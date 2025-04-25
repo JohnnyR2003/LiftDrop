@@ -7,7 +7,6 @@ import pt.isel.liftdrop.Location
 interface CourierRepository {
     fun createCourier(
         userId: Int,
-        currentLocation: Location,
         isAvailable: Boolean,
     ): Int
 
