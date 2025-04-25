@@ -54,9 +54,9 @@ class JdbiCourierRepositoryTests {
                     val courierPassword = userPassword
 
                     // When: logging in with the user's email and password
-                    val loggedInClientId = courierRepository.loginCourier(courierEmail, courierPassword)
+                    val loggedInClientPassword = courierRepository.loginCourier(courierEmail, courierPassword)
                     // Then: the logged-in client's ID should match the expected client ID
-                    assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+                    assert(loggedInClientPassword == courierPassword) { "Logged in client ID should match" }
                 }
             }
         }
@@ -88,9 +88,9 @@ class JdbiCourierRepositoryTests {
                 val courierId = user.id
 
                 // When: logging in with the user's email and password
-                val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
+                val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
                 // Then: the logged-in client's ID should match the expected client ID
-                assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+                assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
             }
         }
     }
@@ -111,10 +111,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
 
             // Given: a request ID to accept
             val requestId = 1 // Replace with an actual request ID from your database
@@ -143,10 +143,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
 
             // Given: a request ID to decline
             val requestId = 1 // Replace with an actual request ID from your database
@@ -175,10 +175,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
 
             // Given: a request ID associated with a delivery to be cancelled
             val requestId = 1 // Replace with an actual request ID from your database
@@ -212,10 +212,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
 
             // Given: a request ID associated with a delivery to be completed
             val requestId = 1 // Replace with an actual request ID from your database
@@ -249,10 +249,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientId == courierId) { "Logged in client ID should match" }
+            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
 
             // When: toggling availability status
             val isToggled = courierRepository.toggleAvailability(courierId)

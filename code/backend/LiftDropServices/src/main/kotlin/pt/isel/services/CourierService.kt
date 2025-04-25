@@ -11,6 +11,7 @@ import pt.isel.liftdrop.Location
 import pt.isel.liftdrop.UserRole
 import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
+import java.util.*
 
 sealed class CourierError {
     data object CourierNotFound : CourierError()
@@ -65,20 +66,37 @@ class CourierService(
     fun loginCourier(
         email: String,
         password: String,
-    ): Either<CourierError, Boolean> {
-        return transactionManager.run {
+    ): Either<CourierError, String> =
+        transactionManager.run {
+            val courierRepository = it.courierRepository
             val userRepository = it.usersRepository
 
-            val user =
-                userRepository.findUserByEmail(email) ?: return@run failure(CourierError.InvalidEmailOrPassword)
+            val passwordFromDatabase =
+                courierRepository.loginCourier(
+                    email = email,
+                    password = password,
+                ) ?: return@run failure(CourierError.InvalidEmailOrPassword)
 
-            if (user.role != UserRole.COURIER || !matchesPassword(password, user.password)) {
+            val user =
+                userRepository.findUserByEmail(email)
+                    ?: return@run failure(CourierError.UserNotFound)
+
+            if (user.role != UserRole.COURIER) {
                 return@run failure(CourierError.InvalidEmailOrPassword)
             }
 
-            success(true)
+            val sessionToken = UUID.randomUUID().toString()
+
+            courierRepository.createCourierSession(
+                user.id,
+                sessionToken,
+            )
+
+            return@run when (matchesPassword(password, passwordFromDatabase)) {
+                true -> success(sessionToken)
+                false -> failure(CourierError.InvalidEmailOrPassword)
+            }
         }
-    }
 
     fun acceptRequest(
         courierId: Int,

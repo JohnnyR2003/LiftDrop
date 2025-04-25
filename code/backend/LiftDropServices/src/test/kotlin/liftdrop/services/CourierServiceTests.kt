@@ -107,6 +107,7 @@ class CourierServiceTests {
                 courierEmail,
                 courierPassword,
             )
+        println(courierLogin)
         assertTrue(courierRegistration is Either.Right)
         assertTrue(courierLogin is Either.Right)
     }

@@ -16,5 +16,8 @@ interface ClientRepository {
 
     fun getClientByUserId(userId: Int): Client?
 
-    fun createClientSession(userId: Int, sessionToken: String): Int?
+    fun createClientSession(
+        userId: Int,
+        sessionToken: String,
+    ): String?
 }

@@ -14,7 +14,7 @@ interface CourierRepository {
     fun loginCourier(
         email: String,
         password: String,
-    ): Int?
+    ): String?
 
     fun acceptRequest(
         requestId: Int,
@@ -46,4 +46,9 @@ interface CourierRepository {
         pickupLat: Double,
         pickupLng: Double,
     ): List<CourierWithLocation>
+
+    fun createCourierSession(
+        userId: Int,
+        sessionToken: String,
+    ): String?
 }

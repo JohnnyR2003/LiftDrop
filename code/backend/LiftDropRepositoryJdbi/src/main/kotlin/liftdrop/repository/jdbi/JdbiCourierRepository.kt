@@ -6,10 +6,10 @@ import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.liftdrop.Location
+import pt.isel.liftdrop.RequestDTO
 import pt.isel.liftdrop.Status
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
-import pt.isel.liftdrop.RequestDTO
 
 class JdbiCourierRepository(
     private val handle: Handle,
@@ -87,16 +87,16 @@ class JdbiCourierRepository(
     override fun loginCourier(
         email: String,
         password: String,
-    ): Int? =
+    ): String? =
         handle
             .createQuery(
                 """
-                SELECT user_id FROM liftdrop.user
-                WHERE email = :email AND password = :password AND role = 'COURIER'
+                SELECT password FROM liftdrop.user
+                WHERE email = :email AND role = 'COURIER'
                 """,
             ).bind("email", email)
             .bind("password", password)
-            .mapTo<Int>()
+            .mapTo<String>()
             .singleOrNull()
 
     /**
@@ -370,4 +370,22 @@ class JdbiCourierRepository(
                     distanceMeters = rs.getDouble("distance_meters"),
                 )
             }.list()
+
+    override fun createCourierSession(
+        userId: Int,
+        sessionToken: String,
+    ): String? =
+        handle
+            .createUpdate(
+                """
+                INSERT INTO liftdrop.sessions (user_id, session_token, created_at, role)
+                VALUES (:user_id, :session_token, EXTRACT(EPOCH FROM NOW()), :role)
+                RETURNING session_token
+                """.trimIndent(),
+            ).bind("user_id", userId)
+            .bind("session_token", sessionToken)
+            .bind("role", UserRole.COURIER.name)
+            .executeAndReturnGeneratedKeys()
+            .mapTo<String>()
+            .singleOrNull()
 }

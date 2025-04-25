@@ -59,7 +59,7 @@ class CourierController(
                 .loginCourier(
                     input.email,
                     input.password,
-                ) // NEEDS TO CHANGE IMPLEMENTATION BECAUSE IT LACKS SESSION MANAGEMENT
+                )
 
         return when (result) {
             is Either.Right -> {
@@ -68,14 +68,14 @@ class CourierController(
                 // Handle successful login
                 val cookie =
                     ResponseCookie
-                        .from("auth_token", token.toString())
+                        .from("auth_token", token)
                         .path("/") // Path for which the cookie is valid
                         .maxAge(3600 * 12) // Cookie expiration time
                         .build()
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(LoginOutputModel(token.toString()))
+                    .body(LoginOutputModel(token))
             }
             is Either.Left -> {
                 // Handle login error

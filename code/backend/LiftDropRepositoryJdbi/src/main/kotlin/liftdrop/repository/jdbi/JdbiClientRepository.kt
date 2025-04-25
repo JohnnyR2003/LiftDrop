@@ -65,11 +65,10 @@ class JdbiClientRepository(
         handle
             .createQuery(
                 """
-                SELECT email FROM liftdrop.user
+                SELECT password FROM liftdrop.user
                 WHERE email = :email AND role = 'CLIENT'
                 """,
-            )
-            .bind("email", email)
+            ).bind("email", email)
             .mapTo<String>()
             .singleOrNull()
 
@@ -83,41 +82,43 @@ class JdbiClientRepository(
         handle
             .createQuery(
                 """
-            SELECT 
-                u.user_id, u.email, u.password, u.name, u.role,
-                c.address
-            FROM liftdrop.user u
-            JOIN liftdrop.client c ON u.user_id = c.client_id
-            WHERE u.user_id = :userId
-            """.trimIndent()
-            )
-            .bind("userId", userId)
+                SELECT 
+                    u.user_id, u.email, u.password, u.name, u.role,
+                    c.address
+                FROM liftdrop.user u
+                JOIN liftdrop.client c ON u.user_id = c.client_id
+                WHERE u.user_id = :userId
+                """.trimIndent(),
+            ).bind("userId", userId)
             .map { rs, _ ->
-                val user = User(
-                    id = rs.getInt("user_id"),
-                    email = rs.getString("email"),
-                    password = rs.getString("password"),
-                    name = rs.getString("name"),
-                    role = UserRole.valueOf(rs.getString("role")),
-                )
+                val user =
+                    User(
+                        id = rs.getInt("user_id"),
+                        email = rs.getString("email"),
+                        password = rs.getString("password"),
+                        name = rs.getString("name"),
+                        role = UserRole.valueOf(rs.getString("role")),
+                    )
                 val address = rs.getInt("address").takeIf { !rs.wasNull() }
 
                 Client(user = user, address = address)
-            }
-            .singleOrNull()
+            }.singleOrNull()
 
-
-    override fun createClientSession(userId: Int, sessionToken: String): Int? =
-        handle.createUpdate("""
-            INSERT INTO liftdrop.sessions (user_id, session_token, created_at, role)
-            VALUES (:userId, :sessionToken, EXTRACT(EPOCH FROM NOW()))
-            RETURNING session_token
-        """.trimIndent()
-        )
-            .bind("userId", userId)
+    override fun createClientSession(
+        userId: Int,
+        sessionToken: String,
+    ): String? =
+        handle
+            .createUpdate(
+                """
+                INSERT INTO liftdrop.sessions (user_id, session_token, created_at, role)
+                VALUES (:userId, :sessionToken, EXTRACT(EPOCH FROM NOW()))
+                RETURNING session_token
+                """.trimIndent(),
+            ).bind("userId", userId)
             .bind("sessionToken", sessionToken)
             .bind("role", UserRole.CLIENT.name)
             .executeAndReturnGeneratedKeys()
-            .mapTo<Int>()
+            .mapTo<String>()
             .singleOrNull()
 }

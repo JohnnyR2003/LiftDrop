@@ -52,9 +52,9 @@ class JdbiClientRepositoryTests {
                     val clientPassword = userPassword
 
                     // When: logging in with the user's email and password
-                    val loggedInClientEmail = clientRepository.loginClient(clientEmail, clientPassword)
+                    val loggedInClientPassword = clientRepository.loginClient(clientEmail, clientPassword)
                     // Then: the logged-in client's ID should match the expected client ID
-                    assert(loggedInClientEmail == clientEmail) { "Logged in client ID should match" }
+                    assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
                 }
             }
         }
