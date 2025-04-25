@@ -1,0 +1,88 @@
+package pt.isel.liftdrop.login.model
+
+import androidx.compose.ui.platform.LocalContext
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import pt.isel.liftdrop.HOST
+import okhttp3.*
+import pt.isel.liftdrop.ApplicationJsonType
+import okhttp3.RequestBody.Companion.toRequestBody
+import pt.isel.liftdrop.services.LocationServices
+import java.lang.reflect.Type
+
+interface LoginService {
+
+    suspend fun register(email: String, password: String, username: String): Token
+
+    suspend fun login(username: String, password: String): Token
+}
+
+class RealLoginService(
+    private val httpClient: OkHttpClient,
+    private val jsonEncoder: Gson
+) : LoginService {
+
+
+
+    override suspend fun register(email: String, password: String, username: String): Token {
+        val body = ("{" +
+                "\"email\": \"$email\"," +
+                "\"password\": \"$password\"," +
+                "\"name\": \"$username\"" +
+                "}").toRequestBody(ApplicationJsonType)
+        val request = Request.Builder()
+            .url("$HOST/courier/register")
+            .post(body)
+            .build()
+        httpClient.newCall(request).execute().use { response ->
+            return handleResponse(response, Token::class.java)
+        }
+    }
+
+    override suspend fun login(email: String, password: String): Token {
+        val body = ("{" +
+                "\"email\": \"$email\"," +
+                "\"password\": \"$password\"" +
+                "}").toRequestBody(ApplicationJsonType)
+        val request = Request.Builder()
+            .url("$HOST/courier/login")
+            .post(body)
+            .build()
+        httpClient.newCall(request).execute().use { response ->
+            return handleResponse(response, Token::class.java)
+        }
+    }
+
+    /**
+     * This method's usefulness is circumstantial. In more realistic scenarios
+     * we will not be handling API responses with this simplistic approach.
+     */
+    private fun <T> handleResponse(response: Response, type: Type): T {
+        val contentType = response.body?.contentType()
+        return if (response.isSuccessful && contentType != null && contentType == ApplicationJsonType) {
+            try {
+                val body = response.body?.string()
+                jsonEncoder.fromJson<T>(body, type)
+            } catch (e: JsonSyntaxException) {
+                throw UnexpectedResponseException(response)
+            }
+        } else {
+            val body = response.body?.string()
+            throw ResponseException(body.orEmpty())
+        }
+    }
+
+    abstract class ApiException(msg: String) : Exception(msg)
+
+    /**
+     * Exception throw when an unexpected response was received from the API.
+     */
+    class UnexpectedResponseException(
+        val response: Response? = null
+    ) : ApiException("Unexpected ${response?.code} response from the API.")
+
+    class ResponseException(
+        response: String
+    ) : ApiException(response)
+
+}
