@@ -40,7 +40,7 @@ class JdbiCourierRepositoryTests {
                 val currentLocation = newTestLocation()
 
                 // When: creating a new client associated with the user
-                val courierCreation = courierRepository.createCourier(courierId, currentLocation, true)
+                val courierCreation = courierRepository.createCourier(courierId, true)
 
                 if (courierCreation == 0) {
                     throw Exception("Client should be created")

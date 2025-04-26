@@ -5,7 +5,6 @@ import liftdrop.services.ServicesTestUtils.createClientService
 import liftdrop.services.ServicesTestUtils.createCourierService
 import liftdrop.services.ServicesTestUtils.newTestAddress
 import liftdrop.services.ServicesTestUtils.newTestEmail
-import liftdrop.services.ServicesTestUtils.newTestLocation
 import liftdrop.services.ServicesTestUtils.newTestPassword
 import liftdrop.services.ServicesTestUtils.newTestUserName
 import org.junit.jupiter.api.BeforeAll
@@ -71,7 +70,6 @@ class CourierServiceTests {
                 courierEmail,
                 newTestPassword(),
                 newTestUserName(),
-                newTestLocation(),
             )
 
         assertTrue(co1 is Either.Right)
@@ -81,7 +79,6 @@ class CourierServiceTests {
                 courierEmail,
                 newTestPassword(),
                 newTestUserName(),
-                newTestLocation(),
             )
 
         assertTrue(co2 is Either.Left)
@@ -99,7 +96,6 @@ class CourierServiceTests {
                 courierEmail,
                 courierPassword,
                 newTestUserName(),
-                newTestLocation(),
             )
 
         val courierLogin =
@@ -124,7 +120,6 @@ class CourierServiceTests {
                 courierEmail,
                 courierPassword,
                 newTestUserName(),
-                newTestLocation(),
             )
 
         if (courierRegistration is Either.Left) fail("Unexpected error")
@@ -152,7 +147,6 @@ class CourierServiceTests {
                 courierEmail,
                 courierPassword,
                 newTestUserName(),
-                newTestLocation(),
             )
 
         if (courierRegistration is Either.Left) fail("Unexpected error")
@@ -180,7 +174,6 @@ class CourierServiceTests {
                 courierEmail,
                 courierPassword,
                 newTestUserName(),
-                newTestLocation(),
             )
 
         if (courierRegistration is Either.Left) fail("Unexpected error")
