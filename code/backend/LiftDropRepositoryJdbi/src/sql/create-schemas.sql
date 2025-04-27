@@ -26,7 +26,7 @@ CREATE TABLE liftdrop.location (
                                    location_id                     SERIAL PRIMARY KEY,
                                    latitude                        DOUBLE PRECISION NOT NULL,
                                    longitude                       DOUBLE PRECISION NOT NULL,
-                                   address                         INT,
+                                   address                         INT DEFAULT NULL,
                                    name                            TEXT,
                                    FOREIGN KEY (address) REFERENCES liftdrop.address(address_id) ON DELETE SET NULL
 );

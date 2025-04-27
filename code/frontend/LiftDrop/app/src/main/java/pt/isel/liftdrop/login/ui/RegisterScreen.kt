@@ -41,7 +41,7 @@ import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import pt.isel.liftdrop.services.LocationServices
+import pt.isel.liftdrop.location.LocationServices
 import pt.isel.liftdrop.ui.TopBar
 
 @Composable

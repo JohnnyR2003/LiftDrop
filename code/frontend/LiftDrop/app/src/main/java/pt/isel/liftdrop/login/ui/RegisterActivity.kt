@@ -55,16 +55,10 @@ class RegisterActivity : ComponentActivity() {
                             val tok = viewModel.token.value
                             if (tok != null) {
                                 repo.userInfoRepo.userInfo = UserInfo(email, tok.token)
-                                if (repo.userInfoRepo.userInfo != null){
-                                    SessionManager.setUserLoggedIn(this@RegisterActivity, true)
-                                    HomeActivity.navigate(this@RegisterActivity)
-                                    finish()
-                                }
                             }
                         }
                     }
-                    Log.v(TAG, "${SessionManager.isUserLoggedIn(context = this)}")
-                    HomeActivity.navigate(this)
+                    finish()
                     viewModel.resetError()
                 },
                 onBackRequest = { finish() }

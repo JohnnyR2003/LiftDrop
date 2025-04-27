@@ -121,47 +121,44 @@ class JdbiUserRepository(
         handle
             .createQuery(
                 """
-            SELECT 
-                u.user_id, u.email, u.password, u.name, u.role,
-                c.address
-            FROM liftdrop.sessions s
-            JOIN liftdrop.user u ON s.user_id = u.user_id
-            JOIN liftdrop.client c ON u.user_id = c.client_id
-            WHERE s.session_token = :token
-            """.trimIndent()
-            )
-            .bind("token", token)
+                SELECT 
+                    u.user_id, u.email, u.password, u.name, u.role,
+                    c.address
+                FROM liftdrop.sessions s
+                JOIN liftdrop.user u ON s.user_id = u.user_id
+                JOIN liftdrop.client c ON u.user_id = c.client_id
+                WHERE s.session_token = :token
+                """.trimIndent(),
+            ).bind("token", token)
             .map { rs, _ ->
                 val user = mapToUser(rs)
                 val address = rs.getInt("address").takeIf { !rs.wasNull() }
 
                 Client(user = user, address = address)
-            }
-            .singleOrNull()
-
+            }.singleOrNull()
 
     override fun findCourierByToken(token: String): Courier? =
         handle
             .createQuery(
                 """
-            SELECT 
-                u.user_id, u.email, u.password, u.name, u.role,
-                c.current_location, c.is_available
-            FROM liftdrop.sessions s
-            JOIN liftdrop.user u ON s.user_id = u.user_id
-            JOIN liftdrop.courier c ON u.user_id = c.courier_id
-            WHERE s.session_token = :token
-            """.trimIndent()
-            )
-            .bind("token", token)
+                SELECT 
+                    u.user_id, u.email, u.password, u.name, u.role,
+                    c.current_location, c.is_available
+                FROM liftdrop.sessions s
+                JOIN liftdrop.user u ON s.user_id = u.user_id
+                JOIN liftdrop.courier c ON u.user_id = c.courier_id
+                WHERE s.session_token = :token
+                """.trimIndent(),
+            ).bind("token", token)
             .map { rs, _ ->
-                val user = User(
-                    id = rs.getInt("user_id"),
-                    email = rs.getString("email"),
-                    password = rs.getString("password"),
-                    name = rs.getString("name"),
-                    role = UserRole.valueOf(rs.getString("role")),
-                )
+                val user =
+                    User(
+                        id = rs.getInt("user_id"),
+                        email = rs.getString("email"),
+                        password = rs.getString("password"),
+                        name = rs.getString("name"),
+                        role = UserRole.valueOf(rs.getString("role")),
+                    )
 
                 val currentLocation = rs.getInt("current_location").takeIf { !rs.wasNull() }
                 val isAvailable = rs.getBoolean("is_available")
@@ -169,20 +166,29 @@ class JdbiUserRepository(
                 Courier(
                     user = user,
                     currentLocation = currentLocation,
-                    isAvailable = isAvailable
+                    isAvailable = isAvailable,
                 )
-            }
+            }.singleOrNull()
+
+    override fun getCourierIdByToken(token: String): Int? =
+        handle
+            .createQuery(
+                """
+                SELECT u.user_id
+                FROM liftdrop.sessions s
+                JOIN liftdrop.user u ON s.user_id = u.user_id
+                WHERE s.session_token = :token
+                """.trimIndent(),
+            ).bind("token", token)
+            .mapTo<Int>()
             .singleOrNull()
-
-
 }
 
-private fun mapToUser(rs: ResultSet): User {
-    return User(
+private fun mapToUser(rs: ResultSet): User =
+    User(
         id = rs.getInt("user_id"),
         email = rs.getString("email"),
         password = rs.getString("password"),
         name = rs.getString("name"),
         role = UserRole.valueOf(rs.getString("role")),
     )
-}

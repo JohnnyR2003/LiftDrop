@@ -14,6 +14,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.TAG
+import pt.isel.liftdrop.home.model.HomeService
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.login.ui.LoginActivity
 import pt.isel.liftdrop.utils.SessionManager.isUserLoggedIn
@@ -27,15 +28,13 @@ class HomeActivity : ComponentActivity() {
     }
     private val viewModel: HomeViewModel by viewModels {
         viewModelInit {
-            HomeViewModel(repo.homeService, repo.userInfoRepo)
+            HomeViewModel(repo.homeService, repo.userInfoRepo, repo.locationRepo)
         }
     }
 
     companion object {
         fun navigate(origin: Activity) {
-            val intent = Intent(origin, HomeActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
+            val intent = Intent(origin, HomeActivity::class.java)
             origin.startActivity(intent)
         }
     }
@@ -55,6 +54,7 @@ class HomeActivity : ComponentActivity() {
             val loggedState = viewModel.isLoggedIn.collectAsState().value
             val earningsState = viewModel.earnings.collectAsState().value
             HomeScreen(
+                viewModel = viewModel,
                 state = HomeScreenState(
                     dailyEarnings = earningsState.toString(),
                     isUserLoggedIn = loggedState,

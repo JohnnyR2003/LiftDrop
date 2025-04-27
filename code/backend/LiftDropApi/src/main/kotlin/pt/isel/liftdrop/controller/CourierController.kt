@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import pt.isel.liftdrop.model.LocationUpdateInputModel
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.LoginOutputModel
 import pt.isel.liftdrop.model.RegisterCourierInputModel
@@ -86,6 +87,33 @@ class CourierController(
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body("Invalid email or password")
+            }
+        }
+    }
+
+    @PostMapping("/updateLocation")
+    fun updateCourierLocation(
+        @RequestBody input: LocationUpdateInputModel,
+    ): ResponseEntity<Any> {
+        val result =
+            courierService
+                .updateCourierLocation(
+                    input.courierId,
+                    input.newLocation,
+                )
+
+        return when (result) {
+            is Success -> {
+                // Handle successful location update
+                println("Courier location updated successfully")
+                ResponseEntity.ok("Location updated")
+            }
+            is Failure -> {
+                // Handle location update error
+                println("Failed to update location")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update location")
             }
         }
     }

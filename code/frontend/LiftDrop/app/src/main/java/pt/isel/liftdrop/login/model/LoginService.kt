@@ -7,7 +7,7 @@ import pt.isel.liftdrop.HOST
 import okhttp3.*
 import pt.isel.liftdrop.ApplicationJsonType
 import okhttp3.RequestBody.Companion.toRequestBody
-import pt.isel.liftdrop.services.LocationServices
+import pt.isel.liftdrop.location.LocationServices
 import java.lang.reflect.Type
 
 interface LoginService {

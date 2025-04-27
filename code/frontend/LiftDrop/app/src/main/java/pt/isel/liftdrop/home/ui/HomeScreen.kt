@@ -1,6 +1,9 @@
 package pt.isel.liftdrop.home.ui
 
+import android.Manifest
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,7 +27,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.*
-import pt.isel.liftdrop.services.LocationServices
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import pt.isel.liftdrop.home.model.HomeViewModel
+import pt.isel.liftdrop.location.LocationServices
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+
 
 data class HomeScreenState(
     val dailyEarnings: String= "0.00",
@@ -34,11 +42,14 @@ data class HomeScreenState(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
+    viewModel: HomeViewModel,
     state: HomeScreenState = HomeScreenState(),
+    userToken: String = "",
     onMenuClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onStartClick: () -> Unit = {}
 ) {
+
     Scaffold(
         topBar = {},
         containerColor = Color.White
@@ -155,12 +166,5 @@ fun HomeScreen(
             }
         }
     }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun HomePreview() {
-    HomeScreen()
 }
 

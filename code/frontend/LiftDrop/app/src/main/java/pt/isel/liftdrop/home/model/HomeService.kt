@@ -12,6 +12,10 @@ interface HomeService {
     suspend fun getDailyEarnings(token: String): Double
 
     suspend fun startListening(token: String): Boolean
+
+    suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double): Boolean
+
+    suspend fun getCourierIdByToken(token: String): Int
 }
 
 class RealHomeService(
@@ -33,6 +37,36 @@ class RealHomeService(
             if (!response.isSuccessful) throw IOException("$response")
             val responseBody = response.body?.string()
             return jsonEncoder.fromJson(responseBody, Double::class.java)
+        }
+    }
+
+    override suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double): Boolean {
+        val body = ("{\"courierId\": ${courierId.toInt()}, \"newLocation\": {" +
+                "\"latitude\": $lat" +
+                ", \"longitude\": $lon" +
+                "}").toRequestBody(ApplicationJsonType)
+        val request = Request.Builder()
+            .url("$HOST/courier/updateLocation")
+            .post(body)
+            .build()
+
+        httpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("$response")
+            val responseBody = response.body?.string()
+            return jsonEncoder.fromJson(responseBody, Boolean::class.java)
+        }
+    }
+
+    override suspend fun getCourierIdByToken(token: String): Int {
+        val body = ("{\"token\": \"$token\"}").toRequestBody(ApplicationJsonType)
+        val request = Request.Builder()
+            .url("$HOST/api/user/getIdByToken")
+            .post(body)
+            .build()
+        httpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("$response")
+            val responseBody = response.body?.string()
+            return jsonEncoder.fromJson(responseBody, Int::class.java)
         }
     }
 }

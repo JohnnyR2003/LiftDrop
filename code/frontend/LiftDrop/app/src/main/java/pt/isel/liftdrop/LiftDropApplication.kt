@@ -11,6 +11,8 @@ import pt.isel.liftdrop.about.model.AboutService
 import pt.isel.liftdrop.about.model.RealAboutService
 import pt.isel.liftdrop.home.model.HomeService
 import pt.isel.liftdrop.home.model.RealHomeService
+import pt.isel.liftdrop.location.LocationRepository
+import pt.isel.liftdrop.location.LocationRepositoryImpl
 import pt.isel.liftdrop.login.UserInfoSharedPrefs
 import java.util.concurrent.TimeUnit
 import pt.isel.liftdrop.login.model.LoginService
@@ -33,6 +35,7 @@ interface DependenciesContainer {
     val homeService: HomeService
     //val courierService: CourierService
     val userInfoRepo : UserInfoRepository
+    val locationRepo: LocationRepository
 }
 class LiftDropApplication : DependenciesContainer, Application() {
 
@@ -58,6 +61,9 @@ class LiftDropApplication : DependenciesContainer, Application() {
 
     override val userInfoRepo: UserInfoRepository
         get() = UserInfoSharedPrefs(this)
+
+    override val locationRepo: LocationRepository
+        get() = LocationRepositoryImpl(this)
 
     private val workerConstraints  = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)

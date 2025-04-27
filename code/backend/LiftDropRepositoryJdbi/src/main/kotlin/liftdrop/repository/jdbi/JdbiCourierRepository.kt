@@ -5,11 +5,11 @@ import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.CourierWithLocation
-import pt.isel.liftdrop.Location
 import pt.isel.liftdrop.RequestDTO
 import pt.isel.liftdrop.Status
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
 
 class JdbiCourierRepository(
     private val handle: Handle,
@@ -254,21 +254,20 @@ class JdbiCourierRepository(
      */
     override fun updateCourierLocation(
         courierId: Int,
-        newLocation: Location,
+        newLocation: LocationDTO,
     ): Boolean { // Needs further integration with google maps API to get address based on coordinates
         val updatedLocation =
             handle
                 .createUpdate(
                     """
-                INSERT INTO liftdrop.location (latitude, longitude, address)
-                VALUES (:latitude, :longitude, :address)
+                INSERT INTO liftdrop.location (latitude, longitude)
+                VALUES (:latitude, :longitude)
                 ON CONFLICT (latitude, longitude) DO UPDATE
                 SET address = :address
                 WHERE liftdrop.location.latitude = :latitude AND liftdrop.location.longitude = :longitude
                 """,
                 ).bind("latitude", newLocation.latitude)
                 .bind("longitude", newLocation.longitude)
-                .bind("address", newLocation.address)
                 .executeAndReturnGeneratedKeys()
                 .mapTo<Int>()
                 .one()
