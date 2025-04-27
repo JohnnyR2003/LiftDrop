@@ -1,5 +1,6 @@
 package pt.isel
 
+import com.example.utils.Either
 import org.springframework.stereotype.Component
 import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.AuthenticatedCourier
@@ -12,22 +13,30 @@ class RequestTokenProcessor(
     fun processClientAuthorizationHeaderValue(authorizationValue: String?): AuthenticatedClient? {
         if (authorizationValue == null) return null
 
-        return usersService.getClientByToken(authorizationValue)?.let {
+        val client = usersService.getClientByToken(authorizationValue)
+
+        return if (client is Either.Right) {
             AuthenticatedClient(
-                it,
+                client.value,
                 authorizationValue,
             )
+        } else {
+            null
         }
     }
 
     fun processCourierAuthorizationHeaderValue(authorizationValue: String?): AuthenticatedCourier? {
         if (authorizationValue == null) return null
 
-        return usersService.getCourierByToken(authorizationValue)?.let {
+        val courier = usersService.getCourierByToken(authorizationValue)
+
+        return if (courier is Either.Right) {
             AuthenticatedCourier(
-                it,
+                courier.value,
                 authorizationValue,
             )
+        } else {
+            null
         }
     }
 

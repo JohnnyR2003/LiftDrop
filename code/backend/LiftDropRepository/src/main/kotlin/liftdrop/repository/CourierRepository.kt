@@ -13,14 +13,17 @@ interface CourierRepository {
     fun loginCourier(
         email: String,
         password: String,
-    ): String?
+    ): Pair<Int, String>?
 
     fun acceptRequest(
         requestId: Int,
         courierId: Int,
     ): Boolean
 
-    fun declineRequest(requestId: Int): Boolean
+    fun declineRequest(
+        courierId: Int,
+        requestId: Int,
+    ): Boolean
 
     fun cancelDelivery(
         requestId: Int,

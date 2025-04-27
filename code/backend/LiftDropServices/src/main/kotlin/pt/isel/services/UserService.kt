@@ -7,35 +7,50 @@ import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.Courier
-import java.lang.IllegalArgumentException
+
+sealed class UserError {
+    data object ClientNotFound : UserError()
+
+    data object CourierNotFound : UserError()
+}
 
 @Named
 class UserService(
     private val transactionManager: TransactionManager,
 ) {
-    fun getCourierIdByToken(token: String): Either<IllegalArgumentException, Int> {
+    fun getCourierIdByToken(token: String): Either<UserError, Int> {
         return transactionManager.run {
             val userRepository = it.usersRepository
             val courierId = userRepository.getCourierIdByToken(token)
             if (courierId == null) {
-                return@run failure(IllegalArgumentException("Courier not found"))
+                return@run failure(UserError.CourierNotFound)
             } else {
                 success(courierId)
             }
         }
     }
 
-    fun getCourierByToken(token: String): Courier? {
+    fun getCourierByToken(token: String): Either<UserError, Courier>? {
         return transactionManager.run {
             val userRepository = it.usersRepository
-            return@run userRepository.findCourierByToken(token)
+            val courier = userRepository.findCourierByToken(token)
+            if (courier == null) {
+                return@run failure(UserError.CourierNotFound)
+            } else {
+                success(courier)
+            }
         }
     }
 
-    fun getClientByToken(token: String): Client? {
+    fun getClientByToken(token: String): Either<UserError, Client>? {
         return transactionManager.run {
             val userRepository = it.usersRepository
-            return@run userRepository.findClientByToken(token)
+            val client = userRepository.findClientByToken(token)
+            if (client == null) {
+                return@run failure(UserError.ClientNotFound)
+            } else {
+                success(client)
+            }
         }
     }
 }

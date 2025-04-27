@@ -61,16 +61,20 @@ class JdbiClientRepository(
     override fun loginClient(
         email: String,
         password: String,
-    ): String? =
+    ): Pair<Int, String>? =
         handle
             .createQuery(
                 """
-                SELECT password FROM liftdrop.user
-                WHERE email = :email AND role = 'CLIENT'
-                """,
+                SELECT u.user_id, u.password
+                FROM liftdrop.user u
+                WHERE u.email = :email
+                """.trimIndent(),
             ).bind("email", email)
-            .mapTo<String>()
-            .singleOrNull()
+            .map { rs, _ ->
+                val userId = rs.getInt("user_id")
+                val userPassword = rs.getString("password")
+                Pair<Int, String>(userId, userPassword)
+            }.singleOrNull()
 
     /**
      * Gets a client by their user ID.

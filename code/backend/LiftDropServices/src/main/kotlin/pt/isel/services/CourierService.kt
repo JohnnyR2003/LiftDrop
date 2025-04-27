@@ -70,10 +70,11 @@ class CourierService(
             val userRepository = it.usersRepository
 
             val passwordFromDatabase =
-                courierRepository.loginCourier(
-                    email = email,
-                    password = password,
-                ) ?: return@run failure(CourierError.InvalidEmailOrPassword)
+                courierRepository
+                    .loginCourier(
+                        email = email,
+                        password = password,
+                    )?.second ?: return@run failure(CourierError.InvalidEmailOrPassword)
 
             val user =
                 userRepository.findUserByEmail(email)
@@ -103,6 +104,21 @@ class CourierService(
         return transactionManager.run {
             val courierRepository = it.courierRepository
             val request = courierRepository.acceptRequest(requestId, courierId)
+            if (!request) {
+                return@run failure(CourierError.RequestNotAccepted)
+            } else {
+                success(true)
+            }
+        }
+    }
+
+    fun declineRequest(
+        courierId: Int,
+        requestId: Int,
+    ): Either<CourierError, Boolean> {
+        return transactionManager.run {
+            val courierRepository = it.courierRepository
+            val request = courierRepository.declineRequest(requestId, courierId)
             if (!request) {
                 return@run failure(CourierError.RequestNotAccepted)
             } else {

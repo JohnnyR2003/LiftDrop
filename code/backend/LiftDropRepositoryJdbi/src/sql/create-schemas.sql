@@ -68,6 +68,15 @@ CREATE TABLE liftdrop.request_details (
                                           FOREIGN KEY (dropoff_location) REFERENCES liftdrop.location(location_id) ON DELETE SET NULL
 );
 
+CREATE TABLE liftdrop.request_declines (
+                                           decline_id SERIAL PRIMARY KEY,
+                                           request_id INT NOT NULL,
+                                           courier_id INT NOT NULL,
+                                           declined_at BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
+                                           FOREIGN KEY (request_id) REFERENCES liftdrop.request(request_id) ON DELETE CASCADE,
+                                           FOREIGN KEY (courier_id) REFERENCES liftdrop.courier(courier_id) ON DELETE CASCADE
+);
+
 CREATE TABLE liftdrop.delivery (
                                    delivery_id                     SERIAL PRIMARY KEY,
                                    courier_id                      INT,

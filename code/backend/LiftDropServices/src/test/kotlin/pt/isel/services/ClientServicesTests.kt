@@ -1,5 +1,6 @@
 package pt.isel.services
 
+import com.example.utils.Either
 import com.example.utils.Success
 import liftdrop.repository.TransactionManager
 import liftdrop.repository.jdbi.JdbiTransactionManager
@@ -7,10 +8,7 @@ import liftdrop.repository.jdbi.configureWithAppRequirements
 import org.jdbi.v3.core.Jdbi
 import org.junit.jupiter.api.BeforeEach
 import org.postgresql.ds.PGSimpleDataSource
-import pt.isel.liftdrop.Address
-import pt.isel.liftdrop.Location
-import pt.isel.liftdrop.User
-import pt.isel.liftdrop.UserRole
+import pt.isel.liftdrop.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -18,14 +16,14 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class ClientServiceTest {
-
     companion object {
-        private val jdbi = Jdbi
-            .create(
-                PGSimpleDataSource().apply {
-                    setURL(Environment.getDbUrl())
-                }
-            ).configureWithAppRequirements()
+        private val jdbi =
+            Jdbi
+                .create(
+                    PGSimpleDataSource().apply {
+                        setURL(Environment.getDbUrl())
+                    },
+                ).configureWithAppRequirements()
 
         private val transactionManager = JdbiTransactionManager(jdbi)
 
@@ -41,84 +39,93 @@ class ClientServiceTest {
         private fun createClientService(): ClientService = ClientService(transactionManager)
     }
 
-    private val testAddress = Address(
-        id = 1,
-        street = "123 Test St",
-        city = "Testville",
-        zipCode = "00000",
-        country = "Testland",
-        streetNumber = "1A",
-        floor = "1",
-    )
+    private val testAddress =
+        Address(
+            id = 1,
+            street = "123 Test St",
+            city = "Testville",
+            zipCode = "00000",
+            country = "Testland",
+            streetNumber = "1A",
+            floor = "1",
+        )
 
-    private val testUser = User(
-        email = "client@example.com",
-        password = "securePassword123",
-        name = "Test Client",
-        role = UserRole.CLIENT,
-        id = 0,
-    )
+    private val testUser =
+        User(
+            email = "client@example.com",
+            password = "securePassword123",
+            name = "Test Client",
+            role = UserRole.CLIENT,
+            id = 0,
+        )
 
     @BeforeEach
     fun setup() {
         cleanup(transactionManager)
     }
 
-
     @Test
     fun `registerClient should persist user and client`() {
-        val testUser2 = User(
-            email = "client2@example.com",
-            password = "securePassword123",
-            name = "Test Client",
-            role = UserRole.CLIENT,
-            id = 0,
-        )
+        val testUser2 =
+            User(
+                email = "client2@example.com",
+                password = "securePassword123",
+                name = "Test Client",
+                role = UserRole.CLIENT,
+                id = 0,
+            )
         val clientService = createClientService()
 
         val clientId = clientService.registerClient(testUser2.email, testUser2.password, testUser2.password, testAddress)
         assertIs<Success<Int>>(clientId)
 
         val savedClient = clientService.getClientById(clientId.value)
-        assertNotNull(savedClient)
-        assertEquals(testUser2.email, savedClient.user.email)
+        if (savedClient is Either.Right) {
+            assertEquals(testUser2.email, savedClient.value.user.email)
+        }
     }
 
     @Test
     fun `makeRequest should create request and requestDetails`() {
         val clientService = createClientService()
 
-        val clientId = clientService.registerClient(
-            testUser.email,
-            testUser.password,
-            testUser.name,
-            testAddress
-        )
+        val clientId =
+            clientService.registerClient(
+                testUser.email,
+                testUser.password,
+                testUser.name,
+                testAddress,
+            )
         assertIs<Success<Int>>(clientId)
         val client = clientService.getClientById(clientId.value)!!
+
+        assertIs<Either.Right<Client>>(client)
 
         transactionManager.run {
             val locationRepo = it.locationRepository
             val requestRepo = it.requestRepository
 
-            val pickupLocationId = locationRepo.createLocation(
-                client.user.id,
-                0,
-                Location(0 ,10.0, 20.0, testAddress, "Pickup location")
-            )
-            val dropoffLocationId = locationRepo.createLocation(
-                client.user.id,
-                0,
-                Location(1, 11.0, 21.0, testAddress, "Dropoff location")
-            )
+            val pickupLocationId =
+                locationRepo.createLocation(
+                    client.value.user.id,
+                    0,
+                    Location(0, 10.0, 20.0, testAddress, "Pickup location"),
+                )
+            val dropoffLocationId =
+                locationRepo.createLocation(
+                    client.value.user.id,
+                    0,
+                    Location(1, 11.0, 21.0, testAddress, "Dropoff location"),
+                )
 
             // Call service to make the request
-            val requestId = clientService.makeRequest(
-                client = client,
-                description = "Send package please",
-                pickupLocationId = pickupLocationId,
-                dropOffLocationId = dropoffLocationId,
-            )
+            val requestId =
+                clientService.makeRequest(
+                    client = client.value,
+                    description = "Send package please",
+                    pickupLocationId = pickupLocationId,
+                    dropOffLocationId = dropoffLocationId,
+                )
             assertIs<Success<Int>>(requestId)
 
             // Validate request
@@ -131,6 +138,4 @@ class ClientServiceTest {
             assertEquals("PENDING", createdRequest.requestStatus.name)
         }
     }
-
-
 }

@@ -12,10 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import pt.isel.liftdrop.model.LocationUpdateInputModel
-import pt.isel.liftdrop.model.LoginInputModel
-import pt.isel.liftdrop.model.LoginOutputModel
-import pt.isel.liftdrop.model.RegisterCourierInputModel
+import pt.isel.liftdrop.model.*
 import pt.isel.services.CourierService
 
 @RestController
@@ -121,17 +118,54 @@ class CourierController(
     /**
      * Accepts an order and changes the courier's status accordingly.
      */
-    @PostMapping("/acceptOrder")
-    fun acceptOrder() {
-        TODO()
+    @PostMapping("/acceptRequest")
+    fun acceptRequest(
+        @RequestBody input: AcceptRequestInputModel,
+    ): ResponseEntity<Any> {
+        val result = courierService.acceptRequest(input.courierId, input.requestId)
+
+        return when (result) {
+            is Success -> {
+                // Handle successful order acceptance
+                println("Order accepted successfully by courier with courierId: ${input.courierId}")
+                ResponseEntity.ok("Order accepted")
+            }
+            is Failure -> {
+                // Handle order acceptance error
+                println("Failed to accept order")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to accept order")
+            }
+        }
     }
 
     /**
      * Declines an order, keeping the courier available for new requests.
      */
-    @PostMapping("/declineOrder")
-    fun declineOrder() {
-        TODO()
+    @PostMapping("/declineRequest")
+    fun declineRequest(input: DeclineOrderInputModel): ResponseEntity<Any> {
+        val request =
+            courierService
+                .declineRequest(
+                    input.courierId,
+                    input.requestId,
+                )
+
+        return when (request) {
+            is Success -> {
+                // Handle successful order decline
+                println("Order declined successfully by courier with courierId: ${input.courierId}")
+                ResponseEntity.ok("Order declined")
+            }
+            is Failure -> {
+                // Handle order decline error
+                println("Failed to decline order")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to decline order")
+            }
+        }
     }
 
     /**

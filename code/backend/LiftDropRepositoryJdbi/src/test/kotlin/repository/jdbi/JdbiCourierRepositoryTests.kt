@@ -4,7 +4,6 @@ import liftdrop.repository.jdbi.JdbiCourierRepository
 import liftdrop.repository.jdbi.JdbiUserRepository
 import pt.isel.liftdrop.UserRole
 import repositoryJdbi.JdbiTestUtils.newTestEmail
-import repositoryJdbi.JdbiTestUtils.newTestLocation
 import repositoryJdbi.JdbiTestUtils.newTestPassword
 import repositoryJdbi.JdbiTestUtils.newTestUserName
 import repositoryJdbi.JdbiTestUtils.testWithHandleAndRollback
@@ -37,7 +36,6 @@ class JdbiCourierRepositoryTests {
 
                 // Given: the client id and an address for the client
                 val courierId = user.id
-                val currentLocation = newTestLocation()
 
                 // When: creating a new client associated with the user
                 val courierCreation = courierRepository.createCourier(courierId, true)
@@ -51,46 +49,12 @@ class JdbiCourierRepositoryTests {
 
                     // Given: the client's email and password
                     val courierEmail = userEmail
-                    val courierPassword = userPassword
 
                     // When: logging in with the user's email and password
-                    val loggedInClientPassword = courierRepository.loginCourier(courierEmail, courierPassword)
+                    val loggedInCourierId = courierRepository.loginCourier(courierEmail, userPassword)
                     // Then: the logged-in client's ID should match the expected client ID
-                    assert(loggedInClientPassword == courierPassword) { "Logged in client ID should match" }
+                    assert(loggedInCourierId?.first == courierId) { "Logged in client ID should match" }
                 }
-            }
-        }
-    }
-
-    @Test
-    fun `should successfully authenticate courier account`() {
-        testWithHandleAndRollback { handle ->
-            // Given: repositories for client and user operations
-            val courierRepository = JdbiCourierRepository(handle)
-            val userRepository = JdbiUserRepository(handle)
-
-            // Given: user information for creating a new user
-            val userEmail = newTestEmail()
-            val userPassword = newTestPassword()
-            val userName = newTestUserName()
-            val role: UserRole = UserRole.COURIER
-
-            // When: creating a new user
-            val userCreation = userRepository.createUser(userEmail, userPassword, userName, role)
-
-            if (userCreation == 0) {
-                throw Exception("User should be created")
-            } else {
-                // Then: the user should be retrievable from the database
-                val user = userRepository.findUserByEmail(userEmail) ?: throw Exception("User should be created")
-
-                // Given: the client id and an address for the client
-                val courierId = user.id
-
-                // When: logging in with the user's email and password
-                val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
-                // Then: the logged-in client's ID should match the expected client ID
-                assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
             }
         }
     }
@@ -111,10 +75,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
+            assert(loggedInClientId?.first == courierId) { "Logged in client ID should match" }
 
             // Given: a request ID to accept
             val requestId = 1 // Replace with an actual request ID from your database
@@ -143,16 +107,19 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
+            assert(loggedInClientId?.first == courierId) { "Logged in client ID should match" }
 
+            if (loggedInClientId == null) {
+                throw Exception("User should be created")
+            }
             // Given: a request ID to decline
             val requestId = 1 // Replace with an actual request ID from your database
 
             // When: declining the request
-            val isDeclined = courierRepository.declineRequest(requestId)
+            val isDeclined = courierRepository.declineRequest(loggedInClientId.first, requestId)
 
             // Then: the request should be declined successfully
             assert(isDeclined) { "Request should be declined" }
@@ -175,10 +142,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
+            assert(loggedInClientId?.first == courierId) { "Logged in client ID should match" }
 
             // Given: a request ID associated with a delivery to be cancelled
             val requestId = 1 // Replace with an actual request ID from your database
@@ -212,10 +179,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
+            assert(loggedInClientId?.first == courierId) { "Logged in client ID should match" }
 
             // Given: a request ID associated with a delivery to be completed
             val requestId = 1 // Replace with an actual request ID from your database
@@ -249,10 +216,10 @@ class JdbiCourierRepositoryTests {
             val userPassword = user.password
 
             // When: logging in with the user's email and password
-            val loggedInClientPassword = courierRepository.loginCourier(userEmail, userPassword)
+            val loggedInClientId = courierRepository.loginCourier(userEmail, userPassword)
 
             // Then: the logged-in client's ID should match the expected client ID
-            assert(loggedInClientPassword == userPassword) { "Logged in client ID should match" }
+            assert(loggedInClientId?.first == courierId) { "Logged in client ID should match" }
 
             // When: toggling availability status
             val isToggled = courierRepository.toggleAvailability(courierId)

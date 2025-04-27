@@ -56,17 +56,20 @@ class JdbiCourierRepository(
     override fun loginCourier(
         email: String,
         password: String,
-    ): String? =
+    ): Pair<Int, String>? =
         handle
             .createQuery(
                 """
-                SELECT password FROM liftdrop.user
-                WHERE email = :email AND role = 'COURIER'
+                SELECT c.courier_id, u.password FROM liftdrop.courier c
+                JOIN liftdrop."user" u ON c.courier_id = u.user_id
+                WHERE u.email = :email
                 """,
             ).bind("email", email)
-            .bind("password", password)
-            .mapTo<String>()
-            .singleOrNull()
+            .map { rs, _ ->
+                val id = rs.getInt("courier_id")
+                val passwordHash = rs.getString("password")
+                Pair(id, passwordHash)
+            }.singleOrNull()
 
     /**
      * Accepts a delivery request for a courier.
@@ -127,19 +130,36 @@ class JdbiCourierRepository(
      * @param requestId The ID of the delivery request.
      * @return true if the request was declined successfully, false otherwise.
      */
-    override fun declineRequest(requestId: Int): Boolean {
-        val result =
+    override fun declineRequest(
+        courierId: Int,
+        requestId: Int,
+    ): Boolean {
+        // 1. Set courier_id = NULL for the request (leave status as PENDING)
+        val updateRequest =
             handle
                 .createUpdate(
                     """
-                UPDATE liftdrop.request
-                SET courier_id = NULL, request_status = 'DECLINED'
-                WHERE request_id = :request_id 
-                """,
+                    UPDATE liftdrop.request
+                    SET courier_id = NULL
+                    WHERE request_id = :request_id
+                    """.trimIndent(),
                 ).bind("request_id", requestId)
                 .execute()
 
-        return result > 0
+        // 2. Insert a row into request_declines
+        val updateDeclinedRequests =
+            handle
+                .createUpdate(
+                    """
+                    INSERT INTO liftdrop.request_declines (request_id, courier_id)
+                    VALUES (:request_id, :courier_id)
+                    """.trimIndent(),
+                ).bind("request_id", requestId)
+                .bind("courier_id", courierId)
+                .execute()
+
+        // 3. Return true if the update was successful, false otherwise
+        return (updateRequest > 0 && updateDeclinedRequests > 0)
     }
 
     /**

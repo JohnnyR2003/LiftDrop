@@ -5,9 +5,9 @@ import com.example.utils.failure
 import com.example.utils.success
 import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
+import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.UserRole
-import pt.isel.liftdrop.Address
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.UUID
 
@@ -55,10 +55,15 @@ class ClientService(
             return@run success(clientCreation)
         }
 
-    fun getClientById(clientId: Int): Client? =
+    fun getClientById(clientId: Int): Either<ClientError, Client>? =
         transactionManager.run {
             val clientRepository = it.clientRepository
-            clientRepository.getClientByUserId(clientId)
+            val client = clientRepository.getClientByUserId(clientId)
+            if (client == null) {
+                return@run failure(ClientError.ClientNotFound)
+            } else {
+                return@run success(client)
+            }
         }
 
     fun loginClient(
@@ -68,21 +73,24 @@ class ClientService(
         transactionManager.run {
             val clientRepository = it.clientRepository
             val userRepository = it.usersRepository
-            val passwordFromDatabase = clientRepository.loginClient(
-                email = email,
-                password = password,
-            ) ?: return@run failure(ClientError.InvalidEmailOrPassword)
-            val userId = userRepository.findUserByEmail(email)?.id
-                ?: return@run failure(ClientError.UserNotFound)
+            val passwordFromDatabase =
+                clientRepository
+                    .loginClient(
+                        email = email,
+                        password = password,
+                    )?.second ?: return@run failure(ClientError.InvalidEmailOrPassword)
+            val userId =
+                userRepository.findUserByEmail(email)?.id
+                    ?: return@run failure(ClientError.UserNotFound)
             val sessionToken = UUID.randomUUID().toString()
 
             clientRepository
                 .createClientSession(
                     userId,
-                    sessionToken
+                    sessionToken,
                 )
 
-            when(matchesPassword(password, passwordFromDatabase)) {
+            when (matchesPassword(password, passwordFromDatabase)) {
                 true -> {
                     return@run success(sessionToken)
                 }
@@ -91,7 +99,6 @@ class ClientService(
                 }
             }
         }
-
 
     fun makeRequest(
         client: Client,
@@ -107,7 +114,6 @@ class ClientService(
                     eta = 0,
                 )
 
-
             requestRepository.createRequestDetails(
                 requestId = requestId,
                 description = description,
@@ -115,6 +121,5 @@ class ClientService(
                 dropoffLocationId = dropOffLocationId,
             )
             return@run success(requestId)
-
         }
 }
