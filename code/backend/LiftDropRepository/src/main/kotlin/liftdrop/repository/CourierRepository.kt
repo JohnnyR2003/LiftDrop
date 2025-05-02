@@ -25,6 +25,11 @@ interface CourierRepository {
         requestId: Int,
     ): Boolean
 
+    fun pickupDelivery(
+        requestId: Int,
+        courierId: Int,
+    ): Boolean
+
     fun cancelDelivery(
         requestId: Int,
         courierId: Int,

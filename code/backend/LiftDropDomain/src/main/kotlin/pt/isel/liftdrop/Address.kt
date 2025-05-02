@@ -1,7 +1,6 @@
 package pt.isel.liftdrop
 
 data class Address(
-    val id: Int,
     val country: String,
     val city: String,
     val street: String,

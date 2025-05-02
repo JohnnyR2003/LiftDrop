@@ -15,7 +15,6 @@ class LocationMapper : RowMapper<Location> {
                 r.getDouble("latitude"),
                 r.getDouble("longitude"),
                 Address(
-                    r.getInt("address_id"),
                     r.getString("country"),
                     r.getString("city"),
                     r.getString("street"),

@@ -2,13 +2,19 @@ package pt.isel.services
 
 import com.example.utils.Either
 import com.example.utils.Success
+import kotlinx.coroutines.runBlocking
 import liftdrop.repository.TransactionManager
 import liftdrop.repository.jdbi.JdbiTransactionManager
 import liftdrop.repository.jdbi.configureWithAppRequirements
 import org.jdbi.v3.core.Jdbi
 import org.junit.jupiter.api.BeforeEach
 import org.postgresql.ds.PGSimpleDataSource
-import pt.isel.liftdrop.*
+import pt.isel.liftdrop.Address
+import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.User
+import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.services.google.GeocodingServices
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -27,6 +33,12 @@ class ClientServiceTest {
 
         private val transactionManager = JdbiTransactionManager(jdbi)
 
+        private val courierService = createCourierService()
+
+        private val courierWebSocketHandler = createCourierWebSocketHandler()
+
+        private val geocodingServices = createGeocodingService()
+
         private fun cleanup(trxManager: TransactionManager) {
             trxManager.run { trx ->
                 trx.requestRepository
@@ -36,18 +48,33 @@ class ClientServiceTest {
             }
         }
 
-        private fun createClientService(): ClientService = ClientService(transactionManager)
+        private fun createCourierService(): CourierService = CourierService(transactionManager)
+
+        private fun createCourierWebSocketHandler(): CourierWebSocketHandler = CourierWebSocketHandler(courierService)
+
+        private fun createGeocodingService(): GeocodingServices = GeocodingServices(transactionManager, courierWebSocketHandler)
+
+        private fun createClientService(): ClientService = ClientService(transactionManager, geocodingServices)
     }
 
     private val testAddress =
         Address(
-            id = 1,
             street = "123 Test St",
             city = "Testville",
-            zipCode = "00000",
+            zipCode = "1",
             country = "Testland",
             streetNumber = "1A",
             floor = "1",
+        )
+
+    private val testAddress2 =
+        Address(
+            street = "1234 Test2 St",
+            city = "Testville",
+            zipCode = "2",
+            country = "Testland",
+            streetNumber = "2A",
+            floor = "3",
         )
 
     private val testUser =
@@ -107,25 +134,29 @@ class ClientServiceTest {
 
             val pickupLocationId =
                 locationRepo.createLocation(
-                    client.value.user.id,
-                    0,
-                    Location(0, 10.0, 20.0, testAddress, "Pickup location"),
+                    LocationDTO(38.7169, -9.1399),
+                    testAddress,
                 )
             val dropoffLocationId =
                 locationRepo.createLocation(
-                    client.value.user.id,
-                    0,
-                    Location(1, 11.0, 21.0, testAddress, "Dropoff location"),
+                    LocationDTO(40.4168, -3.7038),
+                    testAddress2,
                 )
 
-            // Call service to make the request
+            val pickup = locationRepo.getLocationById(pickupLocationId)
+
+            val dropoff = locationRepo.getLocationById(dropoffLocationId)
+
             val requestId =
-                clientService.makeRequest(
-                    client = client.value,
-                    description = "Send package please",
-                    pickupLocationId = pickupLocationId,
-                    dropOffLocationId = dropoffLocationId,
-                )
+                runBlocking {
+                    clientService.makeRequest(
+                        client = client.value,
+                        description = "Send package please",
+                        pickupLocation = pickup,
+                        dropOffLocation = dropoff,
+                    )
+                }
+
             assertIs<Success<Int>>(requestId)
 
             // Validate request
@@ -135,7 +166,7 @@ class ClientServiceTest {
             val createdRequest = requestRepo.getRequestById(requestId.value)
             assertNotNull(createdRequest)
             assertEquals(clientId.value, createdRequest.clientId)
-            assertEquals("PENDING", createdRequest.requestStatus.name)
+            assertEquals("PENDING", createdRequest.requestStatus.status.name)
         }
     }
 }

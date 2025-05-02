@@ -1,6 +1,6 @@
 package pt.isel.liftdrop.model
 
-data class DeclineOrderInputModel(
+data class DeclineRequestInputModel(
     val courierId: Int,
     val requestId: Int,
 )

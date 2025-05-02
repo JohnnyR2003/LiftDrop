@@ -159,6 +159,7 @@ class CourierServiceTests {
                 requestId,
             )
 
+        println(acceptRequestResult)
         assertTrue(acceptRequestResult is Either.Right)
     }
 

@@ -4,10 +4,15 @@ import com.example.utils.Either
 import com.example.utils.failure
 import com.example.utils.success
 import jakarta.inject.Named
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.services.google.GeocodingServices
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.UUID
 
@@ -24,6 +29,7 @@ sealed class ClientError {
 @Named
 class ClientService(
     private val transactionManager: TransactionManager,
+    private val geocodingServices: GeocodingServices,
 ) {
     fun registerClient(
         email: String,
@@ -100,26 +106,53 @@ class ClientService(
             }
         }
 
-    fun makeRequest(
+    suspend fun makeRequest(
         client: Client,
         description: String,
-        pickupLocationId: Int,
-        dropOffLocationId: Int,
+        pickupLocation: LocationDTO,
+        dropOffLocation: LocationDTO,
     ): Either<ClientError, Int> =
         transactionManager.run {
             val requestRepository = it.requestRepository
+            val locationRepository = it.locationRepository
             val requestId =
                 requestRepository.createRequest(
                     clientId = client.user.id,
                     eta = 0,
                 )
+/*
+            val pickupAddress: Address =
+                geocodingServices.reverseGeocode(
+                    pickupLocation.latitude,
+                    pickupLocation.longitude,
+                )
 
-            requestRepository.createRequestDetails(
-                requestId = requestId,
-                description = description,
-                pickupLocationId = pickupLocationId,
-                dropoffLocationId = dropOffLocationId,
-            )
+            val pickupLocationId = locationRepository.createLocation(pickupLocation, pickupAddress)
+
+            val dropOffAddress: Address =
+                geocodingServices.reverseGeocode(
+                    dropOffLocation.latitude,
+                    dropOffLocation.longitude,
+                )
+
+            val dropOffLocationId = locationRepository.createLocation(dropOffLocation, dropOffAddress)
+*/
+
+            val pickupLocationId = 8
+
+            val dropOffLocationId = 9
+
+            requestRepository
+                .createRequestDetails(
+                    requestId = requestId,
+                    description = description,
+                    pickupLocationId = pickupLocationId,
+                    dropoffLocationId = dropOffLocationId,
+                )
+
+            CoroutineScope(Dispatchers.Default).launch {
+                geocodingServices.handleCourierAssignment(pickupLocation.latitude, pickupLocation.longitude, requestId)
+            }
             return@run success(requestId)
         }
 }

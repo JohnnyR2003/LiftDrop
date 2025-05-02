@@ -63,6 +63,10 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
 
+    implementation("io.ktor:ktor-server-websockets:2.3.7") // adjust version as needed
+    implementation("io.ktor:ktor-client-cio:2.3.7") // adjust version as needed
+
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

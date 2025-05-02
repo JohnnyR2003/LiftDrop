@@ -7,7 +7,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -126,16 +125,15 @@ class CourierController(
 
         return when (result) {
             is Success -> {
-                // Handle successful order acceptance
                 println("Order accepted successfully by courier with courierId: ${input.courierId}")
-                ResponseEntity.ok("Order accepted")
+                val response = AcceptRequestOutputModel(requestId = input.requestId)
+                ResponseEntity.ok(response)
             }
             is Failure -> {
-                // Handle order acceptance error
                 println("Failed to accept order")
                 ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to accept order")
+                    .body(mapOf("error" to "Failed to accept order"))
             }
         }
     }
@@ -144,7 +142,7 @@ class CourierController(
      * Declines an order, keeping the courier available for new requests.
      */
     @PostMapping("/declineRequest")
-    fun declineRequest(input: DeclineOrderInputModel): ResponseEntity<Any> {
+    fun declineRequest(input: DeclineRequestInputModel): ResponseEntity<Any> {
         val request =
             courierService
                 .declineRequest(
@@ -172,17 +170,26 @@ class CourierController(
      * Sets the courier status to waiting for orders.
      */
     @PostMapping("/waitingOrders")
-    fun waitingOrders() {
-        TODO()
-    }
+    fun startListening(input: StartListeningInputModel): ResponseEntity<Any> {
+        val request =
+            courierService.toggleAvailability(
+                input.courierId,
+            )
 
-    /**
-     * Checks if the courier is currently waiting for orders.
-     * @return true if the courier is available and waiting for new orders, false otherwise.
-     */
-    @GetMapping("/isWaitingOrders")
-    fun isWaitingOrders() {
-        TODO()
+        return when (request) {
+            is Success -> {
+                // Handle successful order acceptance
+                println("Courier is now available for orders")
+                ResponseEntity.ok("Courier is now available for orders")
+            }
+            is Failure -> {
+                // Handle order acceptance error
+                println("Failed to set courier to waiting for orders")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to set courier to waiting for orders")
+            }
+        }
     }
 
     /**
@@ -197,16 +204,54 @@ class CourierController(
      * Marks an order as picked up, indicating that the courier has collected it from the sender.
      */
     @PostMapping("/pickedUpOrder")
-    fun pickedUpOrder() {
-        TODO()
+    fun pickUpOrder(input: PickupOrderInputModel): ResponseEntity<Any> {
+        val request =
+            courierService.pickupDelivery(
+                requestId = input.requestId,
+                courierId = input.courierId,
+            )
+
+        return when (request) {
+            is Success -> {
+                // Handle successful order pickup
+                println("Order picked up successfully by courier with courierId: ${input.courierId}")
+                ResponseEntity.ok("Order picked up")
+            }
+            is Failure -> {
+                // Handle order pickup error
+                println("Failed to pick up order")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to pick up order")
+            }
+        }
     }
 
     /**
      * Marks an order as delivered, indicating that the courier has successfully handed it to the recipient.
      */
     @PostMapping("/deliveredOrder")
-    fun deliveredOrder() {
-        TODO()
+    fun deliverOrder(input: DeliverOrderInputModel): ResponseEntity<Any> {
+        val request =
+            courierService.deliver(
+                requestId = 0,
+                courierId = 0,
+            )
+
+        return when (request) {
+            is Success -> {
+                // Handle successful order delivery
+                println("Order delivered successfully")
+                ResponseEntity.ok("Order delivered")
+            }
+            is Failure -> {
+                // Handle order delivery error
+                println("Failed to deliver order")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to deliver order")
+            }
+        }
     }
 
     /**

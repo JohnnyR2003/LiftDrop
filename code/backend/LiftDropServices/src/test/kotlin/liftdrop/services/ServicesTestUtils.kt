@@ -8,7 +8,9 @@ import pt.isel.liftdrop.Address
 import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
 import pt.isel.services.ClientService
 import pt.isel.services.CourierService
+import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.UserService
+import pt.isel.services.google.GeocodingServices
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -21,14 +23,22 @@ object ServicesTestUtils {
                 },
             ).configureWithAppRequirements()
 
+    fun createCourierWebSocketHandler() =
+        CourierWebSocketHandler(
+            createCourierService(),
+        )
+
     fun createCourierService() =
         CourierService(
             JdbiTransactionManager(jdbi),
         )
 
+    private fun createGeocodingService() = GeocodingServices(JdbiTransactionManager(jdbi), createCourierWebSocketHandler())
+
     fun createClientService() =
         ClientService(
             JdbiTransactionManager(jdbi),
+            createGeocodingService(),
         )
 
     fun createUsersService() =
@@ -58,7 +68,6 @@ object ServicesTestUtils {
 
     fun newTestAddress() =
         Address(
-            id = newTestId(),
             country = newCountry(),
             city = newCity(),
             street = newStreet(),

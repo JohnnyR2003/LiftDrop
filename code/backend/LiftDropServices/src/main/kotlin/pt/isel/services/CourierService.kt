@@ -6,7 +6,6 @@ import com.example.utils.success
 import liftdrop.repository.TransactionManager
 import org.springframework.stereotype.Service
 import pt.isel.liftdrop.Courier
-import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.liftdrop.UserRole
 import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
 import pt.isel.services.utils.Codify.encodePassword
@@ -56,7 +55,7 @@ class CourierService(
             val courierCreation =
                 courierRepository.createCourier(
                     userId = id,
-                    isAvailable = false,
+                    isAvailable = true,
                 )
             success(courierCreation)
         }
@@ -127,13 +126,28 @@ class CourierService(
         }
     }
 
-    fun deliver(
+    fun pickupDelivery(
+        requestId: Int,
         courierId: Int,
-        packageId: Int,
     ): Either<CourierError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
-            val request = courierRepository.completeDelivery(packageId, courierId)
+            val request = courierRepository.pickupDelivery(requestId, courierId)
+            if (!request) {
+                return@run failure(CourierError.PackageAlreadyDelivered)
+            } else {
+                success(true)
+            }
+        }
+    }
+
+    fun deliver(
+        requestId: Int,
+        courierId: Int,
+    ): Either<CourierError, Boolean> {
+        return transactionManager.run {
+            val courierRepository = it.courierRepository
+            val request = courierRepository.completeDelivery(requestId, courierId)
             if (!request) {
                 return@run failure(CourierError.PackageAlreadyDelivered)
             } else {
@@ -166,30 +180,6 @@ class CourierService(
             } else {
                 success(true)
             }
-        }
-    }
-
-    fun fetchClosestCouriers(
-        pickupLat: Double,
-        pickupLon: Double,
-        offset: Int = 0,
-    ): Either<CourierError, CourierWithLocation> {
-        return transactionManager.run {
-            val courierRepository = it.courierRepository
-
-            // 1. Get all available couriers and their locations(already sorted by distance)
-            val couriers = courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon)
-            if (couriers.isEmpty()) {
-                return@run failure(CourierError.NoAvailableCouriers)
-            }
-
-            // 2. Pick a courier at the offset index
-            if (offset >= couriers.size) {
-                return@run failure(CourierError.NoCourierAvailable)
-            }
-
-            val selectedCourier = couriers[offset]
-            return@run success(selectedCourier)
         }
     }
 

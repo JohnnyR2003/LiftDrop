@@ -1,8 +1,8 @@
 package pt.isel.pipeline.pt.isel.liftdrop
 
 data class RequestDetails(
-    val restaurantName: String,
+    val restaurantName: String?,
     val description: String,
     val pickupLocation: Int,
-    val dropOffLocation: Int,
+    val dropoffLocation: Int,
 )

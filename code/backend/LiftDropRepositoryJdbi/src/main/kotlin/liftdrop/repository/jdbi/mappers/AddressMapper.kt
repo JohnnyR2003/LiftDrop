@@ -10,7 +10,6 @@ class AddressMapper : RowMapper<Address> {
     ): Address? =
         if (r != null) {
             Address(
-                r.getInt("address_id"),
                 r.getString("country"),
                 r.getString("city"),
                 r.getString("street"),

@@ -53,7 +53,9 @@ INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, r
 VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800),
        (2, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700),
        (3, 3, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 3600),
-       (4, 1, 4, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800);
+       (4, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800),
+       (5, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700);
+
 
 -- Insert request details (depends on Request and Location)
 INSERT INTO liftdrop."request_details" (request_id, description, pickup_location, dropoff_location)
@@ -66,9 +68,18 @@ VALUES (1, 40.7128, -74.0060, 1, 'Pickup Spot 1'),
        (3, 37.7749, -122.4194, 3, 'Pickup Spot 3');
 
 INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)
-VALUES (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, 1800),
-       (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, 2700),
-       (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, 3600);
+VALUES
+    (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, 1800),
+    (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, 2700),
+    (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, 3600),
+    (4, 'PIZZA HUT AVENIDA', 2, 'Pepperoni Pizza', 9.49, 3000),
+    (5, 'TACO BELL MARQUÊS', 3, 'Crunchwrap Supreme', 7.29, 2500),
+    (6, 'STARBUCKS OLIVAIS', 1, 'Caramel Macchiato', 4.89, 1200),
+    (7, 'SUBWAY ALVALADE', 1, 'Turkey Sub', 6.19, 2000),
+    (8, 'PASTELARIA BELÉM', 3, 'Pastel de Nata', 1.50, 900),
+    (9, 'MEGA SUSHI CENTER', 2, 'Salmon Nigiri', 11.99, 3300),
+    (10, 'DONER KEBAB INTENDENTE', 1, 'Doner Kebab Wrap', 5.75, 1500);
+
 --deliveries todo
 
 INSERT INTO liftdrop."delivery" (delivery_id, courier_id, request_id, started_at, completed_at, ETA, delivery_status)

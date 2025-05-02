@@ -3,7 +3,8 @@ package liftdrop.repository.jdbi
 import liftdrop.repository.RequestRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
-import pt.isel.liftdrop.RequestDTO
+import pt.isel.liftdrop.Request
+import pt.isel.liftdrop.RequestDetailsDTO
 
 class JdbiRequestRepository(
     private val handle: Handle,
@@ -87,7 +88,7 @@ class JdbiRequestRepository(
             ).bind("requestId", requestId)
             .execute() > 0
 
-    override fun getAllRequestsForClient(clientId: Int): List<RequestDTO> =
+    override fun getAllRequestsForClient(clientId: Int): List<Request> =
         handle
             .createQuery(
                 """
@@ -97,7 +98,7 @@ class JdbiRequestRepository(
             r.courier_id,
             r.created_at,
             r.request_status,
-            r.ETA AS eta_seconds,
+            r.ETA AS order_eta,
             d.description,
             d.pickup_location,
             d.dropoff_location,
@@ -105,14 +106,14 @@ class JdbiRequestRepository(
         FROM liftdrop.request r
         JOIN liftdrop.request_details d ON r.request_id = d.request_id
         LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
-        WHERE r.client_id = :clientId
+        WHERE r.client_id = :client_id
         ORDER BY r.created_at DESC
         """,
-            ).bind("clientId", clientId)
-            .mapTo<RequestDTO>()
+            ).bind("client_id", clientId)
+            .mapTo<Request>()
             .list()
 
-    override fun getRequestById(id: Int): RequestDTO? =
+    override fun getRequestById(id: Int): Request? =
         handle
             .createQuery(
                 """
@@ -122,7 +123,7 @@ class JdbiRequestRepository(
             r.courier_id,
             r.created_at,
             r.request_status,
-            r.ETA AS eta_seconds,
+            r.ETA AS order_eta,
             d.description,
             d.pickup_location,
             d.dropoff_location,
@@ -130,11 +131,29 @@ class JdbiRequestRepository(
         FROM liftdrop.request r
         JOIN liftdrop.request_details d ON r.request_id = d.request_id
         LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
-        WHERE r.request_id = :id
+        WHERE r.request_id = :request_id
+        """,
+            ).bind("request_id", id)
+            .mapTo<Request>()
+            .one()
+
+    override fun getRequestForCourierById(id: Int): RequestDetailsDTO =
+        handle
+            .createQuery(
+                """
+        SELECT 
+            r.request_id,
+            d.description,
+            d.pickup_location,
+            d.dropoff_location
+        FROM liftdrop.request r
+        JOIN liftdrop.request_details d ON r.request_id = d.request_id
+        LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
+        WHERE d.request_id = :id
         LIMIT 1
         """,
             ).bind("id", id)
-            .mapTo<RequestDTO>()
+            .mapTo<RequestDetailsDTO>()
             .findOne()
             .orElse(null)
 }

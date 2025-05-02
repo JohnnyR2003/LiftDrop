@@ -59,7 +59,6 @@ class ClientController(
                     registerInput.password,
                     registerInput.name,
                     Address(
-                        0,
                         registerInput.address.country,
                         registerInput.address.city,
                         registerInput.address.street,

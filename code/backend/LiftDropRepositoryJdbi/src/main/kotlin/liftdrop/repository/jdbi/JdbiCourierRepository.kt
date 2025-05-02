@@ -5,8 +5,6 @@ import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.CourierWithLocation
-import pt.isel.liftdrop.RequestDTO
-import pt.isel.liftdrop.Status
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
 import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
@@ -82,46 +80,65 @@ class JdbiCourierRepository(
         requestId: Int,
         courierId: Int,
     ): Boolean {
+        // 1. check if request is valid(exists and is pending)
+
         val request =
             handle
                 .createQuery(
                     """
-                SELECT * FROM liftdrop.request
-                WHERE request_id = :requestId
-                """,
-                ).bind("requestId", requestId)
-                .mapTo<RequestDTO>()
+            SELECT request_id FROM liftdrop.request
+            WHERE request_id = :request_id
+            """,
+                ).bind("request_id", requestId)
+                .mapTo<Int>()
                 .singleOrNull()
 
-        if (request == null || request.requestStatus != Status.PENDING) {
-            return false
+        if (request == null) {
+            return false // Request not found
         }
-
-        handle
-            .createUpdate(
-                """
-            UPDATE liftdrop.request
-            SET courier_id = :courierId, request_status = 'ACCEPTED'
-            WHERE request_id = :requestId
-            """,
-            ).bind("courierId", courierId)
-            .bind("requestId", requestId)
-            .execute()
-
-        val createdDelivery =
+        val rowsUpdated =
             handle
                 .createUpdate(
                     """
+            UPDATE liftdrop.request
+            SET courier_id = :courierId,
+                request_status = 'ACCEPTED'
+            WHERE request_id = :requestId
+              AND request_status = 'PENDING'
+              AND courier_id IS NULL
+            """,
+                ).bind("courierId", courierId)
+                .bind("requestId", requestId)
+                .execute()
+
+        if (rowsUpdated == 1) {
+            val updateCourierStatus =
+                handle
+                    .createUpdate(
+                        """
+                UPDATE liftdrop.courier
+                SET is_available = FALSE
+                WHERE courier_id = :courierId
+                """,
+                    ).bind("courierId", courierId)
+                    .execute()
+
+            val createdDelivery =
+                handle
+                    .createUpdate(
+                        """
                 INSERT INTO liftdrop.delivery (courier_id, request_id, started_at, completed_at, ETA, delivery_status)
                 VALUES (:courierId, :requestId, EXTRACT(EPOCH FROM NOW()), NULL, NULL, 'PENDING')
                 """,
-                ).bind("courierId", courierId)
-                .bind("requestId", requestId)
-                .executeAndReturnGeneratedKeys()
-                .mapTo<Int>()
-                .one()
+                    ).bind("courierId", courierId)
+                    .bind("requestId", requestId)
+                    .executeAndReturnGeneratedKeys()
+                    .mapTo<Int>()
+                    .one()
 
-        return createdDelivery > 0
+            return (updateCourierStatus > 0 && createdDelivery > 0)
+        }
+        return false
     }
 
     /**
@@ -160,6 +177,44 @@ class JdbiCourierRepository(
 
         // 3. Return true if the update was successful, false otherwise
         return (updateRequest > 0 && updateDeclinedRequests > 0)
+    }
+
+    /**
+     * Picks up a delivery for a courier.
+     *
+     * @param requestId The ID of the delivery request.
+     * @param courierId The ID of the courier picking up the delivery.
+     * @return true if the delivery was picked up successfully, false otherwise.
+     */
+
+    override fun pickupDelivery(
+        requestId: Int,
+        courierId: Int,
+    ): Boolean {
+        handle
+            .createUpdate(
+                """
+                UPDATE liftdrop.delivery
+                SET delivery_status = 'PICKED_UP'
+                WHERE request_id = :requestId AND courier_id = :courierId
+                """,
+            ).bind("courierId", courierId)
+            .bind("requestId", requestId)
+            .execute()
+
+        val updatedRequest =
+            handle
+                .createUpdate(
+                    """
+                UPDATE liftdrop.request
+                SET request_status = 'PICKED_UP'
+                WHERE request_id = :requestId AND courier_id = :courierId
+                """,
+                ).bind("requestId", requestId)
+                .bind("courierId", courierId)
+                .execute()
+
+        return updatedRequest > 0
     }
 
     /**

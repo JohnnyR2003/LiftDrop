@@ -5,4 +5,5 @@ data class CourierWithLocation(
     val latitude: Double,
     val longitude: Double,
     val distanceMeters: Double,
+    val estimatedTravelTime: Long? = null,
 )

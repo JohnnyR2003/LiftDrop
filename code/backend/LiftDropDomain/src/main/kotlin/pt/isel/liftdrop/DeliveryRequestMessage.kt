@@ -1,0 +1,8 @@
+package pt.isel.pipeline.pt.isel.liftdrop
+
+data class DeliveryRequestMessage(
+    val requestId: Int,
+    val pickupLatitude: Double,
+    val pickupLongitude: Double,
+    val details: String,
+)

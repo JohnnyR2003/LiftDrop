@@ -37,7 +37,6 @@ object JdbiTestUtils {
 
     fun newTestAddress() =
         Address(
-            id = newTestId(),
             country = "country-${abs(Random.nextLong())}",
             city = "city-${abs(Random.nextLong())}",
             street = "street-${abs(Random.nextLong())}",
