@@ -106,10 +106,10 @@ class ClientService(
             }
         }
 
-    suspend fun makeRequest(
+    fun makeRequest(
         client: Client,
         description: String,
-        pickupLocation: LocationDTO,
+        restaurantName: String,
         dropOffLocation: LocationDTO,
     ): Either<ClientError, Int> =
         transactionManager.run {
@@ -120,7 +120,9 @@ class ClientService(
                     clientId = client.user.id,
                     eta = 0,
                 )
-/*
+
+            val pickupLocation = locationRepository.getRestaurantLocationByItem(description, restaurantName)
+
             val pickupAddress: Address =
                 geocodingServices.reverseGeocode(
                     pickupLocation.latitude,
@@ -136,11 +138,6 @@ class ClientService(
                 )
 
             val dropOffLocationId = locationRepository.createLocation(dropOffLocation, dropOffAddress)
-*/
-
-            val pickupLocationId = 8
-
-            val dropOffLocationId = 9
 
             requestRepository
                 .createRequestDetails(

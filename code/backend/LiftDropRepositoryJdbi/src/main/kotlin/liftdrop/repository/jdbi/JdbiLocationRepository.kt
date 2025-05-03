@@ -12,8 +12,24 @@ class JdbiLocationRepository(
     override fun createLocation(
         location: LocationDTO,
         address: Address,
-    ): Int =
-        handle
+    ): Int {
+        val addressId =
+            handle
+                .createUpdate(
+                    """
+                    INSERT INTO liftdrop.address (country, city, street, house_number, floor, zip_code)
+                    VALUES (:country, :city, :street, :house_number, :floor, :zipCode)
+                    """,
+                ).bind("country", address.country)
+                .bind("city", address.city)
+                .bind("street", address.street)
+                .bind("house_number", address.streetNumber)
+                .bind("floor", address.floor)
+                .bind("zipCode", address.zipCode)
+                .executeAndReturnGeneratedKeys()
+                .mapTo<Int>()
+                .one()
+        return handle
             .createUpdate(
                 """
                 INSERT INTO liftdrop.location (latitude, longitude, address)
@@ -21,10 +37,11 @@ class JdbiLocationRepository(
                 """,
             ).bind("latitude", location.latitude)
             .bind("longitude", location.longitude)
-            .bind("address", address.zipCode.toInt())
+            .bind("address", addressId)
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
+    }
 
     override fun getLocationById(id: Int): LocationDTO =
         handle
@@ -45,4 +62,21 @@ class JdbiLocationRepository(
                 """,
             ).bind("deliveryId", deliveryId)
             .execute() > 0
+
+    override fun getRestaurantLocationByItem(
+        item: String,
+        restaurantName: String,
+    ): LocationDTO =
+        handle
+            .createQuery(
+                """
+                SELECT l.latitude, l.longitude
+                FROM liftdrop.location l
+                JOIN liftdrop.item i ON l.location_id = i.establishment_location
+                WHERE i.designation = :item AND i.establishment = :restaurant_name
+                """,
+            ).bind("item", item)
+            .bind("restaurant_name", restaurantName)
+            .mapTo<LocationDTO>()
+            .first()
 }

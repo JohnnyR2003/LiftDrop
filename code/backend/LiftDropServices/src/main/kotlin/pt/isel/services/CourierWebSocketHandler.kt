@@ -63,7 +63,7 @@ class CourierWebSocketHandler(
         }
     }
 
-    fun handleCourierAccept(
+    private fun handleCourierAccept(
         courierId: Int,
         requestId: Int,
     ) {
@@ -71,7 +71,7 @@ class CourierWebSocketHandler(
         courierService.acceptRequest(courierId, requestId)
     }
 
-    fun handleCourierDecline(
+    private fun handleCourierDecline(
         courierId: Int,
         requestId: Int,
     ) {

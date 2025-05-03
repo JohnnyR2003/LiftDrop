@@ -14,10 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.AuthenticatedUser
+import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.LoginOutputModel
-import pt.isel.liftdrop.model.OrderInputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
+import pt.isel.liftdrop.model.RequestInputModel
 import pt.isel.services.ClientService
 
 /**
@@ -31,11 +32,35 @@ class ClientController(
     private val clientService: ClientService,
 ) {
     @PostMapping("/makeOrder")
-    fun makeOrder(
+    fun makeRequest(
         user: AuthenticatedUser,
-        @RequestBody order: OrderInputModel,
-    ) {
-        TODO()
+        @RequestBody order: RequestInputModel,
+    ): ResponseEntity<Any> {
+        val result =
+            clientService
+                .makeRequest(
+                    Client(
+                        user.user,
+                    ),
+                    order.itemDesignation,
+                    order.restaurantName,
+                    order.dropOffLocation,
+                )
+
+        return when (result) {
+            is Success -> {
+                // Handle successful order creation
+                println("Order created successfully with ID: ${result.value}")
+                ResponseEntity.ok(result.value)
+            }
+            is Failure -> {
+                // Handle order creation error
+                println("Failed to create order")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to create order")
+            }
+        }
     }
 
     @GetMapping("/getOrderStatus")

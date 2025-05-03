@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.location.LocationRepository
 import pt.isel.liftdrop.login.model.UserInfoRepository
 
@@ -27,8 +28,19 @@ class HomeViewModel(
     private val _isLoggedIn = MutableStateFlow<Boolean>(userRepo.userInfo != null)
     val isLoggedIn = _isLoggedIn.asStateFlow()
 
+    private val _homeScreenState = MutableStateFlow(HomeScreenState())
+    val homeScreenState: StateFlow<HomeScreenState> = _homeScreenState
+
+    private val _isListening = MutableStateFlow(false)
+    val isListening: StateFlow<Boolean> = _isListening.asStateFlow()
+
     private val _currentLocation = MutableStateFlow<Location?>(null)
     val currentLocation: StateFlow<Location?> = _currentLocation.asStateFlow()
+
+    private val _currentRequest = MutableStateFlow<RequestWebSocketDTO?>(null)
+    val currentRequest: StateFlow<RequestWebSocketDTO?> = _currentRequest
+
+
 
     fun login() {
         viewModelScope.launch {
@@ -83,17 +95,36 @@ class HomeViewModel(
         }
     }
 
-    fun startListening(userToken: String) {
+
+    fun startListening(token: String) {
         viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                homeService.startListening(userToken)
-                _error.value = null
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
-            } finally {
-                _isLoading.value = false
-            }
+            homeService.startListening(
+                token = token,
+                onMessage = { message ->
+                    val request = parseRequest(message)
+                    _homeScreenState.update { it.copy(incomingRequest = request) }
+                },
+                onFailure = { error ->
+                    _homeScreenState.update { it.copy(isListening = false) }
+                }
+            )
         }
+        _homeScreenState.update { it.copy(isListening = true) }
+    }
+
+    // Simulated JSON parsing
+    private fun parseRequest(message: String): CourierRequest {
+        // Replace with real JSON parsing
+        return CourierRequest(
+            id = "abc123",
+            pickup = "McDonald's Downtown",
+            dropoff = "123 Main St",
+            price = "4.50"
+        )
+    }
+
+    suspend fun stopListening() {
+        homeService.stopListening()
+        _isListening.value = false
     }
 }

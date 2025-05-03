@@ -12,6 +12,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.TAG
 import pt.isel.liftdrop.home.model.HomeService
@@ -53,23 +56,30 @@ class HomeActivity : ComponentActivity() {
         setContent {
             val loggedState = viewModel.isLoggedIn.collectAsState().value
             val earningsState = viewModel.earnings.collectAsState().value
+            val isListening = viewModel.isListening.collectAsState().value
+
             HomeScreen(
                 viewModel = viewModel,
                 state = HomeScreenState(
                     dailyEarnings = earningsState.toString(),
                     isUserLoggedIn = loggedState,
+                    isListening = isListening
                 ),
                 onMenuClick = { /* TODO */ },
                 onNotificationClick = { /* TODO */ },
-                onStartClick = {}
-            )
-            lifecycle.addObserver(object : DefaultLifecycleObserver {
-                override fun onStart(owner: LifecycleOwner) {
-                    if (repo.userInfoRepo.userInfo != null) {
-                        viewModel.login()
+                onStartClick = {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        if (isListening) {
+                            viewModel.stopListening()
+                        } else {
+                            val userInfo = repo.userInfoRepo.userInfo
+                            if (userInfo != null) {
+                                viewModel.startListening(token = userInfo.bearer)
+                            }
+                        }
                     }
                 }
-            })
+            )
         }
     }
 }

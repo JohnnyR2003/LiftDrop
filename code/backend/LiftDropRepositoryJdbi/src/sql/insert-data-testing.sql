@@ -29,7 +29,8 @@ VALUES (1, 40.7128, -74.0060, 1, 'New York City'),
        (6, 37.7749, -122.4194, 3, 'San Francisco'),
        (7, 38.73908, -9.12461, 1, 'Olaias'),
        (8, 38.74362, -9.13896, 1, 'Avenida de Roma'),
-       (9, 38.74140, -9.14667, 1, 'Campo Pequeno');
+       (9, 38.74140, -9.14667, 1, 'Campo Pequeno'),
+       (10, 38.74000, -9.15000, 1, 'Alameda');
 
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
@@ -65,20 +66,26 @@ VALUES (1, 'Pickup documents', 1, 2),
 INSERT INTO liftdrop."pickup_spot" (location_id, latitude, longitude, address, name)
 VALUES (1, 40.7128, -74.0060, 1, 'Pickup Spot 1'),
        (2, 34.0522, -118.2437, 2, 'Pickup Spot 2'),
-       (3, 37.7749, -122.4194, 3, 'Pickup Spot 3');
+       (3, 37.7749, -122.4194, 3, 'Pickup Spot 3'),
+       (4, 38.73908, -9.12461, 4, 'Pickup Spot 4'),
+       (5, 38.74362, -9.13896, 5, 'Pickup Spot 5'),
+       (6, 38.74140, -9.14667, 6, 'Pickup Spot 6'),
+       (7, 38.74000, -9.15000, 7, 'Pickup Spot 7'),
+       (8, 38.74000, -9.15000, 8, 'Pickup Spot 8'),
+       (9, 38.74000, -9.15000, 9, 'Pickup Spot 9'),
+       (10, 38.74000, -9.15000, 10, 'Pickup Spot 10');
 
 INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)
 VALUES
     (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, 1800),
     (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, 2700),
     (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, 3600),
-    (4, 'PIZZA HUT AVENIDA', 2, 'Pepperoni Pizza', 9.49, 3000),
-    (5, 'TACO BELL MARQUÊS', 3, 'Crunchwrap Supreme', 7.29, 2500),
-    (6, 'STARBUCKS OLIVAIS', 1, 'Caramel Macchiato', 4.89, 1200),
-    (7, 'SUBWAY ALVALADE', 1, 'Turkey Sub', 6.19, 2000),
-    (8, 'PASTELARIA BELÉM', 3, 'Pastel de Nata', 1.50, 900),
-    (9, 'MEGA SUSHI CENTER', 2, 'Salmon Nigiri', 11.99, 3300),
-    (10, 'DONER KEBAB INTENDENTE', 1, 'Doner Kebab Wrap', 5.75, 1500);
+    (4, 'PIZZA HUT AVENIDA', 4, 'Pepperoni Pizza', 9.49, 3000),
+    (5, 'TACO BELL MARQUÊS', 5, 'Crunchwrap Supreme', 7.29, 2500),
+    (6, 'STARBUCKS OLIVAIS', 6, 'Caramel Macchiato', 4.89, 1200),
+    (7, 'SUBWAY ALVALADE', 7, 'Turkey Sub', 6.19, 2000),
+    (8, 'PASTELARIA BELÉM', 8, 'Pastel de Nata', 1.50, 900),
+    (9, 'DONER KEBAB INTENDENTE', 9, 'Doner Kebab Wrap', 5.75, 1500);
 
 --deliveries todo
 

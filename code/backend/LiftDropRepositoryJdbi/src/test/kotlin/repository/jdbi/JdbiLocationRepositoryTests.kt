@@ -27,7 +27,7 @@ class JdbiLocationRepositoryTests {
                     street = "5th Avenue",
                     streetNumber = "123",
                     floor = "1st",
-                    zipCode = "5",
+                    zipCode = "3",
                 )
 
             // When: creating the location

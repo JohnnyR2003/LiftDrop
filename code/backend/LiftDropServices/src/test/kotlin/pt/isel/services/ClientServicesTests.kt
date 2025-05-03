@@ -132,18 +132,11 @@ class ClientServiceTest {
             val locationRepo = it.locationRepository
             val requestRepo = it.requestRepository
 
-            val pickupLocationId =
-                locationRepo.createLocation(
-                    LocationDTO(38.7169, -9.1399),
-                    testAddress,
-                )
             val dropoffLocationId =
                 locationRepo.createLocation(
                     LocationDTO(40.4168, -3.7038),
                     testAddress2,
                 )
-
-            val pickup = locationRepo.getLocationById(pickupLocationId)
 
             val dropoff = locationRepo.getLocationById(dropoffLocationId)
 
@@ -151,8 +144,8 @@ class ClientServiceTest {
                 runBlocking {
                     clientService.makeRequest(
                         client = client.value,
-                        description = "Send package please",
-                        pickupLocation = pickup,
+                        description = "Big Mac",
+                        restaurantName = "MC DONALDS CHELAS",
                         dropOffLocation = dropoff,
                     )
                 }

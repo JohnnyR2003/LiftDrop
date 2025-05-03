@@ -32,11 +32,15 @@ import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import pt.isel.liftdrop.home.model.CourierRequest
+import pt.isel.liftdrop.home.model.IncomingRequestCard
 
 
 data class HomeScreenState(
-    val dailyEarnings: String= "0.00",
-    val isUserLoggedIn: Boolean= false,
+    val dailyEarnings: String = "0.00",
+    val isUserLoggedIn: Boolean = false,
+    val isListening: Boolean = false,
+    val incomingRequest: CourierRequest? = null // New!
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -52,7 +56,7 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {},
-        containerColor = Color.White
+        containerColor = Color.White,
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -131,14 +135,17 @@ fun HomeScreen(
                         .background(Color.White, shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
+                    val buttonColor = if (state.isListening) Color.Red else Color.Green
+                    val buttonText = if (state.isListening) "STOP" else "START"
+
                     Button(
                         onClick = onStartClick,
                         shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                        colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                         modifier = Modifier.size(110.dp)
                     ) {
                         Text(
-                            text = "START",
+                            text = buttonText,
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
@@ -146,6 +153,14 @@ fun HomeScreen(
                         )
                     }
                 }
+            }
+
+            if (state.incomingRequest != null) {
+                IncomingRequestCard(
+                    request = state.incomingRequest,
+                    onAccept = { viewModel.acceptRequest(state.incomingRequest.id) },
+                    onDecline = { viewModel.declineRequest(state.incomingRequest.id) }
+                )
             }
 
             // Bottom info text
@@ -156,13 +171,22 @@ fun HomeScreen(
                     .background(Color.White),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("It's lunch time!", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF384259))
-                Text(
-                    "Check the map for the busiest restaurants",
-                    fontSize = 14.sp,
-                    color = Color(0xFF384259),
-                    modifier = Modifier.padding(bottom = 20.dp)
-                )
+                if(state.isListening){
+                    Text(
+                        text = "Listening for orders...",
+                        fontSize = 16.sp,
+                        color = Color(0xFF384259),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                } else {
+                    Text("It's lunch time!", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF384259))
+                    Text(
+                        "Check the map for the busiest restaurants",
+                        fontSize = 14.sp,
+                        color = Color(0xFF384259),
+                        modifier = Modifier.padding(bottom = 20.dp)
+                    )
+                }
             }
         }
     }
