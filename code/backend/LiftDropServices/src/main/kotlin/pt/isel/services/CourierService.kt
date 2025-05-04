@@ -7,7 +7,7 @@ import liftdrop.repository.TransactionManager
 import org.springframework.stereotype.Service
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.UserRole
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
 import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.*

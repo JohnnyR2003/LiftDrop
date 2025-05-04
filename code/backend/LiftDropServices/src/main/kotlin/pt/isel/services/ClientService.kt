@@ -11,7 +11,7 @@ import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.UserRole
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
 import pt.isel.services.google.GeocodingServices
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.UUID
@@ -40,7 +40,8 @@ class ClientService(
         transactionManager.run {
             val userRepository = it.usersRepository
             val clientRepository = it.clientRepository
-
+            val locationRepository = it.locationRepository
+            // Create user
             val userCreation =
                 userRepository.createUser(
                     email = email,
@@ -48,6 +49,7 @@ class ClientService(
                     name = name,
                     role = UserRole.CLIENT,
                 )
+
 
             val user = userRepository.findUserByEmail(email) ?: throw IllegalStateException("User should be created")
             val clientId = user.id
@@ -57,6 +59,12 @@ class ClientService(
                     clientId = clientId,
                     address = address,
                 )
+
+            //Create a DropOff Location
+            val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString()) ?: throw IllegalStateException("Location should be created")
+            println("longitude: ${loc.first} latitude: ${loc.second}")
+            locationRepository.createLocation(LocationDTO(loc.first, loc.second), address)
+
 
             return@run success(clientCreation)
         }
@@ -152,4 +160,16 @@ class ClientService(
             }
             return@run success(requestId)
         }
+}
+
+fun Address.toFormattedString(): String {
+    val components = listOfNotNull(
+        streetNumber?.takeIf { it.isNotBlank() },
+        street.takeIf { it.isNotBlank() },
+        floor?.takeIf { it.isNotBlank() },
+        city.takeIf { it.isNotBlank() },
+        zipCode.takeIf { it.isNotBlank() },
+        country.takeIf { it.isNotBlank() }
+    )
+    return components.joinToString(separator = ", ")
 }

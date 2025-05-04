@@ -1,4 +1,4 @@
-package pt.isel.pipeline.pt.isel.liftdrop
+package pt.isel.liftdrop
 
 data class LocationDTO(
     val latitude: Double,

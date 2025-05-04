@@ -3,7 +3,7 @@ package liftdrop.repository.jdbi.mappers
 import org.jdbi.v3.core.mapper.RowMapper
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Location
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
 
 class LocationMapper : RowMapper<Location> {
     override fun map(

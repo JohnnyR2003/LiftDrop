@@ -1,7 +1,7 @@
 package liftdrop.repository
 
 import pt.isel.liftdrop.Address
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
 
 interface LocationRepository {
     fun createLocation(

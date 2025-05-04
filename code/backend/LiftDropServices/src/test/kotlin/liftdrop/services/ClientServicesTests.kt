@@ -1,4 +1,4 @@
-package pt.isel.services
+package liftdrop.services
 
 import com.example.utils.Either
 import com.example.utils.Success
@@ -13,7 +13,10 @@ import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
+import pt.isel.services.ClientService
+import pt.isel.services.CourierService
+import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.google.GeocodingServices
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -59,11 +62,11 @@ class ClientServiceTest {
 
     private val testAddress =
         Address(
-            street = "123 Test St",
-            city = "Testville",
-            zipCode = "1",
-            country = "Testland",
-            streetNumber = "1A",
+            street = "R. Mário Moreira",
+            city = "Odivelas",
+            zipCode = "2675-669",
+            country = "Portugal",
+            streetNumber = "15b",
             floor = "1",
         )
 

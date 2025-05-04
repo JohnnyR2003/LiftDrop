@@ -1,6 +1,6 @@
 package pt.isel.liftdrop.model
 
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
 
 data class RequestInputModel(
     val restaurantName: String,

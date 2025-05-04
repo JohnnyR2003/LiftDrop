@@ -207,4 +207,39 @@ class GeocodingServices(
             floor = null,
         )
     }
+
+    fun getLatLngFromAddress(address: String): Pair<Double, Double>? {
+        val client = OkHttpClient()
+        println(address)
+        val url =
+            baseUrl +
+                "?address=${address.replace(" ", "+")}&key=$apiKey"
+        println(url)
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw Exception("Unexpected code $response")
+
+            val body = response.body?.string() ?: throw Exception("Empty response from geocoding API")
+            val json = JsonParser.parseString(body).asJsonObject
+
+            if (json["status"].asString == "OK") {
+                val results = json["results"].asJsonArray
+                if (results.size() > 0) {
+                    val location = results[0].asJsonObject["geometry"].asJsonObject["location"].asJsonObject
+                    val lat = location["lat"].asDouble
+                    val lng = location["lng"].asDouble
+                    return Pair(lat, lng)
+                } else {
+                    throw Exception("No results found for address: $address")
+                }
+            } else {
+                throw Exception("Error from geocoding API: ${json["status"].asString}")
+            }
+        }
+    }
 }

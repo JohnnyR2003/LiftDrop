@@ -4,7 +4,7 @@ import liftdrop.repository.LocationRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.liftdrop.Address
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
 
 class JdbiLocationRepository(
     private val handle: Handle,

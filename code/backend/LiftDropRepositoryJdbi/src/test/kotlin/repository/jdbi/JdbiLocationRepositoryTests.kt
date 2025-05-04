@@ -2,7 +2,7 @@ package repository.jdbi
 
 import liftdrop.repository.jdbi.JdbiLocationRepository
 import pt.isel.liftdrop.Address
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
 import repositoryJdbi.JdbiTestUtils.testWithHandleAndRollback
 import kotlin.test.Test
 

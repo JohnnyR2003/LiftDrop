@@ -2,7 +2,7 @@ package liftdrop.repository
 
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.CourierWithLocation
-import pt.isel.pipeline.pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.LocationDTO
 
 interface CourierRepository {
     fun createCourier(
