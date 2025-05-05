@@ -1,8 +1,8 @@
 package liftdrop.repository.jdbi.mappers
 
 import org.jdbi.v3.core.mapper.RowMapper
-import pt.isel.liftdrop.RequestDetailsDTO
 import pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.RequestDetailsDTO
 
 class RequestDetailsMapper : RowMapper<RequestDetailsDTO> {
     override fun map(
@@ -16,7 +16,7 @@ class RequestDetailsMapper : RowMapper<RequestDetailsDTO> {
                     latitude = rs.getDouble("pickup_latitude"),
                     longitude = rs.getDouble("pickup_longitude"),
                 ),
-            dropoffSpot =
+            dropoffLocation =
                 LocationDTO(
                     latitude = rs.getDouble("dropoff_latitude"),
                     longitude = rs.getDouble("dropoff_longitude"),

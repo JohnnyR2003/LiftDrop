@@ -17,7 +17,6 @@ class CourierWebSocketHandler(
     private val sessions: MutableMap<Int, WebSocketSession> = ConcurrentHashMap()
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
-        // Example: Extract courier ID from query or headers
         val courierId =
             session.uri
                 ?.query

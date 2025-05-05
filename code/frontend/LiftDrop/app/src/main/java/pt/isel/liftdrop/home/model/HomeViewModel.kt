@@ -95,7 +95,6 @@ class HomeViewModel(
         }
     }
 
-
     fun startListening(token: String) {
         viewModelScope.launch {
             homeService.startListening(
@@ -112,9 +111,34 @@ class HomeViewModel(
         _homeScreenState.update { it.copy(isListening = true) }
     }
 
-    // Simulated JSON parsing
+    fun acceptRequest(requestId: String, token: String) {
+        viewModelScope.launch {
+            try {
+                val accepted = homeService.acceptRequest(requestId, token)
+                if (accepted) {
+                    _homeScreenState.update { it.copy(incomingRequest = null) }
+                } else {
+                    _error.value = "Failed to accept request"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to accept request"
+            }
+        }
+    }
+
+    fun declineRequest(requestId: String) {
+        viewModelScope.launch {
+            try {
+                homeService.rejectRequest(requestId)
+                _homeScreenState.update { it.copy(incomingRequest = null) }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to reject request"
+            }
+        }
+    }
+
     private fun parseRequest(message: String): CourierRequest {
-        // Replace with real JSON parsing
+        // JSON parsing to be done
         return CourierRequest(
             id = "abc123",
             pickup = "McDonald's Downtown",

@@ -73,6 +73,8 @@ class GeocodingServices(
                             requestId = requestId,
                             pickupLatitude = requestDetails.pickupLocation.latitude,
                             pickupLongitude = requestDetails.pickupLocation.longitude,
+                            dropoffLatitude = requestDetails.dropoffLocation.latitude,
+                            dropoffLongitude = requestDetails.dropoffLocation.longitude,
                             details = requestDetails.description,
                         ),
                     )
@@ -220,8 +222,6 @@ class GeocodingServices(
                 .Builder()
                 .url(url)
                 .build()
-
-
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw Exception("Unexpected code $response")

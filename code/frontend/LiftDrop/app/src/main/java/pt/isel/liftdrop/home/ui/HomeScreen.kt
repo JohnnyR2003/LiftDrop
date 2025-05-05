@@ -158,7 +158,7 @@ fun HomeScreen(
             if (state.incomingRequest != null) {
                 IncomingRequestCard(
                     request = state.incomingRequest,
-                    onAccept = { viewModel.acceptRequest(state.incomingRequest.id) },
+                    onAccept = { viewModel.acceptRequest(state.incomingRequest.id, userToken) },
                     onDecline = { viewModel.declineRequest(state.incomingRequest.id) }
                 )
             }

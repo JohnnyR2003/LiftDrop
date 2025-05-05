@@ -20,6 +20,8 @@ interface HomeService {
 
     suspend fun acceptRequest(requestId: String, token: String): Boolean
 
+    suspend fun rejectRequest(requestId: String)
+
     suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double): Boolean
 
     suspend fun getCourierIdByToken(token: String): Int
@@ -43,8 +45,10 @@ class RealHomeService(
         if (isConnected) return
 
         val request = Request.Builder()
-            .url("$HOST/ws/courier?token=$token")
+            .url("$HOST/ws/courier")
+            .addHeader("Authorization", "Bearer $token")
             .build()
+
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -95,6 +99,12 @@ class RealHomeService(
         }*/
 
         //Send websocket message to accept request
+        webSocket?.send("{\"requestId\": \"$requestId\"}")
+        TODO()
+    }
+
+    override suspend fun rejectRequest(requestId: String) {
+        //Send websocket message to reject request
         webSocket?.send("{\"requestId\": \"$requestId\"}")
         TODO()
     }
