@@ -72,11 +72,11 @@ class ClientServiceTest {
 
     private val testAddress2 =
         Address(
-            street = "1234 Test2 St",
-            city = "Testville",
-            zipCode = "2",
-            country = "Testland",
-            streetNumber = "2A",
+            street = "R. Diogo Guilherme da Silva Alves Furtado",
+            city = "Odivelas",
+            zipCode = "2675-642",
+            country = "Portugal",
+            streetNumber = "8",
             floor = "3",
         )
 

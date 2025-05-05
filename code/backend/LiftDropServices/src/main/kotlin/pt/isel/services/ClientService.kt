@@ -24,6 +24,8 @@ sealed class ClientError {
     data object InvalidEmailOrPassword : ClientError()
 
     data object ClientEmailAlreadyExists : ClientError()
+
+    data object InvalidAddress : ClientError()
 }
 
 @Named
@@ -61,7 +63,10 @@ class ClientService(
                 )
 
             //Create a DropOff Location
-            val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString()) ?: throw IllegalStateException("Location should be created")
+            val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString())
+            if (loc == null) {
+                return@run failure(ClientError.InvalidAddress)
+            }
             println("longitude: ${loc.first} latitude: ${loc.second}")
             locationRepository.createLocation(LocationDTO(loc.first, loc.second), address)
 

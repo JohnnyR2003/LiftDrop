@@ -221,11 +221,17 @@ class GeocodingServices(
                 .url(url)
                 .build()
 
+
+
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw Exception("Unexpected code $response")
 
             val body = response.body?.string() ?: throw Exception("Empty response from geocoding API")
             val json = JsonParser.parseString(body).asJsonObject
+
+            if (json["status"].asString == "ZERO_RESULTS") {
+                return null
+            }
 
             if (json["status"].asString == "OK") {
                 val results = json["results"].asJsonArray

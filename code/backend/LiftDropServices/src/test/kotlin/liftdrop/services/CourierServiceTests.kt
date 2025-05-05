@@ -8,6 +8,7 @@ import liftdrop.services.ServicesTestUtils.newTestEmail
 import liftdrop.services.ServicesTestUtils.newTestPassword
 import liftdrop.services.ServicesTestUtils.newTestUserName
 import org.junit.jupiter.api.BeforeAll
+import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
 import kotlin.test.Test
@@ -28,7 +29,14 @@ class CourierServiceTests {
             val testEmail = newTestEmail()
             val testPassword = newTestPassword()
             val testUserName = newTestUserName()
-            val testAddress = newTestAddress()
+            val testAddress = Address(
+                street = "R. Mário Moreira",
+                city = "Odivelas",
+                zipCode = "2675-669",
+                country = "Portugal",
+                streetNumber = "15b",
+                floor = "1",
+            )
 
             val clientCreation =
                 clientService.registerClient(
