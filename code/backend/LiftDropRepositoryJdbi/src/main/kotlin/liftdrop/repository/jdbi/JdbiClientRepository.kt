@@ -116,10 +116,11 @@ class JdbiClientRepository(
             .createUpdate(
                 """
                 INSERT INTO liftdrop.sessions (user_id, session_token, created_at, role)
-                VALUES (:userId, :sessionToken, EXTRACT(EPOCH FROM NOW()))
+                VALUES (:userId, :sessionToken, EXTRACT(EPOCH FROM NOW()), :role)
                 RETURNING session_token
                 """.trimIndent(),
-            ).bind("userId", userId)
+            )
+            .bind("userId", userId)
             .bind("sessionToken", sessionToken)
             .bind("role", UserRole.CLIENT.name)
             .executeAndReturnGeneratedKeys()
