@@ -32,8 +32,16 @@ import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.ExitToApp
+import com.google.gson.GsonBuilder
+import okhttp3.OkHttpClient
 import pt.isel.liftdrop.home.model.CourierRequest
+import pt.isel.liftdrop.home.model.HomeService
 import pt.isel.liftdrop.home.model.IncomingRequestCard
+import pt.isel.liftdrop.home.model.RealHomeService
+import pt.isel.liftdrop.location.LocationRepositoryImpl
+import pt.isel.liftdrop.login.UserInfoSharedPrefs
 
 
 data class HomeScreenState(
@@ -51,7 +59,8 @@ fun HomeScreen(
     userToken: String = "",
     onMenuClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
-    onStartClick: () -> Unit = {}
+    onStartClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {} // Adicionado callback para logout
 ) {
 
     Scaffold(
@@ -96,7 +105,7 @@ fun HomeScreen(
                 }
             }
 
-            // Menu + Notifications
+            // Menu + Notifications + Logout
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -106,7 +115,8 @@ fun HomeScreen(
             ) {
                 listOf(
                     Pair(Icons.Default.Menu, onMenuClick),
-                    Pair(Icons.Default.Notifications, onNotificationClick)
+                    Pair(Icons.Default.Notifications, onNotificationClick),
+                    Pair(Icons.Default.ExitToApp, onLogoutClick)
                 ).forEach { (icon, action) ->
                     Box(
                         modifier = Modifier
@@ -190,5 +200,32 @@ fun HomeScreen(
             }
         }
     }
+}
+
+val mockJson = GsonBuilder()
+    .create()
+val mockHttpClient: OkHttpClient = OkHttpClient()
+val homeService = RealHomeService(mockHttpClient, mockJson)
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    HomeScreen(
+        viewModel = HomeViewModel( homeService,
+            userRepo = UserInfoSharedPrefs(LocalContext.current),
+            locationRepository = LocationRepositoryImpl(LocalContext.current)
+        ),
+        state = HomeScreenState(
+            dailyEarnings = "12.50",
+            isUserLoggedIn = true,
+            isListening = false,
+            incomingRequest = null
+        ),
+        onMenuClick = {},
+        onNotificationClick = {},
+        onStartClick = {},
+        onLogoutClick = {}
+    )
 }
 

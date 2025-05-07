@@ -52,8 +52,8 @@ tasks.test {
     if (System.getenv("DB_URL") == null) {
         environment("DB_URL", "jdbc:postgresql://localhost:5432/liftdrop?user=postgres&password=postgres")
     }
-    dependsOn("dbTestsWait")
-    finalizedBy("dbTestsDown")
+    dependsOn(":LiftDropRepositoryJdbi:dbTestsWait")
+    finalizedBy(":LiftDropRepositoryJdbi:dbTestsDown")
 }
 
 kotlin {
@@ -62,16 +62,3 @@ kotlin {
 
 val composeFileDir: Directory by parent!!.extra
 val dockerComposePath = composeFileDir.file("docker-compose.yml").toString()
-
-task<Exec>("dbTestsUp") {
-    commandLine("docker", "compose", "-f", dockerComposePath, "up", "-d", "--build", "--force-recreate", "liftdrop-for-tests")
-}
-
-task<Exec>("dbTestsWait") {
-    commandLine("docker", "exec", "liftdrop-for-tests", "/app/bin/wait-for-pg.sh", "localhost")
-    dependsOn("dbTestsUp")
-}
-
-task<Exec>("dbTestsDown") {
-    commandLine("docker", "compose", "-f", dockerComposePath, "down", "liftdrop-for-tests")
-}
