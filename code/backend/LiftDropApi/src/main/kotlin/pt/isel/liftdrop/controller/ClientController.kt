@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.Address
+import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.AuthenticatedUser
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.model.LoginInputModel
@@ -33,14 +34,15 @@ class ClientController(
 ) {
     @PostMapping("/makeOrder")
     fun makeRequest(
-        user: AuthenticatedUser,
+        user: AuthenticatedClient,
         @RequestBody order: RequestInputModel,
     ): ResponseEntity<Any> {
+        println("user: $user")
         val result =
             clientService
                 .makeRequest(
                     Client(
-                        user.user,
+                        user.client.user,
                     ),
                     order.itemDesignation,
                     order.restaurantName,

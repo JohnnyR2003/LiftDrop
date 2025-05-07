@@ -1,4 +1,4 @@
-package pt.isel
+package pt.isel.pipeline
 
 import com.example.utils.Either
 import org.springframework.stereotype.Component
@@ -11,6 +11,8 @@ class RequestTokenProcessor(
     private val usersService: UserService,
 ) {
     fun processClientAuthorizationHeaderValue(authorizationValue: String?): AuthenticatedClient? {
+        println("[1]I'm here")
+        println("authorizationValue: $authorizationValue")
         if (authorizationValue == null) return null
 
         val client = usersService.getClientByToken(authorizationValue)

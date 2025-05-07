@@ -1,4 +1,4 @@
-package pt.isel
+package pt.isel.pipeline
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -19,11 +19,12 @@ class AuthenticationInterceptor(
     ): Boolean {
         if (handler is HandlerMethod &&
             handler.methodParameters.any {
-                it.parameterType == AuthenticatedClient::class.java ||
-                    it.parameterType == AuthenticatedCourier::class.java
+                it.parameterType == AuthenticatedClient::class.java
             }
         ) {
             val authCookie = request.cookies?.find { it.name == "auth_token" }
+            println("[0]I'm here")
+            println("authCookie: $authCookie")
 
             // Check for AuthorizedClient
             if (handler.methodParameters.any {
@@ -45,7 +46,7 @@ class AuthenticationInterceptor(
             }
 
             // Check for AuthorizedCourier
-            if (handler.methodParameters.any {
+            else if (handler.methodParameters.any {
                     it.parameterType == AuthenticatedCourier::class.java
                 }
             ) {

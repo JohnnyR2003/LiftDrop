@@ -14,7 +14,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import pt.isel.services.CourierWebSocketHandler
 
 @SpringBootApplication(
-    scanBasePackages = ["pt.isel.liftdrop", "liftdrop.repository.jdbi", "pt.isel.services"],
+    scanBasePackages = ["pt.isel.liftdrop", "liftdrop.repository.jdbi", "pt.isel.services", "pt.isel.pipeline"],
     exclude = [org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration::class],
 )
 class LiftDropApplication {

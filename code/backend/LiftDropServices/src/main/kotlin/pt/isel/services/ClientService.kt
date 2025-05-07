@@ -94,27 +94,24 @@ class ClientService(
         transactionManager.run {
             val clientRepository = it.clientRepository
             val userRepository = it.usersRepository
-            println("I'm here")
+
             val passwordFromDatabase =
                 clientRepository
                     .loginClient(
                         email = email,
                         password = password,
                     )?.second ?: return@run failure(ClientError.InvalidEmailOrPassword)
-            println("I'm here")
+
             val userId =
                 userRepository.findUserByEmail(email)?.id
                     ?: return@run failure(ClientError.UserNotFound)
             val sessionToken = UUID.randomUUID().toString()
-            println("I'm here")
+
             clientRepository
                 .createClientSession(
                     userId,
                     sessionToken,
                 )
-            println("I'm here")
-            println("passwordFromDatabase: $passwordFromDatabase")
-            println("password: $password")
             when (matchesPassword(password, passwordFromDatabase)) {
                 true -> {
                     return@run success(sessionToken)

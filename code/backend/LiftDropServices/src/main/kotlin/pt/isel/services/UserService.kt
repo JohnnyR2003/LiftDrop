@@ -43,6 +43,8 @@ class UserService(
     }
 
     fun getClientByToken(token: String): Either<UserError, Client>? {
+        println("I reached the getClientByToken")
+        println("token: $token")
         return transactionManager.run {
             val userRepository = it.usersRepository
             val client = userRepository.findClientByToken(token)
