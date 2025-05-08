@@ -5,9 +5,10 @@ import com.example.utils.failure
 import com.example.utils.success
 import liftdrop.repository.TransactionManager
 import org.springframework.stereotype.Service
+import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Courier
-import pt.isel.liftdrop.UserRole
 import pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.UserRole
 import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.*
@@ -171,10 +172,17 @@ class CourierService(
     fun updateCourierLocation(
         courierId: Int,
         newLocation: LocationDTO,
+        address: Address,
     ): Either<CourierError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
-            val updated = courierRepository.updateCourierLocation(courierId, newLocation)
+            val locationRepository = it.locationRepository
+            val locationId =
+                locationRepository.createLocation(
+                    newLocation,
+                    address,
+                )
+            val updated = courierRepository.updateCourierLocation(courierId, locationId)
             if (!updated) {
                 return@run failure(CourierError.CourierNotFound)
             } else {

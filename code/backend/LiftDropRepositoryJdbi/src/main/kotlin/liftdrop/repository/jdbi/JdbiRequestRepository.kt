@@ -144,11 +144,17 @@ class JdbiRequestRepository(
         SELECT 
             r.request_id,
             d.description,
-            d.pickup_location,
+            l.latitude AS pickup_latitude,
+            l.longitude AS pickup_longitude,
+            l2.latitude AS dropoff_latitude,
+            l2.longitude AS dropoff_longitude,
             d.dropoff_location
         FROM liftdrop.request r
         JOIN liftdrop.request_details d ON r.request_id = d.request_id
         LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
+        LEFT JOIN liftdrop.location l ON l.location_id = d.dropoff_location
+        LEFT JOIN liftdrop.location l2 ON l2.location_id = d.pickup_location
+        
         WHERE d.request_id = :id
         LIMIT 1
         """,

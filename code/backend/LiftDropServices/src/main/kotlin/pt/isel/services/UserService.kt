@@ -20,8 +20,10 @@ class UserService(
 ) {
     fun getCourierIdByToken(token: String): Either<UserError, Int> {
         return transactionManager.run {
+            println("the following token was received in the backend for fetching purposes: $token")
             val userRepository = it.usersRepository
             val courierId = userRepository.getCourierIdByToken(token)
+            println("the following courierId was fetched from the database: $courierId")
             if (courierId == null) {
                 return@run failure(UserError.CourierNotFound)
             } else {

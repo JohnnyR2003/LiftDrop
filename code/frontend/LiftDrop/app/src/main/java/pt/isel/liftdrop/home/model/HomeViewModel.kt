@@ -9,9 +9,11 @@ import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.location.LocationRepository
 import pt.isel.liftdrop.login.model.UserInfoRepository
+import pt.isel.liftdrop.services.LocationTrackingService
 
 class HomeViewModel(
     private val homeService: HomeService,
+    private val locationTrackingService: LocationTrackingService,
     userRepo: UserInfoRepository,
     private val locationRepository: LocationRepository // <-- Add this
 ) : ViewModel() {
@@ -74,21 +76,18 @@ class HomeViewModel(
 
     fun startLocationUpdates(userToken: String) {
         viewModelScope.launch {
-            locationRepository.getLocationUpdates()
-                .catch { e -> _error.value = e.message ?: "Location error" }
-                .collect { location ->
-                    _currentLocation.value = location
-                    val courierId = homeService.getCourierIdByToken(userToken)
-                    updateCourierLocation(courierId, location)
-                }
+            val location = locationRepository.getCurrentLocation()
+            val courierId = homeService.getCourierIdByToken(userToken)
+            _currentLocation.value = location
+            updateCourierLocation(courierId, location)
         }
     }
 
-    private fun updateCourierLocation(courierId: Int, location: Location) {
+    private fun updateCourierLocation(courierId: Int, location: Location?) {
         viewModelScope.launch {
             try {
-                homeService.updateCourierLocation(courierId.toString(), location.latitude, location.longitude)
-                Log.d("HomeViewModel", "Courier location updated: ${location.latitude}, ${location.longitude}")
+                homeService.updateCourierLocation(courierId.toString(), location?.latitude, location?.longitude)
+                Log.d("HomeViewModel", "Courier location updated: ${location?.latitude}, ${location?.longitude}")
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to update courier location"
             }
@@ -107,8 +106,8 @@ class HomeViewModel(
                     _homeScreenState.update { it.copy(isListening = false) }
                 }
             )
+            _isListening.value = true
         }
-        _homeScreenState.update { it.copy(isListening = true) }
     }
 
     fun acceptRequest(requestId: String, token: String) {

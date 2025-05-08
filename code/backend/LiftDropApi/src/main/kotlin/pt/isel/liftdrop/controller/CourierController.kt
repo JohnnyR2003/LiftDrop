@@ -13,11 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.model.*
 import pt.isel.services.CourierService
+import pt.isel.services.google.GeocodingServices
 
 @RestController
 @RequestMapping("/courier")
 class CourierController(
     val courierService: CourierService,
+    val geocodingServices: GeocodingServices,
 ) {
     @PostMapping("/register")
     fun registerCourier(
@@ -91,11 +93,18 @@ class CourierController(
     fun updateCourierLocation(
         @RequestBody input: LocationUpdateInputModel,
     ): ResponseEntity<Any> {
+        val address =
+            geocodingServices.reverseGeocode(
+                input.newLocation.latitude,
+                input.newLocation.longitude,
+            )
+
         val result =
             courierService
                 .updateCourierLocation(
                     input.courierId,
                     input.newLocation,
+                    address,
                 )
 
         return when (result) {

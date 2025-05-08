@@ -55,10 +55,13 @@ class RegisterActivity : ComponentActivity() {
                             val tok = viewModel.token.value
                             if (tok != null) {
                                 repo.userInfoRepo.userInfo = UserInfo(email, tok.token)
+                                if(repo.userInfoRepo.userInfo != null) {
+                                    LoginActivity.navigate(this@RegisterActivity)
+                                    finish()
+                                }
                             }
                         }
                     }
-                    finish()
                     viewModel.resetError()
                 },
                 onBackRequest = { finish() }

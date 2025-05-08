@@ -2,7 +2,6 @@ package liftdrop.repository
 
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.CourierWithLocation
-import pt.isel.liftdrop.LocationDTO
 
 interface CourierRepository {
     fun createCourier(
@@ -44,7 +43,7 @@ interface CourierRepository {
 
     fun updateCourierLocation(
         courierId: Int,
-        newLocation: LocationDTO,
+        newLocationId: Int,
     ): Boolean
 
     fun toggleAvailability(courierId: Int): Boolean

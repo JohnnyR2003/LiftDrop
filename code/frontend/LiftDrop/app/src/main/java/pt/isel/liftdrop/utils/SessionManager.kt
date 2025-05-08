@@ -6,20 +6,25 @@ import androidx.core.content.edit
 object SessionManager {
 
     private const val PREFS_NAME = "user_session"
-    private const val IS_LOGGED_IN_KEY = "is_logged_in"
+    private const val KEY_TOKEN = "token"
 
     fun isUserLoggedIn(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getBoolean(IS_LOGGED_IN_KEY, false)
+        return prefs.getString(KEY_TOKEN, null) != null
     }
 
-    fun setUserLoggedIn(context: Context, isLoggedIn: Boolean) {
+    fun setUserToken(context: Context, token: String) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit() { putBoolean(IS_LOGGED_IN_KEY, isLoggedIn) }
+        prefs.edit { putString(KEY_TOKEN, token) }
+    }
+
+    fun getUserToken(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_TOKEN, null)
     }
 
     fun clearSession(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit() { clear() }
+        prefs.edit().clear().apply()
     }
 }

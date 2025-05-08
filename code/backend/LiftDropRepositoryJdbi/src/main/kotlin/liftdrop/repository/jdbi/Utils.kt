@@ -16,6 +16,8 @@ fun Jdbi.configureWithAppRequirements(): Jdbi {
     registerRowMapper(ClientMapper())
     registerRowMapper(CourierMapper())
     registerRowMapper(RequestMapper())
+    registerRowMapper(RequestDetailsMapper())
+    registerRowMapper(LocationDTOMapper())
 
     return this
 }

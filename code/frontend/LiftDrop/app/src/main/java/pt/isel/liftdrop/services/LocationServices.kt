@@ -14,10 +14,17 @@ import androidx.compose.ui.Modifier
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.tasks.await
 import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.maps.android.compose.*
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.LatLng
-class LocationServices {
+import pt.isel.liftdrop.location.LocationRepository
+
+
+interface LocationRepository {
+    suspend fun getCurrentLocation(): Location?
+}
+class LocationServices(val locationRepository: LocationRepository) {
 
     @OptIn(ExperimentalPermissionsApi::class)
     @Composable
@@ -38,16 +45,11 @@ class LocationServices {
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun getCurrentLocation(context: Context): Location? {
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        return fusedLocationClient.lastLocation.await()
+    suspend fun getCurrentLocation(): Location? {
+        val location = locationRepository.getCurrentLocation()
+        return location
     }
 
-    @SuppressLint("MissingPermission")
-    suspend fun getCurrentLocationCoordinates(context: Context): LatLng? {
-        val location = getCurrentLocation(context)
-        return location?.let { LatLng(it.latitude, it.longitude) }
-    }
 
     @Composable
     fun GoogleMapWithCurrentLocation() {
@@ -55,7 +57,7 @@ class LocationServices {
         var currentLocation by remember { mutableStateOf<LatLng?>(null) }
 
         LaunchedEffect(Unit) {
-            val location = getCurrentLocation(context)
+            val location = getCurrentLocation()
             currentLocation = location?.let { LatLng(it.latitude, it.longitude) }
         }
 
@@ -88,5 +90,7 @@ class LocationServices {
             }
         }
     }
+
+    companion object
 
 }

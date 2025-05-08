@@ -32,7 +32,7 @@ class LoginActivity : ComponentActivity() {
     }
 
     companion object {
-        fun navigate(origin: Activity, email: String = "", password: String = "") {
+        fun navigate(origin: Activity, email: String = "", password: String = "" ) {
             val intent = Intent(origin, LoginActivity::class.java).apply {
                 putExtra("email", email)
                 putExtra("password", password)
@@ -66,8 +66,8 @@ class LoginActivity : ComponentActivity() {
                             val tok = viewModel.token.value
                             if (tok != null) {
                                 repo.userInfoRepo.userInfo = UserInfo(username, tok.token)
-                                if (repo.userInfoRepo.userInfo != null){
-                                    SessionManager.setUserLoggedIn(this@LoginActivity, true)
+                                if(repo.userInfoRepo.userInfo?.bearer != null) {
+                                    SessionManager.setUserToken(this@LoginActivity, tok.token)
                                     HomeActivity.navigate(this@LoginActivity)
                                     finish()
                                 }

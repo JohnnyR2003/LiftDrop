@@ -35,7 +35,8 @@ class RealLoginService(
             .post(body)
             .build()
         httpClient.newCall(request).execute().use { response ->
-            return handleResponse(response, Token::class.java)
+            val id = handleResponse<String>(response, String::class.java)
+            return Token(id)
         }
     }
 

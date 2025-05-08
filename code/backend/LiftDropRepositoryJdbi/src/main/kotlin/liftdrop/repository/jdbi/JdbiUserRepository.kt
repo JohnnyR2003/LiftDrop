@@ -169,8 +169,24 @@ class JdbiUserRepository(
                 )
             }.singleOrNull()
 
-    override fun getCourierIdByToken(token: String): Int? =
-        handle
+    override fun getCourierIdByToken(token: String): Int? {
+        println(token)
+        val user =
+            handle
+                .createQuery(
+                    """
+                    SELECT u.user_id
+                    FROM liftdrop.sessions s
+                    JOIN liftdrop.user u ON s.user_id = u.user_id
+                    WHERE s.session_token = :token
+                    """.trimIndent(),
+                ).bind("token", token)
+                .mapTo<Int>()
+                .firstOrNull()
+
+        println("the following courierId was fetched from the database: $user")
+
+        return handle
             .createQuery(
                 """
                 SELECT u.user_id
@@ -180,7 +196,8 @@ class JdbiUserRepository(
                 """.trimIndent(),
             ).bind("token", token)
             .mapTo<Int>()
-            .singleOrNull()
+            .firstOrNull()
+    }
 }
 
 private fun mapToUser(rs: ResultSet): User =

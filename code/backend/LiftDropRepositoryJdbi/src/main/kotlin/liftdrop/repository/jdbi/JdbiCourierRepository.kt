@@ -7,7 +7,6 @@ import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
-import pt.isel.liftdrop.LocationDTO
 
 class JdbiCourierRepository(
     private val handle: Handle,
@@ -329,25 +328,8 @@ class JdbiCourierRepository(
      */
     override fun updateCourierLocation(
         courierId: Int,
-        newLocation: LocationDTO,
-    ): Boolean { // Needs further integration with google maps API to get address based on coordinates
-        val updatedLocation =
-            handle
-                .createUpdate(
-                    """
-                INSERT INTO liftdrop.location (latitude, longitude)
-                VALUES (:latitude, :longitude)
-                ON CONFLICT (latitude, longitude) DO UPDATE
-                SET address = :address
-                WHERE liftdrop.location.latitude = :latitude AND liftdrop.location.longitude = :longitude
-                """,
-                ).bind("latitude", newLocation.latitude)
-                .bind("longitude", newLocation.longitude)
-                .executeAndReturnGeneratedKeys()
-                .mapTo<Int>()
-                .one()
-        // Update the courier's current location
-
+        newLocationId: Int,
+    ): Boolean {
         val updatedCourier =
             handle
                 .createUpdate(
@@ -357,7 +339,7 @@ class JdbiCourierRepository(
                 WHERE courier_id = :courier_id
                 """,
                 ).bind("courier_id", courierId)
-                .bind("current_location", updatedLocation)
+                .bind("current_location", newLocationId)
                 .execute()
 
         return updatedCourier > 0

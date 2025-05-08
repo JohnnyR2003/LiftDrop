@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.annotation.SuppressLint
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ExitToApp
 import com.google.gson.GsonBuilder
@@ -42,6 +43,8 @@ import pt.isel.liftdrop.home.model.IncomingRequestCard
 import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.location.LocationRepositoryImpl
 import pt.isel.liftdrop.login.UserInfoSharedPrefs
+import pt.isel.liftdrop.services.LocationTrackingService
+import pt.isel.liftdrop.services.RealLocationTrackingService
 
 
 data class HomeScreenState(
@@ -207,12 +210,16 @@ val mockJson = GsonBuilder()
 val mockHttpClient: OkHttpClient = OkHttpClient()
 val homeService = RealHomeService(mockHttpClient, mockJson)
 
+
+@SuppressLint("ViewModelConstructorInComposable")
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
+    val mockLocationService = RealLocationTrackingService(mockHttpClient, mockJson, context = LocalContext.current)
     HomeScreen(
         viewModel = HomeViewModel( homeService,
+            locationTrackingService = mockLocationService,
             userRepo = UserInfoSharedPrefs(LocalContext.current),
             locationRepository = LocationRepositoryImpl(LocalContext.current)
         ),

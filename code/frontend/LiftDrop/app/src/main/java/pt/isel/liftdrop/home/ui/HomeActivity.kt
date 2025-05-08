@@ -31,7 +31,7 @@ class HomeActivity : ComponentActivity() {
     }
     private val viewModel: HomeViewModel by viewModels {
         viewModelInit {
-            HomeViewModel(repo.homeService, repo.userInfoRepo, repo.locationRepo)
+            HomeViewModel(repo.homeService, repo.locationTrackingService, repo.userInfoRepo, repo.locationRepo)
         }
     }
 
@@ -49,7 +49,6 @@ class HomeActivity : ComponentActivity() {
 
         if (!isUserLoggedIn(this)) {
             LoginActivity.navigate(this)
-            finish()
             return
         }
 

@@ -18,6 +18,9 @@ import java.util.concurrent.TimeUnit
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.login.model.UserInfoRepository
+import pt.isel.liftdrop.services.LocationTrackingService
+import pt.isel.liftdrop.services.RealLocationTrackingService
+import pt.isel.liftdrop.utils.CourierLocationWorker
 import pt.isel.liftdrop.utils.LiftDropWorker
 
 
@@ -35,6 +38,7 @@ interface DependenciesContainer {
     val homeService: HomeService
     //val courierService: CourierService
     val userInfoRepo : UserInfoRepository
+    val locationTrackingService: LocationTrackingService
     val locationRepo: LocationRepository
 }
 class LiftDropApplication : DependenciesContainer, Application() {
@@ -62,12 +66,15 @@ class LiftDropApplication : DependenciesContainer, Application() {
     override val userInfoRepo: UserInfoRepository
         get() = UserInfoSharedPrefs(this)
 
+    override val locationTrackingService: LocationTrackingService
+        get() = RealLocationTrackingService(httpClient, jsonEncoder, this)
+
     override val locationRepo: LocationRepository
         get() = LocationRepositoryImpl(this)
 
     private val workerConstraints  = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .setRequiresCharging(true)
+        .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+        .setRequiresCharging(false)
         .build()
 
     override fun onCreate() {
@@ -75,9 +82,21 @@ class LiftDropApplication : DependenciesContainer, Application() {
         Log.v(TAG, "LiftDropApplication.onCreate() on process ${android.os.Process.myPid()}")
 
         val workRequest =
-            PeriodicWorkRequestBuilder<LiftDropWorker>(repeatInterval = 12, TimeUnit.HOURS)
+            PeriodicWorkRequestBuilder<LiftDropWorker>(repeatInterval = 1, TimeUnit.MINUTES)
                 .setConstraints(workerConstraints)
                 .build()
+
+        /*val courierLocationWork =
+            PeriodicWorkRequestBuilder<CourierLocationWorker>(15, TimeUnit.MINUTES)
+                .setConstraints(workerConstraints)
+                .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "CourierLocationUpdater",
+            ExistingPeriodicWorkPolicy.KEEP,
+            courierLocationWork
+        )*/
+
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "LiftDropWorker",

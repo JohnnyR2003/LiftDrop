@@ -1,8 +1,11 @@
 package pt.isel.liftdrop.home.model
 
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -22,7 +25,7 @@ interface HomeService {
 
     suspend fun rejectRequest(requestId: String)
 
-    suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double): Boolean
+    suspend fun updateCourierLocation(courierId: String, lat: Double?, lon: Double?): Boolean
 
     suspend fun getCourierIdByToken(token: String): Int
 }
@@ -122,7 +125,7 @@ class RealHomeService(
         }
     }
 
-    override suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double): Boolean {
+    override suspend fun updateCourierLocation(courierId: String, lat: Double?, lon: Double?): Boolean {
         val body = ("{\"courierId\": ${courierId.toInt()}, \"newLocation\": {" +
                 "\"latitude\": $lat" +
                 ", \"longitude\": $lon" +
@@ -140,15 +143,16 @@ class RealHomeService(
     }
 
     override suspend fun getCourierIdByToken(token: String): Int {
-        val body = ("{\"token\": \"$token\"}").toRequestBody(ApplicationJsonType)
         val request = Request.Builder()
-            .url("$HOST/api/user/getIdByToken")
-            .post(body)
+            .url("$HOST/user/IdByToken")
+            .post(RequestBody.create(null, ByteArray(0))) // empty POST body
+            .addHeader("Authorization", "Bearer $token")
             .build()
+
         httpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("$response")
             val responseBody = response.body?.string()
-            return jsonEncoder.fromJson(responseBody, Int::class.java)
+            return jsonEncoder.fromJson(responseBody, IntResponse::class.java).value
         }
     }
 }

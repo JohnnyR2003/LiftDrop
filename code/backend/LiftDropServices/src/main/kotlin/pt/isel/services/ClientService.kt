@@ -10,8 +10,8 @@ import kotlinx.coroutines.launch
 import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
-import pt.isel.liftdrop.UserRole
 import pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.UserRole
 import pt.isel.services.google.GeocodingServices
 import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
@@ -54,7 +54,6 @@ class ClientService(
                     role = UserRole.CLIENT,
                 )
 
-
             val user = userRepository.findUserByEmail(email) ?: throw IllegalStateException("User should be created")
             val clientId = user.id
 
@@ -64,14 +63,13 @@ class ClientService(
                     address = address,
                 )
 
-            //Create a DropOff Location
+            // Create a DropOff Location
             val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString())
             if (loc == null) {
                 return@run failure(ClientError.InvalidAddress)
             }
             println("longitude: ${loc.first} latitude: ${loc.second}")
             locationRepository.createLocation(LocationDTO(loc.first, loc.second), address)
-
 
             return@run success(clientCreation)
         }
@@ -171,13 +169,14 @@ class ClientService(
 }
 
 fun Address.toFormattedString(): String {
-    val components = listOfNotNull(
-        streetNumber?.takeIf { it.isNotBlank() },
-        street.takeIf { it.isNotBlank() },
-        floor?.takeIf { it.isNotBlank() },
-        city.takeIf { it.isNotBlank() },
-        zipCode.takeIf { it.isNotBlank() },
-        country.takeIf { it.isNotBlank() }
-    )
+    val components =
+        listOfNotNull(
+            streetNumber?.takeIf { it.isNotBlank() },
+            street.takeIf { it.isNotBlank() },
+            floor?.takeIf { it.isNotBlank() },
+            city.takeIf { it.isNotBlank() },
+            zipCode.takeIf { it.isNotBlank() },
+            country.takeIf { it.isNotBlank() },
+        )
     return components.joinToString(separator = ", ")
 }
