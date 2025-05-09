@@ -89,10 +89,10 @@ CREATE TABLE liftdrop.delivery (
                                    FOREIGN KEY (request_id) REFERENCES liftdrop.request(request_id) ON DELETE CASCADE
 );
 
-CREATE TABLE liftdrop.pickup_spot () INHERITS (liftdrop.location);
+-- CREATE TABLE liftdrop.pickup_spot () INHERITS (liftdrop.location);
 
-ALTER TABLE liftdrop.pickup_spot
-    ADD CONSTRAINT pickup_spot_location_id_pk PRIMARY KEY (location_id);
+-- ALTER TABLE liftdrop.pickup_spot
+--     ADD CONSTRAINT pickup_spot_location_id_pk PRIMARY KEY (location_id);
 
 CREATE TABLE liftdrop.dropoff_spot (
                                        client_id                       INT,
@@ -106,7 +106,7 @@ CREATE TABLE liftdrop.item (
                                designation                     TEXT,
                                price                           NUMERIC,
                                ETA                             BIGINT,
-                               FOREIGN KEY (establishment_location) REFERENCES liftdrop.pickup_spot(location_id) ON DELETE CASCADE
+                               FOREIGN KEY (establishment_location) REFERENCES liftdrop.location(location_id) ON DELETE CASCADE
 );
 
 CREATE TABLE liftdrop.sessions (

@@ -63,17 +63,17 @@ INSERT INTO liftdrop."request_details" (request_id, description, pickup_location
 VALUES (1, 'Pickup documents', 1, 2),
        (2, 'Deliver food package', 2, 3);
 
-INSERT INTO liftdrop."pickup_spot" (location_id, latitude, longitude, address, name)
-VALUES (1, 40.7128, -74.0060, 1, 'Pickup Spot 1'),
-       (2, 34.0522, -118.2437, 2, 'Pickup Spot 2'),
-       (3, 37.7749, -122.4194, 3, 'Pickup Spot 3'),
-       (4, 38.73908, -9.12461, 4, 'Pickup Spot 4'),
-       (5, 38.74362, -9.13896, 5, 'Pickup Spot 5'),
-       (6, 38.74140, -9.14667, 6, 'Pickup Spot 6'),
-       (7, 38.74000, -9.15000, 7, 'Pickup Spot 7'),
-       (8, 38.74000, -9.15000, 8, 'Pickup Spot 8'),
-       (9, 38.74000, -9.15000, 9, 'Pickup Spot 9'),
-       (10, 38.74000, -9.15000, 10, 'Pickup Spot 10');
+-- INSERT INTO liftdrop."pickup_spot" (location_id, latitude, longitude, address, name)
+-- VALUES (1, 40.7128, -74.0060, 1, 'Pickup Spot 1'),
+--        (2, 34.0522, -118.2437, 2, 'Pickup Spot 2'),
+--        (3, 37.7749, -122.4194, 3, 'Pickup Spot 3'),
+--        (4, 38.73908, -9.12461, 4, 'Pickup Spot 4'),
+--        (5, 38.74362, -9.13896, 5, 'Pickup Spot 5'),
+--        (6, 38.74140, -9.14667, 6, 'Pickup Spot 6'),
+--        (7, 38.74000, -9.15000, 7, 'Pickup Spot 7'),
+--        (8, 38.74000, -9.15000, 8, 'Pickup Spot 8'),
+--        (9, 38.74000, -9.15000, 9, 'Pickup Spot 9'),
+--        (10, 38.74000, -9.15000, 10, 'Pickup Spot 10');
 
 INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)
 VALUES
