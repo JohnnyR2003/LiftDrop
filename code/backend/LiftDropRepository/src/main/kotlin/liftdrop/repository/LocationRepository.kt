@@ -18,5 +18,5 @@ interface LocationRepository {
     fun createDropOffLocation(
         clientId: Int,
         locationId: Int,
-    ): Int
+    ): Int?
 }

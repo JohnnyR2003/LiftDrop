@@ -95,8 +95,10 @@ CREATE TABLE liftdrop.delivery (
 --     ADD CONSTRAINT pickup_spot_location_id_pk PRIMARY KEY (location_id);
 
 CREATE TABLE liftdrop.dropoff_spot (
-                                       client_id                       INT,
-                                       FOREIGN KEY (client_id) REFERENCES liftdrop.client(client_id) ON DELETE CASCADE
+                               location_id                 SERIAL PRIMARY KEY,
+                               client_id                       INT,
+                               FOREIGN KEY (client_id) REFERENCES liftdrop.client(client_id) ON DELETE CASCADE,
+                               FOREIGN KEY (location_id) REFERENCES liftdrop.location(location_id) ON DELETE CASCADE
 );
 
 CREATE TABLE liftdrop.item (

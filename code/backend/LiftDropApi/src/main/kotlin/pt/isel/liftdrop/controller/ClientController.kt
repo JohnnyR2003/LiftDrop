@@ -184,7 +184,32 @@ class ClientController(
         client: AuthenticatedClient,
         @RequestBody address: AddressInputModel,
     ): ResponseEntity<Any> {
-        TODO()
+        val result =
+            clientService
+                .addDropOffLocation(
+                    client.client.user.id,
+                    Address(
+                        address.country,
+                        address.city,
+                        address.street,
+                        address.streetNumber,
+                        address.floor,
+                        address.zipcode,
+                    ),
+                )
+
+        return when (result) {
+            is Success -> {
+                println("Drop-off location added successfully with ID: ${result.value}")
+                ResponseEntity.ok(result.value)
+            }
+            is Failure -> {
+                println("Failed to add drop-off location")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to add drop-off location")
+            }
+        }
 
 
     }
