@@ -63,6 +63,20 @@ class JdbiLocationRepository(
             ).bind("deliveryId", deliveryId)
             .execute() > 0
 
+    override fun createDropOffLocation(clientId: Int, locationId: Int): Int {
+        return handle
+            .createUpdate(
+                """
+                INSERT INTO liftdrop.client_location (client_id, location_id)
+                VALUES (:clientId, :locationId)
+                """,
+            ).bind("clientId", clientId)
+            .bind("locationId", locationId)
+            .executeAndReturnGeneratedKeys()
+            .mapTo<Int>()
+            .one()
+    }
+
     override fun getRestaurantLocationByItem(
         item: String,
         restaurantName: String,

@@ -202,4 +202,18 @@ class CourierService(
             }
         }
     }
+
+    fun logoutCourier(
+        token: String,
+    ): Either<CourierError, Boolean> {
+        return transactionManager.run {
+            val clientRepository = it.clientRepository
+            val result = clientRepository.logoutClient(token)
+            if (result) {
+                return@run success(true)
+            } else {
+                return@run failure(CourierError.CourierNotFound)
+            }
+        }
+    }
 }

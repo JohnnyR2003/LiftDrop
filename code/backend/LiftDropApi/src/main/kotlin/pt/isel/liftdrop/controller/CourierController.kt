@@ -7,10 +7,12 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import pt.isel.liftdrop.AuthenticatedCourier
 import pt.isel.liftdrop.model.*
 import pt.isel.services.CourierService
 import pt.isel.services.google.GeocodingServices
@@ -87,6 +89,23 @@ class CourierController(
                     .body("Invalid email or password")
             }
         }
+    }
+
+    @DeleteMapping("/logout")
+    fun logout(
+         user: AuthenticatedCourier,
+    ): ResponseEntity<Any> {
+        val result = courierService.logoutCourier(user.token)
+        val expiredCookie =
+            ResponseCookie
+                .from("auth_token", "")
+                .path("/")
+                .maxAge(0) // Expire immediately
+                .build()
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+            .body("Logout successful")
     }
 
     @PostMapping("/updateLocation")

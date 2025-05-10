@@ -97,7 +97,7 @@ CREATE TABLE liftdrop.delivery (
 CREATE TABLE liftdrop.dropoff_spot (
                                        client_id                       INT,
                                        FOREIGN KEY (client_id) REFERENCES liftdrop.client(client_id) ON DELETE CASCADE
-)INHERITS (liftdrop.location);
+);
 
 CREATE TABLE liftdrop.item (
                                item_id                         SERIAL PRIMARY KEY,

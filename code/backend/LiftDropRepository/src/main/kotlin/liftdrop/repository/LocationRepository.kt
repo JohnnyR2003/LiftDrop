@@ -14,4 +14,9 @@ interface LocationRepository {
     fun getRestaurantLocationByItem(item: String, restaurantName: String): LocationDTO // for restaurant location
 
     fun deleteDeliveryPath(deliveryId: Int): Boolean // for cancelled deliveries or deliveries that were marked as successfully delivered
+
+    fun createDropOffLocation(
+        clientId: Int,
+        locationId: Int,
+    ): Int
 }

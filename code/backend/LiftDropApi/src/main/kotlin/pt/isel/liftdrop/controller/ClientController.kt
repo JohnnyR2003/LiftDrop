@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -14,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.AuthenticatedClient
-import pt.isel.liftdrop.AuthenticatedUser
 import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.model.AddressInputModel
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.LoginOutputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
@@ -150,5 +151,41 @@ class ClientController(
                     .body("Invalid email or password")
             }
         }
+    }
+
+    @DeleteMapping("/logout")
+    fun logout(client: AuthenticatedClient): ResponseEntity<Any> {
+        val result = clientService.logoutClient(client.token)
+
+        return when (result) {
+            is Success -> {
+                val expiredCookie =
+                    ResponseCookie
+                        .from("auth_token", "")
+                        .path("/")
+                        .maxAge(0) // Expire immediately
+                        .build()
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+                    .body("Logout successful")
+            }
+            is Failure -> {
+                println("Failed Logout")
+                ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Logout error")
+            }
+        }
+    }
+
+    @PostMapping("/getClient")
+    fun addDropOffLocation(
+        client: AuthenticatedClient,
+        @RequestBody address: AddressInputModel,
+    ): ResponseEntity<Any> {
+        TODO()
+
+
     }
 }

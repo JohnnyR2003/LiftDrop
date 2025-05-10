@@ -68,7 +68,7 @@ class ClientService(
             if (loc == null) {
                 return@run failure(ClientError.InvalidAddress)
             }
-            println("longitude: ${loc.first} latitude: ${loc.second}")
+
             locationRepository.createLocation(LocationDTO(loc.first, loc.second), address)
 
             return@run success(clientCreation)
@@ -166,6 +166,35 @@ class ClientService(
             }
             return@run success(requestId)
         }
+
+    fun logoutClient(
+        token: String,
+    ): Either<ClientError, Boolean> =
+        transactionManager.run {
+            val clientRepository = it.clientRepository
+            val result = clientRepository.logoutClient(token)
+            if (result) {
+                return@run success(true)
+            } else {
+                return@run failure(ClientError.ClientNotFound)
+            }
+        }
+
+//    fun addDropOffLocation(
+//        clientId: Int,
+//        address: Address,
+//    ): Either<ClientError, Int> =
+//        transactionManager.run {
+//            val locationRepository = it.locationRepository
+//            val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString())
+//            val locationId = locationRepository.createLocation(LocationDTO(0.0, 0.0), address)
+//            val updated = locationRepository.addDropOffLocation(clientId, locationId)
+//            if (!updated) {
+//                return@run failure(ClientError.ClientNotFound)
+//            } else {
+//                return@run success(locationId)
+//            }
+//        }
 }
 
 fun Address.toFormattedString(): String {

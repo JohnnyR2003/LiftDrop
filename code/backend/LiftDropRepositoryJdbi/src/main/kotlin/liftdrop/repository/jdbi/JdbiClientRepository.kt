@@ -126,4 +126,18 @@ class JdbiClientRepository(
             .executeAndReturnGeneratedKeys()
             .mapTo<String>()
             .singleOrNull()
+
+    override fun logoutClient(sessionToken: String): Boolean {
+        val rowsUpdated =
+            handle
+                .createUpdate(
+                    """
+                DELETE FROM liftdrop.sessions
+                WHERE session_token = :sessionToken
+                """.trimIndent(),
+                )
+                .bind("sessionToken", sessionToken)
+                .execute()
+        return rowsUpdated > 0
+    }
 }

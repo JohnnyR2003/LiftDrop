@@ -20,4 +20,8 @@ interface ClientRepository {
         userId: Int,
         sessionToken: String,
     ): String?
+
+    fun logoutClient(
+        sessionToken: String,
+    ): Boolean
 }
