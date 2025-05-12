@@ -26,6 +26,7 @@ object ServicesTestUtils {
     fun createCourierWebSocketHandler() =
         CourierWebSocketHandler(
             createCourierService(),
+            createUsersService(),
         )
 
     fun createCourierService() =

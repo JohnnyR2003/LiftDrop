@@ -21,7 +21,7 @@ VALUES (1, 'USA', 'New York', '5th Avenue', '123', '2nd', '10001'),
 
 -- Insert locations next (no dependencies)
 INSERT INTO liftdrop."location" (location_id, latitude, longitude, address, name)
-VALUES (1, 40.7128, -74.0060, 1, 'New York City'),
+VALUES (1, 38.743424, -9.138986, 1, 'New York City'),
        (2, 34.0522, -118.2437, 2, 'Los Angeles'),
        (3, 37.7749, -122.4194, 3, 'San Francisco'),
        (4, 40.7306, -73.9352, 1, 'New York City'),
@@ -77,7 +77,7 @@ VALUES (1, 'Pickup documents', 1, 2),
 
 INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)
 VALUES
-    (1, 'MC DONALDS CHELAS', 1, 'Big Mac', 5.99, 1800),
+    (1, 'MC DONALDS Roma', 1, 'Big Mac', 5.99, 1800),
     (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, 2700),
     (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, 3600),
     (4, 'PIZZA HUT AVENIDA', 4, 'Pepperoni Pizza', 9.49, 3000),

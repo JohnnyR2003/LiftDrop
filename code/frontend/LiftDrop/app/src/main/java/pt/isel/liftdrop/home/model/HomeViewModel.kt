@@ -8,11 +8,16 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.location.LocationRepository
+import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.UserInfoRepository
 import pt.isel.liftdrop.services.LocationTrackingService
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.Serializable
 
 class HomeViewModel(
     private val homeService: HomeService,
+    private val loginService: LoginService,
     private val locationTrackingService: LocationTrackingService,
     userRepo: UserInfoRepository,
     private val locationRepository: LocationRepository // <-- Add this
@@ -50,9 +55,15 @@ class HomeViewModel(
         }
     }
 
-    fun logout() {
+    fun logout(userToken: String) {
         viewModelScope.launch {
-            _isLoggedIn.value = false
+            try{
+               loginService.logout(userToken)
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Logout failed: ${e.message}")
+            }finally {
+                _isLoggedIn.value = false
+            }
         }
     }
 
@@ -74,32 +85,13 @@ class HomeViewModel(
         _error.value = null
     }
 
-    fun startLocationUpdates(userToken: String) {
-        viewModelScope.launch {
-            val location = locationRepository.getCurrentLocation()
-            val courierId = homeService.getCourierIdByToken(userToken)
-            _currentLocation.value = location
-            updateCourierLocation(courierId, location)
-        }
-    }
-
-    private fun updateCourierLocation(courierId: Int, location: Location?) {
-        viewModelScope.launch {
-            try {
-                homeService.updateCourierLocation(courierId.toString(), location?.latitude, location?.longitude)
-                Log.d("HomeViewModel", "Courier location updated: ${location?.latitude}, ${location?.longitude}")
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Failed to update courier location"
-            }
-        }
-    }
-
     fun startListening(token: String) {
         viewModelScope.launch {
             homeService.startListening(
                 token = token,
                 onMessage = { message ->
-                    val request = parseRequest(message)
+                    println("Im here")
+                    val request = parseRequestDetails(message)
                     _homeScreenState.update { it.copy(incomingRequest = request) }
                 },
                 onFailure = { error ->
@@ -136,13 +128,24 @@ class HomeViewModel(
         }
     }
 
-    private fun parseRequest(message: String): CourierRequest {
-        // JSON parsing to be done
+    private fun parseRequestDetails(message: String): CourierRequest {
+        try{
+            val requestDetails: CourierRequestDetails = Json.decodeFromString<CourierRequestDetails>(message)
+            println("Request details: $requestDetails")
+            return CourierRequest(
+                id = requestDetails.requestId,
+                pickup = requestDetails.pickupAddress,
+                dropoff = requestDetails.dropoffAddress,
+                price = requestDetails.price
+            )
+        } catch (e: Exception) {
+            println("Error parsing request details: ${e.message}")
+        }
         return CourierRequest(
-            id = "abc123",
-            pickup = "McDonald's Downtown",
-            dropoff = "123 Main St",
-            price = "4.50"
+            id = "",
+            pickup = "",
+            dropoff = "",
+            price = ""
         )
     }
 

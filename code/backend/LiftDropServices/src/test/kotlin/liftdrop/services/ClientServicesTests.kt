@@ -11,12 +11,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.postgresql.ds.PGSimpleDataSource
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.LocationDTO
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
-import pt.isel.liftdrop.LocationDTO
 import pt.isel.services.ClientService
 import pt.isel.services.CourierService
 import pt.isel.services.CourierWebSocketHandler
+import pt.isel.services.UserService
 import pt.isel.services.google.GeocodingServices
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -36,6 +37,8 @@ class ClientServiceTest {
 
         private val transactionManager = JdbiTransactionManager(jdbi)
 
+        private val userService = createUserService(transactionManager)
+
         private val courierService = createCourierService()
 
         private val courierWebSocketHandler = createCourierWebSocketHandler()
@@ -51,9 +54,11 @@ class ClientServiceTest {
             }
         }
 
+        private fun createUserService(transactionManager: TransactionManager) = UserService(transactionManager)
+
         private fun createCourierService(): CourierService = CourierService(transactionManager)
 
-        private fun createCourierWebSocketHandler(): CourierWebSocketHandler = CourierWebSocketHandler(courierService)
+        private fun createCourierWebSocketHandler(): CourierWebSocketHandler = CourierWebSocketHandler(courierService, userService)
 
         private fun createGeocodingService(): GeocodingServices = GeocodingServices(transactionManager, courierWebSocketHandler)
 
@@ -148,7 +153,7 @@ class ClientServiceTest {
                     clientService.makeRequest(
                         client = client.value,
                         description = "Big Mac",
-                        restaurantName = "MC DONALDS CHELAS",
+                        restaurantName = "MC DONALDS Roma",
                         dropOffLocation = dropoff,
                     )
                 }

@@ -146,15 +146,24 @@ class JdbiRequestRepository(
             d.description,
             l.latitude AS pickup_latitude,
             l.longitude AS pickup_longitude,
+            a.street AS pickup_street,
+            a.house_number AS pickup_street_number,
+            a.zip_code AS pickup_postal_code,
             l2.latitude AS dropoff_latitude,
             l2.longitude AS dropoff_longitude,
+            a2.street AS dropoff_street,
+            a2.house_number AS dropoff_street_number,
+            a2.zip_code AS dropoff_postal_code,
+            i.price AS price,
             d.dropoff_location
         FROM liftdrop.request r
         JOIN liftdrop.request_details d ON r.request_id = d.request_id
         LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
         LEFT JOIN liftdrop.location l ON l.location_id = d.dropoff_location
+        LEFT JOIN liftdrop.address a ON a.address_id = l.address
         LEFT JOIN liftdrop.location l2 ON l2.location_id = d.pickup_location
-        
+        LEFT JOIN liftdrop.address a2 ON a2.address_id = l2.address
+        LEFT JOIN liftdrop.item i ON i.designation = d.description
         WHERE d.request_id = :id
         LIMIT 1
         """,

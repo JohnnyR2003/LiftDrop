@@ -15,14 +15,15 @@ interface LoginService {
     suspend fun register(email: String, password: String, username: String): Token
 
     suspend fun login(username: String, password: String): Token
+
+    suspend fun logout(token: String): Boolean
+
 }
 
 class RealLoginService(
     private val httpClient: OkHttpClient,
     private val jsonEncoder: Gson
 ) : LoginService {
-
-
 
     override suspend fun register(email: String, password: String, username: String): Token {
         val body = ("{" +
@@ -54,10 +55,22 @@ class RealLoginService(
         }
     }
 
-    /**
-     * This method's usefulness is circumstantial. In more realistic scenarios
-     * we will not be handling API responses with this simplistic approach.
-     */
+    override suspend fun logout(token: String): Boolean {
+        val request = Request.Builder()
+            .url("$HOST/courier/logout")
+            .addHeader("Authorization", "Bearer $token")
+            .delete()
+            .build()
+        httpClient.newCall(request).execute().use { response ->
+            return if (response.isSuccessful) {
+                val body = response.body?.string()
+                body == "true"
+            } else {
+                throw ResponseException(response.body?.string().orEmpty())
+            }
+        }
+    }
+
     private fun <T> handleResponse(response: Response, type: Type): T {
         val contentType = response.body?.contentType()
         return if (response.isSuccessful && contentType != null && contentType == ApplicationJsonType) {

@@ -1,5 +1,6 @@
 package pt.isel.services
 
+import com.example.utils.Either
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.stereotype.Service
@@ -13,17 +14,23 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class CourierWebSocketHandler(
     private val courierService: CourierService,
+    private val userService: UserService,
 ) : TextWebSocketHandler() {
     private val sessions: MutableMap<Int, WebSocketSession> = ConcurrentHashMap()
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
-        val courierId =
-            session.uri
-                ?.query
-                ?.substringAfter("courierId=")
-                ?.toIntOrNull()
-        if (courierId != null) {
-            sessions[courierId] = session
+        val authHeader = session.handshakeHeaders["Authorization"]?.firstOrNull()
+
+        val token = authHeader?.removePrefix("Bearer ")?.trim()
+
+        if (!token.isNullOrBlank()) {
+            val courierId = userService.getCourierIdByToken(token)
+            if (courierId is Either.Right) {
+                val id = courierId.value
+                sessions[id] = session
+            } else {
+                session.close(CloseStatus.NOT_ACCEPTABLE)
+            }
         }
     }
 

@@ -3,6 +3,8 @@ package pt.isel.liftdrop
 data class RequestDetailsDTO(
     val requestId: Int,
     val pickupLocation: LocationDTO,
+    val pickupAddress: String,
     val dropoffLocation: LocationDTO,
-    val description: String,
+    val dropoffAddress: String,
+    val price: String,
 )

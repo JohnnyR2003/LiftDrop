@@ -16,11 +16,23 @@ class RequestDetailsMapper : RowMapper<RequestDetailsDTO> {
                     latitude = rs.getDouble("pickup_latitude"),
                     longitude = rs.getDouble("pickup_longitude"),
                 ),
+            pickupAddress =
+                rs.getString("pickup_street") +
+                    ", " +
+                    rs.getString("pickup_street_number") +
+                    ", " +
+                    rs.getString("pickup_postal_code"),
             dropoffLocation =
                 LocationDTO(
                     latitude = rs.getDouble("dropoff_latitude"),
                     longitude = rs.getDouble("dropoff_longitude"),
                 ),
-            description = rs.getString("description"),
+            dropoffAddress =
+                rs.getString("dropoff_street") +
+                    ", " +
+                    rs.getString("dropoff_street_number") +
+                    ", " +
+                    rs.getString("dropoff_postal_code"),
+            price = rs.getString("price"),
         )
 }

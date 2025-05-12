@@ -20,7 +20,6 @@ import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.login.model.UserInfoRepository
 import pt.isel.liftdrop.services.LocationTrackingService
 import pt.isel.liftdrop.services.RealLocationTrackingService
-import pt.isel.liftdrop.utils.CourierLocationWorker
 import pt.isel.liftdrop.utils.LiftDropWorker
 
 
@@ -82,7 +81,7 @@ class LiftDropApplication : DependenciesContainer, Application() {
         Log.v(TAG, "LiftDropApplication.onCreate() on process ${android.os.Process.myPid()}")
 
         val workRequest =
-            PeriodicWorkRequestBuilder<LiftDropWorker>(repeatInterval = 1, TimeUnit.MINUTES)
+            PeriodicWorkRequestBuilder<LiftDropWorker>(repeatInterval = 15, TimeUnit.SECONDS)
                 .setConstraints(workerConstraints)
                 .build()
 

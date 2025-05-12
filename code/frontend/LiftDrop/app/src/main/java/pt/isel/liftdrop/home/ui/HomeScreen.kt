@@ -43,6 +43,7 @@ import pt.isel.liftdrop.home.model.IncomingRequestCard
 import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.location.LocationRepositoryImpl
 import pt.isel.liftdrop.login.UserInfoSharedPrefs
+import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.services.LocationTrackingService
 import pt.isel.liftdrop.services.RealLocationTrackingService
 
@@ -58,7 +59,7 @@ data class HomeScreenState(
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
-    state: HomeScreenState = HomeScreenState(),
+    state: HomeScreenState,
     userToken: String = "",
     onMenuClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
@@ -169,6 +170,7 @@ fun HomeScreen(
             }
 
             if (state.incomingRequest != null) {
+                println("I am here at incomingRequest")
                 IncomingRequestCard(
                     request = state.incomingRequest,
                     onAccept = { viewModel.acceptRequest(state.incomingRequest.id, userToken) },
@@ -209,6 +211,7 @@ val mockJson = GsonBuilder()
     .create()
 val mockHttpClient: OkHttpClient = OkHttpClient()
 val homeService = RealHomeService(mockHttpClient, mockJson)
+val loginService = RealLoginService(mockHttpClient, mockJson)
 
 
 @SuppressLint("ViewModelConstructorInComposable")
@@ -219,6 +222,7 @@ fun HomeScreenPreview() {
     val mockLocationService = RealLocationTrackingService(mockHttpClient, mockJson, context = LocalContext.current)
     HomeScreen(
         viewModel = HomeViewModel( homeService,
+            loginService = loginService,
             locationTrackingService = mockLocationService,
             userRepo = UserInfoSharedPrefs(LocalContext.current),
             locationRepository = LocationRepositoryImpl(LocalContext.current)

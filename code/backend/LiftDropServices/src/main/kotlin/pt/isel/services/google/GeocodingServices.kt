@@ -61,6 +61,7 @@ class GeocodingServices(
             val couriers = rankedCouriers.value
 
             for (courier in couriers) {
+                println("Sent assignment request to courier: ${courier.courierId}")
                 val deferredResponse = AssignmentCoordinator.register(requestId)
 
                 transactionManager.run { it ->
@@ -73,9 +74,11 @@ class GeocodingServices(
                             requestId = requestId,
                             pickupLatitude = requestDetails.pickupLocation.latitude,
                             pickupLongitude = requestDetails.pickupLocation.longitude,
+                            pickupAddress = requestDetails.pickupAddress,
                             dropoffLatitude = requestDetails.dropoffLocation.latitude,
                             dropoffLongitude = requestDetails.dropoffLocation.longitude,
-                            details = requestDetails.description,
+                            dropoffAddress = requestDetails.dropoffAddress,
+                            price = requestDetails.price,
                         ),
                     )
                 }

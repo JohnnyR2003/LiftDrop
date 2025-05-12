@@ -246,18 +246,19 @@ class JdbiCourierRepositoryTests {
                 println("Courier ${it.courierId} - Distance: ${"%.2f".format(it.distanceMeters)} meters")
             }
 
-            // ✅ Ensure no more than 5 results
+            // Then: the result should be a list of couriers
+
             assertTrue(result.size <= 5, "Expected at most 5 couriers, got ${result.size}")
 
-            // ✅ Ensure all distances are sorted
             val sorted = result.sortedBy { it.distanceMeters }
             assertEquals(sorted, result, "Couriers should be sorted by ascending distance")
 
             assertTrue(result.first().courierId == 8)
             assertTrue(result[1].courierId == 9)
-            assertTrue(result[2].courierId == 10)
+            assertTrue(result[2].courierId == 4)
 
-            // ✅ Optional: Ensure all couriers are within a reasonable range (e.g. Manhattan ~ 3km)
+            // Then: the couriers should be within 5km of the pickup location
+
             assertTrue(result.all { it.distanceMeters < 5000.0 }, "All couriers should be within 5km")
         }
     }

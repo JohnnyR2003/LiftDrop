@@ -48,9 +48,16 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    kotlin {
+        sourceSets.all {
+            languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
+        }
+    }
 }
 
 dependencies {
+
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation ("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.work:work-runtime-ktx:2.10.1")

@@ -31,7 +31,7 @@ class HomeActivity : ComponentActivity() {
     }
     private val viewModel: HomeViewModel by viewModels {
         viewModelInit {
-            HomeViewModel(repo.homeService, repo.locationTrackingService, repo.userInfoRepo, repo.locationRepo)
+            HomeViewModel(repo.homeService, repo.loginService, repo.locationTrackingService, repo.userInfoRepo, repo.locationRepo)
         }
     }
 
@@ -56,6 +56,7 @@ class HomeActivity : ComponentActivity() {
             val loggedState = viewModel.isLoggedIn.collectAsState().value
             val earningsState = viewModel.earnings.collectAsState().value
             val isListening = viewModel.isListening.collectAsState().value
+            val homeScreenState = viewModel.homeScreenState.collectAsState().value
 
             HomeScreen(
                 viewModel = viewModel,
@@ -76,6 +77,14 @@ class HomeActivity : ComponentActivity() {
                                 viewModel.startListening(token = userInfo.bearer)
                             }
                         }
+                    }
+                },
+                onLogoutClick = {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val userInfo = repo.userInfoRepo.userInfo
+                        viewModel.logout(userInfo?.bearer ?: "")
+                        LoginActivity.navigate(this@HomeActivity)
+                        finish()
                     }
                 }
             )
