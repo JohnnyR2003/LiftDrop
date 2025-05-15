@@ -94,4 +94,8 @@ class JdbiLocationRepository(
             .bind("restaurant_name", restaurantName)
             .mapTo<LocationDTO>()
             .first()
+
+    override fun clear() {
+        handle.createUpdate("TRUNCATE TABLE liftdrop.location CASCADE;").execute()
+    }
 }

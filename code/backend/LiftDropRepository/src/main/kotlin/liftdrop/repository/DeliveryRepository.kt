@@ -9,4 +9,6 @@ interface DeliveryRepository {
     ): Boolean
 
     fun deleteDelivery(courierId: Int, deliveryId: Int): Boolean // for cancelled deliveries
+
+    fun clear()
 }

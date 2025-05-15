@@ -198,6 +198,11 @@ class JdbiUserRepository(
             .mapTo<Int>()
             .firstOrNull()
     }
+
+    override fun clear() {
+        handle.createUpdate("TRUNCATE TABLE liftdrop.user RESTART IDENTITY CASCADE;").execute()
+    }
+
 }
 
 private fun mapToUser(rs: ResultSet): User =

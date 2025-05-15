@@ -30,4 +30,6 @@ interface RequestRepository {
     fun getRequestById(id: Int): Request?
 
     fun getRequestForCourierById(id: Int): RequestDetailsDTO
+
+    fun clear()
 }

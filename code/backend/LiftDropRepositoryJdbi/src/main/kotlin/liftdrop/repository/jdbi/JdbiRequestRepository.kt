@@ -171,4 +171,15 @@ class JdbiRequestRepository(
             .mapTo<RequestDetailsDTO>()
             .findOne()
             .orElse(null)
+
+
+    override fun clear() {
+        handle
+            .createUpdate(
+                """
+                    TRUNCATE TABLE liftdrop.request CASCADE;
+            """,
+            )
+            .execute()
+    }
 }

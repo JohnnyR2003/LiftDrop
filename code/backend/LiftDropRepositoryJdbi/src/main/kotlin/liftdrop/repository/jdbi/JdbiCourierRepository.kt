@@ -413,4 +413,8 @@ class JdbiCourierRepository(
             .executeAndReturnGeneratedKeys()
             .mapTo<String>()
             .singleOrNull()
+
+    override fun clear() {
+        handle.createUpdate("TRUNCATE TABLE liftdrop.courier CASCADE;").execute()
+    }
 }

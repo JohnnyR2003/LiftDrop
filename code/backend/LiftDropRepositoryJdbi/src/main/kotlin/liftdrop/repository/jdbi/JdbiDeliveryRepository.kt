@@ -54,4 +54,8 @@ class JdbiDeliveryRepository(
             ).bind("delivery_id", deliveryId)
             .bind("courier_id", courierId)
             .execute() > 0
+
+    override fun clear() {
+        handle.createUpdate("TRUNCATE TABLE liftdrop.delivery CASCADE;").execute()
+    }
 }

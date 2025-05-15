@@ -20,6 +20,7 @@ import pt.isel.liftdrop.model.AddressInputModel
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.LoginOutputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
+import pt.isel.liftdrop.model.RegisterUserOutput
 import pt.isel.liftdrop.model.RequestInputModel
 import pt.isel.services.ClientService
 
@@ -77,7 +78,7 @@ class ClientController(
         TODO()
     }
 
-    @PostMapping
+    @PostMapping("/register")
     fun registerClient(
         @RequestBody registerInput: RegisterClientInputModel,
     ): ResponseEntity<Any> {
@@ -101,7 +102,12 @@ class ClientController(
             is Success -> {
                 // Handle successful registration
                 println("Client registered successfully with ID: ${register.value}")
-                ResponseEntity.ok(register.value)
+                ResponseEntity.ok(RegisterUserOutput(
+                    register.value.toString(),
+                    registerInput.name,
+                    registerInput.email,
+                    registerInput.password,
+                ))
             }
             is Failure -> {
                 // Handle registration error

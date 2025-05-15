@@ -19,4 +19,6 @@ interface LocationRepository {
         clientId: Int,
         locationId: Int,
     ): Int?
+
+    fun clear()
 }

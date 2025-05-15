@@ -59,6 +59,3 @@ tasks.test {
 kotlin {
     jvmToolchain(21)
 }
-
-val composeFileDir: Directory by parent!!.extra
-val dockerComposePath = composeFileDir.file("docker-compose.yml").toString()

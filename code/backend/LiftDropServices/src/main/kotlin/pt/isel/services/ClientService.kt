@@ -63,6 +63,8 @@ class ClientService(
                     address = address,
                 )
 
+            println("clientCreation: $userCreation")
+
             // Create a DropOff Location
             val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString())
             if (loc == null) {

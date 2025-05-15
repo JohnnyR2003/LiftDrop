@@ -140,4 +140,8 @@ class JdbiClientRepository(
                 .execute()
         return rowsUpdated > 0
     }
+
+    override fun clear() {
+        handle.createUpdate("TRUNCATE TABLE liftdrop.client CASCADE;").execute()
+    }
 }

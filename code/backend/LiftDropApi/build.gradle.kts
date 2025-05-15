@@ -85,3 +85,13 @@ kotlin {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+tasks.test {
+    workingDir = project.rootDir
+    useJUnitPlatform()
+    if (System.getenv("DB_URL") == null) {
+        environment("DB_URL", "jdbc:postgresql://localhost:5432/liftdrop?user=postgres&password=postgres")
+    }
+    dependsOn(":LiftDropRepositoryJdbi:dbTestsWait")
+    finalizedBy(":LiftDropRepositoryJdbi:dbTestsDown")
+}

@@ -24,4 +24,6 @@ interface ClientRepository {
     fun logoutClient(
         sessionToken: String,
     ): Boolean
+
+    fun clear()
 }

@@ -26,4 +26,6 @@ interface UserRepository {
     fun findCourierByToken(token: String): Courier?
 
     fun getCourierIdByToken(token: String): Int?
+
+    fun clear()
 }
