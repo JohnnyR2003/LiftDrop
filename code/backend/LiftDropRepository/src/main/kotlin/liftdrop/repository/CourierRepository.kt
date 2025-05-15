@@ -58,5 +58,10 @@ interface CourierRepository {
         sessionToken: String,
     ): String?
 
+    fun logoutCourier(
+        sessionToken: String,
+        courierId: Int,
+    ): Boolean
+
     fun clear()
 }

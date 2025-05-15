@@ -56,8 +56,10 @@ android {
 }
 
 dependencies {
-
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation ("androidx.work:work-runtime-ktx:2.10.1")
     implementation ("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.work:work-runtime-ktx:2.10.1")

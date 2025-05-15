@@ -205,10 +205,11 @@ class CourierService(
 
     fun logoutCourier(
         token: String,
+        courierId: Int,
     ): Either<CourierError, Boolean> {
         return transactionManager.run {
-            val clientRepository = it.clientRepository
-            val result = clientRepository.logoutClient(token)
+            val clientRepository = it.courierRepository
+            val result = clientRepository.logoutCourier(token, courierId)
             if (result) {
                 return@run success(true)
             } else {

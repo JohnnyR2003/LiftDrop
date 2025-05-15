@@ -4,6 +4,7 @@ import android.location.Location
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
@@ -23,7 +24,7 @@ class HomeViewModel(
     private val locationRepository: LocationRepository // <-- Add this
 ) : ViewModel() {
 
-    private val _earnings = MutableStateFlow(0.0)
+    private val _earnings = MutableStateFlow(0.00)
     val earnings: StateFlow<Double> = _earnings
 
     private val _isLoading = MutableStateFlow(false)
@@ -35,11 +36,11 @@ class HomeViewModel(
     private val _isLoggedIn = MutableStateFlow<Boolean>(userRepo.userInfo != null)
     val isLoggedIn = _isLoggedIn.asStateFlow()
 
-    private val _homeScreenState = MutableStateFlow(HomeScreenState())
-    val homeScreenState: StateFlow<HomeScreenState> = _homeScreenState
-
     private val _isListening = MutableStateFlow(false)
     val isListening: StateFlow<Boolean> = _isListening.asStateFlow()
+
+    private val _homeScreenState = MutableStateFlow(HomeScreenState(earnings.value.toString(), isLoggedIn.value, isListening.value, null))
+    val homeScreenState: StateFlow<HomeScreenState> = _homeScreenState
 
     private val _currentLocation = MutableStateFlow<Location?>(null)
     val currentLocation: StateFlow<Location?> = _currentLocation.asStateFlow()
@@ -48,17 +49,18 @@ class HomeViewModel(
     val currentRequest: StateFlow<RequestWebSocketDTO?> = _currentRequest
 
 
-
     fun login() {
         viewModelScope.launch {
             _isLoggedIn.value = true
+            _homeScreenState.update { it.copy(isUserLoggedIn = true) }
         }
     }
 
     fun logout(userToken: String) {
         viewModelScope.launch {
             try{
-               loginService.logout(userToken)
+                loginService.logout(userToken)
+                _homeScreenState.update { it.copy(isUserLoggedIn = false) }
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Logout failed: ${e.message}")
             }finally {
@@ -90,7 +92,6 @@ class HomeViewModel(
             homeService.startListening(
                 token = token,
                 onMessage = { message ->
-                    println("Im here")
                     val request = parseRequestDetails(message)
                     _homeScreenState.update { it.copy(incomingRequest = request) }
                 },
@@ -98,6 +99,7 @@ class HomeViewModel(
                     _homeScreenState.update { it.copy(isListening = false) }
                 }
             )
+            _homeScreenState.update { it.copy(isListening = true) }
             _isListening.value = true
         }
     }
@@ -129,28 +131,19 @@ class HomeViewModel(
     }
 
     private fun parseRequestDetails(message: String): CourierRequest {
-        try{
-            val requestDetails: CourierRequestDetails = Json.decodeFromString<CourierRequestDetails>(message)
-            println("Request details: $requestDetails")
-            return CourierRequest(
-                id = requestDetails.requestId,
-                pickup = requestDetails.pickupAddress,
-                dropoff = requestDetails.dropoffAddress,
-                price = requestDetails.price
-            )
-        } catch (e: Exception) {
-            println("Error parsing request details: ${e.message}")
-        }
+        val objectMapper = jacksonObjectMapper()
+        val requestDetails: CourierRequestDetails = objectMapper.readValue(message, CourierRequestDetails::class.java)
         return CourierRequest(
-            id = "",
-            pickup = "",
-            dropoff = "",
-            price = ""
+            id = requestDetails.requestId,
+            pickup = requestDetails.pickupAddress,
+            dropoff = requestDetails.dropoffAddress,
+            price = requestDetails.price
         )
     }
 
     suspend fun stopListening() {
         homeService.stopListening()
+        _homeScreenState.update { it.copy(isListening = false) }
         _isListening.value = false
     }
 }

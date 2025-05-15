@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
@@ -53,23 +54,16 @@ class HomeActivity : ComponentActivity() {
         }
 
         setContent {
-            val loggedState = viewModel.isLoggedIn.collectAsState().value
-            val earningsState = viewModel.earnings.collectAsState().value
-            val isListening = viewModel.isListening.collectAsState().value
-            val homeScreenState = viewModel.homeScreenState.collectAsState().value
+            val state by viewModel.homeScreenState.collectAsState()
 
             HomeScreen(
                 viewModel = viewModel,
-                state = HomeScreenState(
-                    dailyEarnings = earningsState.toString(),
-                    isUserLoggedIn = loggedState,
-                    isListening = isListening
-                ),
+                state = state,
                 onMenuClick = { /* TODO */ },
                 onNotificationClick = { /* TODO */ },
                 onStartClick = {
                     CoroutineScope(Dispatchers.IO).launch {
-                        if (isListening) {
+                        if (state.isListening) {
                             viewModel.stopListening()
                         } else {
                             val userInfo = repo.userInfoRepo.userInfo

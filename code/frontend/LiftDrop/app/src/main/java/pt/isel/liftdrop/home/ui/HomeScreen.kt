@@ -1,9 +1,6 @@
 package pt.isel.liftdrop.home.ui
 
-import android.Manifest
 import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -27,32 +24,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.*
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
-import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ExitToApp
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import pt.isel.liftdrop.home.model.CourierRequest
-import pt.isel.liftdrop.home.model.HomeService
-import pt.isel.liftdrop.home.model.IncomingRequestCard
 import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.location.LocationRepositoryImpl
 import pt.isel.liftdrop.login.UserInfoSharedPrefs
 import pt.isel.liftdrop.login.model.RealLoginService
-import pt.isel.liftdrop.services.LocationTrackingService
 import pt.isel.liftdrop.services.RealLocationTrackingService
 
-
 data class HomeScreenState(
-    val dailyEarnings: String = "0.00",
-    val isUserLoggedIn: Boolean = false,
-    val isListening: Boolean = false,
-    val incomingRequest: CourierRequest? = null // New!
+    val dailyEarnings: String,
+    val isUserLoggedIn: Boolean,
+    val isListening: Boolean,
+    val incomingRequest: CourierRequest? // New!
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -135,72 +125,77 @@ fun HomeScreen(
                 }
             }
 
-            // START button with white border
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 87.dp)
-                    .align(Alignment.BottomCenter),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .background(Color.White, shape = CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val buttonColor = if (state.isListening) Color.Red else Color.Green
-                    val buttonText = if (state.isListening) "STOP" else "START"
-
-                    Button(
-                        onClick = onStartClick,
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-                        modifier = Modifier.size(110.dp)
-                    ) {
-                        Text(
-                            text = buttonText,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
-
             if (state.incomingRequest != null) {
-                println("I am here at incomingRequest")
                 IncomingRequestCard(
                     request = state.incomingRequest,
                     onAccept = { viewModel.acceptRequest(state.incomingRequest.id, userToken) },
                     onDecline = { viewModel.declineRequest(state.incomingRequest.id) }
                 )
             }
+            else {
+                // START button with white border
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 87.dp)
+                        .align(Alignment.BottomCenter),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .background(Color.White, shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val buttonColor = if (state.isListening) Color.Red else Color.Green
+                        val buttonText = if (state.isListening) "STOP" else "START"
 
-            // Bottom info text
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .background(Color.White),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if(state.isListening){
-                    Text(
-                        text = "Listening for orders...",
-                        fontSize = 16.sp,
-                        color = Color(0xFF384259),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                } else {
-                    Text("It's lunch time!", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF384259))
-                    Text(
-                        "Check the map for the busiest restaurants",
-                        fontSize = 14.sp,
-                        color = Color(0xFF384259),
-                        modifier = Modifier.padding(bottom = 20.dp)
-                    )
+                        Button(
+                            onClick = onStartClick,
+                            shape = CircleShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+                            modifier = Modifier.size(110.dp)
+                        ) {
+                            Text(
+                                text = buttonText,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+
+                // Bottom info text
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(Color.White),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (state.isListening) {
+                        Text(
+                            text = "Listening for orders...",
+                            fontSize = 16.sp,
+                            color = Color(0xFF384259),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    } else {
+                        Text(
+                            "It's lunch time!",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color(0xFF384259)
+                        )
+                        Text(
+                            "Check the map for the busiest restaurants",
+                            fontSize = 14.sp,
+                            color = Color(0xFF384259),
+                            modifier = Modifier.padding(bottom = 20.dp)
+                        )
+                    }
                 }
             }
         }

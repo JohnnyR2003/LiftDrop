@@ -414,6 +414,36 @@ class JdbiCourierRepository(
             .mapTo<String>()
             .singleOrNull()
 
+    override fun logoutCourier(
+        sessionToken: String,
+        courierId: Int,
+    ): Boolean {
+        val sessionsUpdated =
+            handle
+                .createUpdate(
+                    """
+                    DELETE FROM liftdrop.sessions
+                    WHERE session_token = :sessionToken
+                    """.trimIndent(),
+                ).bind("sessionToken", sessionToken)
+                .execute()
+
+        // Update the courier's availability status
+
+        val updatedCourier =
+            handle
+                .createUpdate(
+                    """
+                    UPDATE liftdrop.courier
+                    SET is_available = FALSE
+                    WHERE courier_id = :courierId
+                    """.trimIndent(),
+                ).bind("courierId", courierId)
+                .execute()
+
+        return sessionsUpdated > 0 && updatedCourier > 0
+    }
+
     override fun clear() {
         handle.createUpdate("TRUNCATE TABLE liftdrop.courier CASCADE;").execute()
     }

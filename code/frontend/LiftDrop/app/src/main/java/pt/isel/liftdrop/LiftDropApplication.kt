@@ -85,18 +85,6 @@ class LiftDropApplication : DependenciesContainer, Application() {
                 .setConstraints(workerConstraints)
                 .build()
 
-        /*val courierLocationWork =
-            PeriodicWorkRequestBuilder<CourierLocationWorker>(15, TimeUnit.MINUTES)
-                .setConstraints(workerConstraints)
-                .build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "CourierLocationUpdater",
-            ExistingPeriodicWorkPolicy.KEEP,
-            courierLocationWork
-        )*/
-
-
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "LiftDropWorker",
             ExistingPeriodicWorkPolicy.KEEP,

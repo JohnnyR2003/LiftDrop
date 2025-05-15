@@ -13,7 +13,13 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.AuthenticatedCourier
-import pt.isel.liftdrop.model.*
+import pt.isel.liftdrop.model.DeliverOrderInputModel
+import pt.isel.liftdrop.model.LocationUpdateInputModel
+import pt.isel.liftdrop.model.LoginInputModel
+import pt.isel.liftdrop.model.LoginOutputModel
+import pt.isel.liftdrop.model.PickupOrderInputModel
+import pt.isel.liftdrop.model.RegisterCourierInputModel
+import pt.isel.liftdrop.model.StartListeningInputModel
 import pt.isel.services.CourierService
 import pt.isel.services.google.GeocodingServices
 
@@ -92,10 +98,8 @@ class CourierController(
     }
 
     @DeleteMapping("/logout")
-    fun logout(
-         user: AuthenticatedCourier,
-    ): ResponseEntity<Any> {
-        val result = courierService.logoutCourier(user.token)
+    fun logout(user: AuthenticatedCourier): ResponseEntity<Any> {
+        val result = courierService.logoutCourier(user.token, user.courier.user.id)
         val expiredCookie =
             ResponseCookie
                 .from("auth_token", "")
@@ -138,58 +142,6 @@ class CourierController(
                 ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to update location")
-            }
-        }
-    }
-
-    /**
-     * Accepts an order and changes the courier's status accordingly.
-     */
-    @PostMapping("/acceptRequest")
-    fun acceptRequest(
-        @RequestBody input: AcceptRequestInputModel,
-    ): ResponseEntity<Any> {
-        val result = courierService.acceptRequest(input.courierId, input.requestId)
-
-        return when (result) {
-            is Success -> {
-                println("Order accepted successfully by courier with courierId: ${input.courierId}")
-                val response = AcceptRequestOutputModel(requestId = input.requestId)
-                ResponseEntity.ok(response)
-            }
-            is Failure -> {
-                println("Failed to accept order")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Failed to accept order"))
-            }
-        }
-    }
-
-    /**
-     * Declines an order, keeping the courier available for new requests.
-     */
-    @PostMapping("/declineRequest")
-    fun declineRequest(input: DeclineRequestInputModel): ResponseEntity<Any> {
-        val request =
-            courierService
-                .declineRequest(
-                    input.courierId,
-                    input.requestId,
-                )
-
-        return when (request) {
-            is Success -> {
-                // Handle successful order decline
-                println("Order declined successfully by courier with courierId: ${input.courierId}")
-                ResponseEntity.ok("Order declined")
-            }
-            is Failure -> {
-                // Handle order decline error
-                println("Failed to decline order")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to decline order")
             }
         }
     }
