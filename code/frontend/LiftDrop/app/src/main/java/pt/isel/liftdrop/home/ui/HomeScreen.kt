@@ -214,13 +214,11 @@ val loginService = RealLoginService(mockHttpClient, mockJson)
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    val mockLocationService = RealLocationTrackingService(mockHttpClient, mockJson, context = LocalContext.current)
+    val mockLocationService = RealLocationTrackingService(mockHttpClient, courierService = homeService, mockJson, context = LocalContext.current)
     HomeScreen(
         viewModel = HomeViewModel( homeService,
             loginService = loginService,
-            locationTrackingService = mockLocationService,
             userRepo = UserInfoSharedPrefs(LocalContext.current),
-            locationRepository = LocationRepositoryImpl(LocalContext.current)
         ),
         state = HomeScreenState(
             dailyEarnings = "12.50",

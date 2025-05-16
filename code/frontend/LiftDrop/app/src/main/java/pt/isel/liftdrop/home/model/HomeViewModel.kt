@@ -19,72 +19,48 @@ import kotlinx.serialization.Serializable
 class HomeViewModel(
     private val homeService: HomeService,
     private val loginService: LoginService,
-    private val locationTrackingService: LocationTrackingService,
-    userRepo: UserInfoRepository,
-    private val locationRepository: LocationRepository // <-- Add this
+    private val userRepo: UserInfoRepository,
 ) : ViewModel() {
 
-    private val _earnings = MutableStateFlow(0.00)
-    val earnings: StateFlow<Double> = _earnings
+    private val _state = MutableStateFlow(
+        HomeScreenState(
+            dailyEarnings = "0.00",
+            isUserLoggedIn = userRepo.userInfo != null,
+            isListening = false,
+            incomingRequest = null
+        )
+    )
+    val homeScreenState: StateFlow<HomeScreenState> = _state.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
-
-    private val _isLoggedIn = MutableStateFlow<Boolean>(userRepo.userInfo != null)
-    val isLoggedIn = _isLoggedIn.asStateFlow()
-
-    private val _isListening = MutableStateFlow(false)
-    val isListening: StateFlow<Boolean> = _isListening.asStateFlow()
-
-    private val _homeScreenState = MutableStateFlow(HomeScreenState(earnings.value.toString(), isLoggedIn.value, isListening.value, null))
-    val homeScreenState: StateFlow<HomeScreenState> = _homeScreenState
-
-    private val _currentLocation = MutableStateFlow<Location?>(null)
-    val currentLocation: StateFlow<Location?> = _currentLocation.asStateFlow()
-
-    private val _currentRequest = MutableStateFlow<RequestWebSocketDTO?>(null)
-    val currentRequest: StateFlow<RequestWebSocketDTO?> = _currentRequest
+    val _serviceStarted = MutableStateFlow<Boolean>(false)
+    val serviceStarted: StateFlow<Boolean> = _serviceStarted.asStateFlow()
 
 
     fun login() {
-        viewModelScope.launch {
-            _isLoggedIn.value = true
-            _homeScreenState.update { it.copy(isUserLoggedIn = true) }
-        }
+        _state.update { it.copy(isUserLoggedIn = true) }
     }
 
-    fun logout(userToken: String) {
+    fun logout(token: String) {
         viewModelScope.launch {
-            try{
-                loginService.logout(userToken)
-                _homeScreenState.update { it.copy(isUserLoggedIn = false) }
+            try {
+                loginService.logout(token)
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Logout failed: ${e.message}")
-            }finally {
-                _isLoggedIn.value = false
-            }
-        }
-    }
-
-    fun fetchDailyEarnings(userToken: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                _earnings.value = homeService.getDailyEarnings(userToken)
-                _error.value = null
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
             } finally {
-                _isLoading.value = false
+                _state.update { it.copy(isUserLoggedIn = false, incomingRequest = null, isListening = false) }
             }
         }
     }
 
-    fun resetError() {
-        _error.value = null
+    fun fetchDailyEarnings(token: String) {
+        viewModelScope.launch {
+            try {
+                val amount = homeService.getDailyEarnings(token)
+                _state.update { it.copy(dailyEarnings = String.format("%.2f", amount)) }
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Earnings fetch failed: ${e.message}")
+            }
+        }
     }
 
     fun startListening(token: String) {
@@ -93,28 +69,33 @@ class HomeViewModel(
                 token = token,
                 onMessage = { message ->
                     val request = parseRequestDetails(message)
-                    _homeScreenState.update { it.copy(incomingRequest = request) }
+                    _state.update { it.copy(incomingRequest = request, isListening = true) }
                 },
-                onFailure = { error ->
-                    _homeScreenState.update { it.copy(isListening = false) }
+                onFailure = {
+                    _state.update { it.copy(isListening = false) }
                 }
             )
-            _homeScreenState.update { it.copy(isListening = true) }
-            _isListening.value = true
+            _state.update { it.copy(isListening = true) }
+        }
+    }
+
+    fun stopListening() {
+        viewModelScope.launch {
+            homeService.stopListening()
+            _state.update { it.copy(isListening = false, incomingRequest = null) }
         }
     }
 
     fun acceptRequest(requestId: String, token: String) {
         viewModelScope.launch {
             try {
-                val accepted = homeService.acceptRequest(requestId, token)
-                if (accepted) {
-                    _homeScreenState.update { it.copy(incomingRequest = null) }
+                if (homeService.acceptRequest(requestId, token)) {
+                    _state.update { it.copy(incomingRequest = null) }
                 } else {
-                    _error.value = "Failed to accept request"
+                    Log.e("HomeViewModel", "Accept request failed")
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Failed to accept request"
+                Log.e("HomeViewModel", "Accept error: ${e.message}")
             }
         }
     }
@@ -123,27 +104,21 @@ class HomeViewModel(
         viewModelScope.launch {
             try {
                 homeService.rejectRequest(requestId)
-                _homeScreenState.update { it.copy(incomingRequest = null) }
+                _state.update { it.copy(incomingRequest = null) }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Failed to reject request"
+                Log.e("HomeViewModel", "Decline error: ${e.message}")
             }
         }
     }
 
     private fun parseRequestDetails(message: String): CourierRequest {
-        val objectMapper = jacksonObjectMapper()
-        val requestDetails: CourierRequestDetails = objectMapper.readValue(message, CourierRequestDetails::class.java)
+        val mapper = jacksonObjectMapper()
+        val details = mapper.readValue(message, CourierRequestDetails::class.java)
         return CourierRequest(
-            id = requestDetails.requestId,
-            pickup = requestDetails.pickupAddress,
-            dropoff = requestDetails.dropoffAddress,
-            price = requestDetails.price
+            id = details.requestId,
+            pickup = details.pickupAddress,
+            dropoff = details.dropoffAddress,
+            price = details.price
         )
-    }
-
-    suspend fun stopListening() {
-        homeService.stopListening()
-        _homeScreenState.update { it.copy(isListening = false) }
-        _isListening.value = false
     }
 }

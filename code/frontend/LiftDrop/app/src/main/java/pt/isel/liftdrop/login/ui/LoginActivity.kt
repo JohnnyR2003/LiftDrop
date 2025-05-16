@@ -64,8 +64,11 @@ class LoginActivity : ComponentActivity() {
                         launch {
                             while (viewModel.isLoading.value);
                             val tok = viewModel.token.value
-                            if (tok != null) {
-                                repo.userInfoRepo.userInfo = UserInfo(username, tok.token)
+                            val courierId = viewModel.courierId.value
+                            if (tok != null && courierId != "") {
+                                repo.userInfoRepo.userInfo = UserInfo(username, tok.token,
+                                    courierId.toString()
+                                )
                                 if(repo.userInfoRepo.userInfo?.bearer != null) {
                                     SessionManager.setUserToken(this@LoginActivity, tok.token)
                                     HomeActivity.navigate(this@LoginActivity)

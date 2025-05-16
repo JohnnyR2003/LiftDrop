@@ -7,7 +7,9 @@ import pt.isel.liftdrop.HOST
 import okhttp3.*
 import pt.isel.liftdrop.ApplicationJsonType
 import okhttp3.RequestBody.Companion.toRequestBody
+import pt.isel.liftdrop.home.model.IntResponse
 import pt.isel.liftdrop.location.LocationServices
+import java.io.IOException
 import java.lang.reflect.Type
 
 interface LoginService {
@@ -17,6 +19,8 @@ interface LoginService {
     suspend fun login(username: String, password: String): Token
 
     suspend fun logout(token: String): Boolean
+
+    suspend fun getCourierIdByToken(token: String): Int
 
 }
 
@@ -68,6 +72,20 @@ class RealLoginService(
             } else {
                 throw ResponseException(response.body?.string().orEmpty())
             }
+        }
+    }
+
+    override suspend fun getCourierIdByToken(token: String): Int {
+        val request = Request.Builder()
+            .url("$HOST/user/IdByToken")
+            .post(RequestBody.create(null, ByteArray(0))) // empty POST body
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        httpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("$response")
+            val responseBody = response.body?.string()
+            return jsonEncoder.fromJson(responseBody, IntResponse::class.java).value
         }
     }
 

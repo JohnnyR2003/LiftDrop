@@ -18,24 +18,28 @@ import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
+import pt.isel.liftdrop.ApplicationJsonType
+import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.HOST
 import pt.isel.liftdrop.TAG
+import pt.isel.liftdrop.home.model.HomeService
 import kotlin.coroutines.resumeWithException
 
 interface LocationTrackingService {
     suspend fun getCurrentLocation(): Location?
-    fun startUpdating(authToken: String)
+    fun startUpdating(authToken: String, courierId: String)
     fun stopUpdating()
-    fun sendLocationToBackend(lat: Double, lon: Double, authToken: String)
+    fun sendLocationToBackend(lat: Double, lon: Double, courierId: String, authToken: String)
 }
 
 class RealLocationTrackingService(
     private val httpClient: OkHttpClient,
+    private val courierService: HomeService,
     private val jsonEncoder: Gson,
     private val context: Context
 ): LocationTrackingService {
 
-    val apiEndpoint = "$HOST/api/courier/location"
+    val apiEndpoint = "$HOST/courier/updateLocation"
 
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     private var locationCallback: LocationCallback? = null
@@ -46,6 +50,7 @@ class RealLocationTrackingService(
     @SuppressLint("MissingPermission") // You must check permissions before calling this
     override suspend fun getCurrentLocation(): Location? {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
 
         return suspendCancellableCoroutine { continuation ->
             fusedLocationClient.lastLocation
@@ -61,18 +66,18 @@ class RealLocationTrackingService(
     }
 
     @SuppressLint("MissingPermission")
-    override fun startUpdating(authToken: String) {
+    override fun startUpdating(authToken: String, courierId: String) {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
         val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10_000L)
-            .setMinUpdateIntervalMillis(5_000L)
+            .setMinUpdateIntervalMillis(15_000L)
             .build()
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val location = result.lastLocation ?: return
                 coroutineScope.launch {
-                    sendLocationToBackend(location.latitude, location.longitude, authToken)
+                    sendLocationToBackend(location.latitude, location.longitude, courierId, authToken)
                 }
             }
         }
@@ -90,14 +95,11 @@ class RealLocationTrackingService(
         }
     }
 
-    override fun sendLocationToBackend(lat: Double, lon: Double, authToken: String) {
-        val json = JSONObject().apply {
-            put("latitude", lat)
-            put("longitude", lon)
-        }
-
-        val mediaType = "application/json".toMediaType()
-        val body = json.toString().toRequestBody(mediaType)
+    override fun sendLocationToBackend(lat: Double, lon: Double, courierId: String, authToken: String) {
+        val body = ("{\"courierId\": ${courierId.toInt()}, \"newLocation\": {" +
+                "\"latitude\": $lat" +
+                ", \"longitude\": $lon" +
+                "}}").toRequestBody(ApplicationJsonType)
 
         val requestBuilder = Request.Builder()
             .url(apiEndpoint)

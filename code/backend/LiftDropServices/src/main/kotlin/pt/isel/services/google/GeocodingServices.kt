@@ -180,8 +180,6 @@ class GeocodingServices(
 
         val json = JsonParser.parseString(body).asJsonObject
         val results = json["results"].asJsonArray
-        println("Geocoding API raw response: $body")
-        println("Geocoding API parsed response: $json")
         if (results.size() == 0) throw Exception("No address found")
 
         val addressComponents = results[0].asJsonObject["address_components"].asJsonArray

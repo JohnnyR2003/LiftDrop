@@ -54,7 +54,7 @@ class RegisterActivity : ComponentActivity() {
                             while (viewModel.isLoading.value);
                             val tok = viewModel.token.value
                             if (tok != null) {
-                                repo.userInfoRepo.userInfo = UserInfo(email, tok.token)
+                                repo.userInfoRepo.userInfo = UserInfo(email, tok.token, "")
                                 if(repo.userInfoRepo.userInfo != null) {
                                     LoginActivity.navigate(this@RegisterActivity)
                                     finish()

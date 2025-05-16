@@ -66,30 +66,13 @@ class LiftDropApplication : DependenciesContainer, Application() {
         get() = UserInfoSharedPrefs(this)
 
     override val locationTrackingService: LocationTrackingService
-        get() = RealLocationTrackingService(httpClient, jsonEncoder, this)
+        get() = RealLocationTrackingService(httpClient, homeService, jsonEncoder, this)
 
     override val locationRepo: LocationRepository
         get() = LocationRepositoryImpl(this)
 
-    private val workerConstraints  = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-        .setRequiresCharging(false)
-        .build()
-
     override fun onCreate() {
         super.onCreate()
         Log.v(TAG, "LiftDropApplication.onCreate() on process ${android.os.Process.myPid()}")
-
-        val workRequest =
-            PeriodicWorkRequestBuilder<LiftDropWorker>(repeatInterval = 15, TimeUnit.SECONDS)
-                .setConstraints(workerConstraints)
-                .build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "LiftDropWorker",
-            ExistingPeriodicWorkPolicy.KEEP,
-            workRequest
-        )
-        Log.v(TAG, "LiftDropWorker was scheduled")
     }
 }

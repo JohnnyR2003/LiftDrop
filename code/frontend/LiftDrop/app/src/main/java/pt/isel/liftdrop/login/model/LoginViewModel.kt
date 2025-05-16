@@ -20,6 +20,9 @@ class LoginViewModel(
     private val _token = MutableStateFlow<Token?>(null)
     val token = _token.asStateFlow()
 
+    private val _courierId = MutableStateFlow<String?>(null)
+    val courierId = _courierId.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
@@ -29,6 +32,15 @@ class LoginViewModel(
             _token.value =
                 try {
                     loginService.login(username, password)
+                } catch (e: Exception) {
+                    Log.e(TAG, e.toString())
+                    val errorMessage = e.toString().split(": ").last()
+                    _error.value = errorMessage
+                    null
+                }
+            _courierId.value =
+                try{
+                    loginService.getCourierIdByToken(token.value?.token.toString()).toString()
                 } catch (e: Exception) {
                     Log.e(TAG, e.toString())
                     val errorMessage = e.toString().split(": ").last()
