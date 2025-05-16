@@ -86,7 +86,7 @@ class GeocodingServices(
                 // Wait for the courier’s response or timeout (e.g., 15s)
                 val accepted =
                     try {
-                        withTimeout(30_000) {
+                        withTimeout(15_000) {
                             deferredResponse.await()
                         }
                     } catch (e: TimeoutCancellationException) {

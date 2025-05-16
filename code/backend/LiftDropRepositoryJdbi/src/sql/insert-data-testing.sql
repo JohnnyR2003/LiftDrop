@@ -103,3 +103,5 @@ SELECT setval(pg_get_serial_sequence('liftdrop.location', 'location_id'), (SELEC
 SELECT setval(pg_get_serial_sequence('liftdrop.request', 'request_id'), (SELECT MAX(request_id) FROM liftdrop.request));
 
 SELECT setval(pg_get_serial_sequence('liftdrop.delivery', 'delivery_id'), (SELECT MAX(delivery_id) FROM liftdrop.delivery));
+
+SELECT setval(pg_get_serial_sequence('liftdrop.request_declines', 'decline_id'), (SELECT MAX(decline_id) FROM liftdrop.request_declines));

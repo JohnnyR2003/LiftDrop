@@ -118,7 +118,7 @@ class CourierService(
     ): Either<CourierError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
-            val request = courierRepository.declineRequest(requestId, courierId)
+            val request = courierRepository.declineRequest(courierId, requestId)
             if (!request) {
                 return@run failure(CourierError.RequestNotAccepted)
             } else {

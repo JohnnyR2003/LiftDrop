@@ -23,7 +23,7 @@ interface HomeService {
 
     suspend fun acceptRequest(requestId: String, token: String): Boolean
 
-    suspend fun rejectRequest(requestId: String)
+    suspend fun rejectRequest(requestId: String): Boolean
 
     suspend fun updateCourierLocation(courierId: String, lat: Double?, lon: Double?): Boolean
 
@@ -88,28 +88,28 @@ class RealHomeService(
     }
 
     override suspend fun acceptRequest(requestId: String, token: String): Boolean {
-        /*val body = ("{\"requestId\": \"$requestId\"}").toRequestBody(ApplicationJsonType)
-        val request = Request.Builder()
-            .url("$HOST/acceptRequest")
-            .post(body)
-            .addHeader("Authorization", "Bearer $token")
-            .build()
 
-        httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("$response")
-            val responseBody = response.body?.string()
-            return jsonEncoder.fromJson(responseBody, Boolean::class.java)
-        }*/
+        val messageJson = """
+    {
+        "type": "RESPONSE",
+        "requestId": "$requestId",
+        "status": "ACCEPT"
+    }
+""".trimIndent()
 
-        //Send websocket message to accept request
-        webSocket?.send("{\"requestId\": \"$requestId\"}")
-        TODO()
+        return webSocket?.send(messageJson) == true
     }
 
-    override suspend fun rejectRequest(requestId: String) {
-        //Send websocket message to reject request
-        webSocket?.send("{\"requestId\": \"$requestId\"}")
-        TODO()
+    override suspend fun rejectRequest(requestId: String): Boolean {
+        val messageJson = """
+    {
+        "type": "RESPONSE",
+        "requestId": "$requestId",
+        "status": "DECLINE"
+    }
+""".trimIndent()
+
+        return webSocket?.send(messageJson) == true
     }
 
     override suspend fun getDailyEarnings(token: String): Double {

@@ -167,12 +167,14 @@ class JdbiCourierRepository(
             handle
                 .createUpdate(
                     """
-                    INSERT INTO liftdrop.request_declines (request_id, courier_id)
-                    VALUES (:request_id, :courier_id)
+                    INSERT INTO liftdrop.request_declines (request_id, courier_id, declined_at)
+                    VALUES (:request_id, :courier_id, EXTRACT(EPOCH FROM NOW()))
                     """.trimIndent(),
                 ).bind("request_id", requestId)
                 .bind("courier_id", courierId)
-                .execute()
+                .executeAndReturnGeneratedKeys()
+                .mapTo<Int>()
+                .one()
 
         // 3. Return true if the update was successful, false otherwise
         return (updateRequest > 0 && updateDeclinedRequests > 0)
