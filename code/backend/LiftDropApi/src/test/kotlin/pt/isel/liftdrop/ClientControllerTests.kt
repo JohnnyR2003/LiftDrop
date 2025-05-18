@@ -8,9 +8,11 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.web.reactive.server.WebTestClient
 import pt.isel.liftdrop.model.AddressInputModel
+import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
 import pt.isel.liftdrop.model.RequestInputModel
 import pt.isel.services.ClientService
+import pt.isel.services.utils.Codify.encodePassword
 import java.util.UUID
 import kotlin.run
 import kotlin.test.Test
@@ -76,6 +78,80 @@ class ClientControllerTests {
                 .isEqualTo("a@gmail.com")
                 .jsonPath("$.id")
                 .isEqualTo("1")
+    }
+
+    @Test
+    fun `login should return a token`(){
+        val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api").build()
+
+        val registerClient = RegisterClientInputModel(
+            name = "a",
+            email = "a@gmail.com",
+            password = "password",
+            address = AddressInputModel(
+                street = "R. Bernardim Ribeiro",
+                city = "Odivelas",
+                country = "Portugal",
+                zipcode = "2620-266",
+                streetNumber = "5",
+                floor = null,
+            )
+        )
+        trxManager.run {
+            val userId = it.usersRepository.createUser(
+                registerClient.email,
+                registerClient.password.encodePassword(),
+                registerClient.name,
+                UserRole.CLIENT
+            )
+            it.clientRepository.createClient(
+                userId,
+                Address(
+                    registerClient.address.country,
+                    registerClient.address.city,
+                    registerClient.address.street,
+                    registerClient.address.streetNumber,
+                    registerClient.address.floor,
+                    registerClient.address.zipcode
+                )
+            )
+            val locId = it.locationRepository.createLocation(
+                LocationDTO(38.80694, -9.189583),
+                Address(
+                    registerClient.address.country,
+                    registerClient.address.city,
+                    registerClient.address.street,
+                    registerClient.address.streetNumber,
+                    registerClient.address.floor,
+                    registerClient.address.zipcode
+                )
+            )
+            it.locationRepository.createDropOffLocation(
+                userId,
+                locId
+            )
+        }
+
+        // Test successful login
+        val validLogin = LoginInputModel(email = "a@gmail.com", password = "password")
+        client.post()
+            .uri("/client/login")
+            .bodyValue(validLogin)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.token").isNotEmpty
+            .jsonPath("$.token").value<String> { token ->
+                assertTrue(token.length >= 32, "Token should be at least 32 characters")
+            }
+
+        // Test invalid password
+        val invalidPassword = LoginInputModel(email = "test@example.com", password = "wrong_password")
+        client.post()
+            .uri("/client/login")
+            .bodyValue(invalidPassword)
+            .exchange()
+            .expectStatus().isNotFound
     }
 
 
