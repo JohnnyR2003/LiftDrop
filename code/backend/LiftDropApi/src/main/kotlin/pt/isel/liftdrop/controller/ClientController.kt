@@ -185,7 +185,7 @@ class ClientController(
         }
     }
 
-    @PostMapping("/getClient")
+    @PostMapping("/createDropOffLocation")
     fun addDropOffLocation(
         client: AuthenticatedClient,
         @RequestBody address: AddressInputModel,
