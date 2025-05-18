@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -27,6 +28,7 @@ import pt.isel.liftdrop.login.ui.LoginActivity
 import pt.isel.liftdrop.services.LocationForegroundService
 import pt.isel.liftdrop.utils.SessionManager.isUserLoggedIn
 import pt.isel.liftdrop.utils.viewModelInit
+import androidx.core.net.toUri
 
 class HomeActivity : ComponentActivity() {
 

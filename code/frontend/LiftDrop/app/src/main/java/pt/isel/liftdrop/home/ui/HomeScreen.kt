@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.ExitToApp
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import pt.isel.liftdrop.home.model.CourierRequest
+import pt.isel.liftdrop.home.model.CourierRequestDetails
 import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.location.LocationRepositoryImpl
 import pt.isel.liftdrop.login.UserInfoSharedPrefs
@@ -42,7 +43,7 @@ data class HomeScreenState(
     val dailyEarnings: String,
     val isUserLoggedIn: Boolean,
     val isListening: Boolean,
-    val incomingRequest: CourierRequest? // New!
+    val incomingRequest: CourierRequestDetails? // New!
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -56,7 +57,6 @@ fun HomeScreen(
     onStartClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {} // Adicionado callback para logout
 ) {
-
     Scaffold(
         topBar = {},
         containerColor = Color.White,
@@ -126,10 +126,18 @@ fun HomeScreen(
             }
 
             if (state.incomingRequest != null) {
+                val context = LocalContext.current
                 IncomingRequestCard(
                     request = state.incomingRequest,
-                    onAccept = { viewModel.acceptRequest(state.incomingRequest.id, userToken) },
-                    onDecline = { viewModel.declineRequest(state.incomingRequest.id) }
+                    onAccept = { viewModel.acceptRequest(
+                        state.incomingRequest.requestId,
+                        userToken, context,
+                        state.incomingRequest.pickupLatitude,
+                        state.incomingRequest.pickupLongitude,
+                        state.incomingRequest.dropoffLatitude,
+                        state.incomingRequest.dropoffLongitude
+                    ) },
+                    onDecline = { viewModel.declineRequest(state.incomingRequest.requestId) }
                 )
             }
             else {

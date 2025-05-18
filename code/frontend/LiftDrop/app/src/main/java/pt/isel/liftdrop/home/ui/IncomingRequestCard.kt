@@ -37,11 +37,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import pt.isel.liftdrop.home.model.CourierRequest
+import pt.isel.liftdrop.home.model.CourierRequestDetails
 
 @Composable
 fun IncomingRequestCard(
-    request: CourierRequest,
+    request: CourierRequestDetails,
     onAccept: () -> Unit,
     onDecline: () -> Unit,
     timeoutSeconds: Int = 30
@@ -61,7 +61,7 @@ fun IncomingRequestCard(
         label = "ProgressBarColor"
     )
 
-    LaunchedEffect(request.id) {
+    LaunchedEffect(request.requestId) {
         while (timeLeft > 0) {
             delay(1000)
             timeLeft--
@@ -105,7 +105,7 @@ fun IncomingRequestCard(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("From: ${request.pickup}", fontSize = 16.sp)
+                            Text("From: ${request.pickupAddress}", fontSize = 16.sp)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -116,7 +116,7 @@ fun IncomingRequestCard(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("To: ${request.dropoff}", fontSize = 16.sp)
+                            Text("To: ${request.dropoffAddress}", fontSize = 16.sp)
                         }
                     }
 

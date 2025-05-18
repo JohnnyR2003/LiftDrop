@@ -1,7 +1,11 @@
 package pt.isel.liftdrop.home.model
 
+import android.content.Context
+import android.content.Intent
 import android.location.Location
+import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -86,11 +90,20 @@ class HomeViewModel(
         }
     }
 
-    fun acceptRequest(requestId: String, token: String) {
+    fun acceptRequest(
+        requestId: String,
+        token: String,
+        context: Context,
+        pickupLat: Double,
+        pickupLon: Double,
+        dropOffLat: Double,
+        dropOffLon: Double
+    ) {
         viewModelScope.launch {
             try {
                 if (homeService.acceptRequest(requestId, token)) {
                     _state.update { it.copy(incomingRequest = null) }
+                    launchNavigationAppChooser(context, pickupLat, pickupLon, dropOffLat, dropOffLon)
                 } else {
                     Log.e("HomeViewModel", "Accept request failed")
                 }
@@ -99,6 +112,7 @@ class HomeViewModel(
             }
         }
     }
+
 
     fun declineRequest(requestId: String) {
         viewModelScope.launch {
@@ -111,14 +125,40 @@ class HomeViewModel(
         }
     }
 
-    private fun parseRequestDetails(message: String): CourierRequest {
+    private fun parseRequestDetails(message: String): CourierRequestDetails {
         val mapper = jacksonObjectMapper()
         val details = mapper.readValue(message, CourierRequestDetails::class.java)
-        return CourierRequest(
-            id = details.requestId,
-            pickup = details.pickupAddress,
-            dropoff = details.dropoffAddress,
+        return CourierRequestDetails(
+            requestId = details.requestId,
+            pickupLatitude = details.pickupLatitude,
+            pickupLongitude = details.pickupLongitude,
+            dropoffLatitude = details.dropoffLatitude,
+            dropoffLongitude = details.dropoffLongitude,
+            pickupAddress = details.pickupAddress,
+            dropoffAddress = details.dropoffAddress,
             price = details.price
         )
     }
+
+    fun launchNavigationAppChooser(
+        context: Context,
+        pickupLat: Double,
+        pickupLng: Double,
+        dropOffLat: Double,
+        dropOffLng: Double
+    ) {
+        val uri = ("https://www.google.com/maps/dir/?api=1" +
+                "&origin=My+Location" +
+                "&destination=$dropOffLat,$dropOffLng" +
+                "&waypoints=$pickupLat,$pickupLng" +
+                "&travelmode=driving").toUri()
+
+        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        val chooser = Intent.createChooser(intent, "Choose an app for navigation")
+        context.startActivity(chooser)
+    }
+
 }
