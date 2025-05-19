@@ -144,16 +144,16 @@ class JdbiRequestRepository(
         SELECT 
             r.request_id,
             d.description,
-            l.latitude AS pickup_latitude,
-            l.longitude AS pickup_longitude,
-            a.street AS pickup_street,
-            a.house_number AS pickup_street_number,
-            a.zip_code AS pickup_postal_code,
-            l2.latitude AS dropoff_latitude,
-            l2.longitude AS dropoff_longitude,
-            a2.street AS dropoff_street,
-            a2.house_number AS dropoff_street_number,
-            a2.zip_code AS dropoff_postal_code,
+            l.latitude AS dropoff_latitude,
+            l.longitude AS dropoff_longitude,
+            a.street AS dropoff_street,
+            a.house_number AS dropoff_street_number,
+            a.zip_code AS dropoff_postal_code,
+            l2.latitude AS pickup_latitude,
+            l2.longitude AS pickup_longitude,
+            a2.street AS pickup_street,
+            a2.house_number AS pickup_street_number,
+            a2.zip_code AS pickup_postal_code,
             i.price AS price,
             d.dropoff_location
         FROM liftdrop.request r
@@ -172,14 +172,12 @@ class JdbiRequestRepository(
             .findOne()
             .orElse(null)
 
-
     override fun clear() {
         handle
             .createUpdate(
                 """
                     TRUNCATE TABLE liftdrop.request CASCADE;
             """,
-            )
-            .execute()
+            ).execute()
     }
 }

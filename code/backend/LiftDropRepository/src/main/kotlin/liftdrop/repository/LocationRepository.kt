@@ -20,5 +20,7 @@ interface LocationRepository {
         locationId: Int,
     ): Int?
 
+    fun getClientDropOffLocation(clientId: Int): Int?
+
     fun clear()
 }

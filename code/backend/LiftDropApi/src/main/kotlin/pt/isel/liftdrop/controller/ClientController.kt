@@ -48,7 +48,6 @@ class ClientController(
                     ),
                     order.itemDesignation,
                     order.restaurantName,
-                    order.dropOffLocation,
                 )
 
         return when (result) {
@@ -66,7 +65,6 @@ class ClientController(
             }
         }
     }
-
 
     @GetMapping("/getOrderStatus")
     fun getOrderStatus() {
@@ -102,12 +100,14 @@ class ClientController(
             is Success -> {
                 // Handle successful registration
                 println("Client registered successfully with ID: ${register.value}")
-                ResponseEntity.ok(RegisterUserOutput(
-                    register.value.toString(),
-                    registerInput.name,
-                    registerInput.email,
-                    registerInput.password,
-                ))
+                ResponseEntity.ok(
+                    RegisterUserOutput(
+                        register.value.toString(),
+                        registerInput.name,
+                        registerInput.email,
+                        registerInput.password,
+                    ),
+                )
             }
             is Failure -> {
                 // Handle registration error
@@ -216,7 +216,5 @@ class ClientController(
                     .body("Failed to add drop-off location")
             }
         }
-
-
     }
 }

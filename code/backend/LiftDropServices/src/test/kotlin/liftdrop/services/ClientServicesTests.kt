@@ -154,7 +154,6 @@ class ClientServiceTest {
                         client = client.value,
                         description = "Big Mac",
                         restaurantName = "MC DONALDS Roma",
-                        dropOffLocation = dropoff,
                     )
                 }
 

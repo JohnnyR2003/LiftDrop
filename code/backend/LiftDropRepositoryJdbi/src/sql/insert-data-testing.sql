@@ -85,7 +85,8 @@ VALUES
     (6, 'STARBUCKS OLIVAIS', 6, 'Caramel Macchiato', 4.89, 1200),
     (7, 'SUBWAY ALVALADE', 7, 'Turkey Sub', 6.19, 2000),
     (8, 'PASTELARIA BELÉM', 8, 'Pastel de Nata', 1.50, 900),
-    (9, 'DONER KEBAB INTENDENTE', 9, 'Doner Kebab Wrap', 5.75, 1500);
+    (9, 'DONER KEBAB CAMPO PEQUENO', 9, 'Doner Kebab Wrap', 5.75, 1500),
+    (10, 'BURGER KING CAMPO PEQUENO', 9, 'Chicken Wings', 4.99, 1800);
 
 --deliveries todo
 

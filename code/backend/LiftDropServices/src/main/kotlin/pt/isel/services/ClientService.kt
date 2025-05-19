@@ -128,7 +128,6 @@ class ClientService(
         client: Client,
         description: String,
         restaurantName: String,
-        dropOffLocation: LocationDTO,
     ): Either<ClientError, Int> =
         transactionManager.run {
             val requestRepository = it.requestRepository
@@ -149,13 +148,9 @@ class ClientService(
 
             val pickupLocationId = locationRepository.createLocation(pickupLocation, pickupAddress)
 
-            val dropOffAddress: Address =
-                geocodingServices.reverseGeocode(
-                    dropOffLocation.latitude,
-                    dropOffLocation.longitude,
-                )
-
-            val dropOffLocationId = locationRepository.createLocation(dropOffLocation, dropOffAddress)
+            val dropOffLocationId =
+                locationRepository.getClientDropOffLocation(client.user.id)
+                    ?: return@run failure(ClientError.ClientNotFound)
 
             requestRepository
                 .createRequestDetails(
@@ -171,9 +166,7 @@ class ClientService(
             return@run success(requestId)
         }
 
-    fun logoutClient(
-        token: String,
-    ): Either<ClientError, Boolean> =
+    fun logoutClient(token: String): Either<ClientError, Boolean> =
         transactionManager.run {
             val clientRepository = it.clientRepository
             val result = clientRepository.logoutClient(token)
@@ -190,8 +183,9 @@ class ClientService(
     ): Either<ClientError, Int> =
         transactionManager.run {
             val locationRepository = it.locationRepository
-            val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString())
-                ?: return@run failure(ClientError.InvalidAddress)
+            val loc =
+                geocodingServices.getLatLngFromAddress(address.toFormattedString())
+                    ?: return@run failure(ClientError.InvalidAddress)
             val locationId = locationRepository.createLocation(LocationDTO(loc.first, loc.second), address)
             val updated = locationRepository.createDropOffLocation(clientId, locationId)
             if (updated == null) {

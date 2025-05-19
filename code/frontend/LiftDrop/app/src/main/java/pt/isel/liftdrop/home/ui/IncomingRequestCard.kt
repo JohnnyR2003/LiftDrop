@@ -44,7 +44,7 @@ fun IncomingRequestCard(
     request: CourierRequestDetails,
     onAccept: () -> Unit,
     onDecline: () -> Unit,
-    timeoutSeconds: Int = 30
+    timeoutSeconds: Int = 20
 ) {
     var timeLeft by remember { mutableStateOf(timeoutSeconds) }
     val progress by remember(timeLeft) { derivedStateOf { timeLeft / timeoutSeconds.toFloat() } }

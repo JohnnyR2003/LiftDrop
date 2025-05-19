@@ -63,8 +63,11 @@ class JdbiLocationRepository(
             ).bind("deliveryId", deliveryId)
             .execute() > 0
 
-    override fun createDropOffLocation(clientId: Int, locationId: Int): Int? {
-        return handle
+    override fun createDropOffLocation(
+        clientId: Int,
+        locationId: Int,
+    ): Int? =
+        handle
             .createUpdate(
                 """
                 INSERT INTO liftdrop.dropoff_spot(location_id, client_id)
@@ -75,8 +78,6 @@ class JdbiLocationRepository(
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .singleOrNull()
-
-    }
 
     override fun getRestaurantLocationByItem(
         item: String,
@@ -94,6 +95,17 @@ class JdbiLocationRepository(
             .bind("restaurant_name", restaurantName)
             .mapTo<LocationDTO>()
             .first()
+
+    override fun getClientDropOffLocation(clientId: Int): Int? =
+        handle
+            .createQuery(
+                """
+                SELECT location_id FROM liftdrop.dropoff_spot WHERE client_id = :clientId
+                """,
+            ).bind("clientId", clientId)
+            .mapTo<Int>()
+            .findOne()
+            .orElse(null)
 
     override fun clear() {
         handle.createUpdate("TRUNCATE TABLE liftdrop.location CASCADE;").execute()
