@@ -5,8 +5,11 @@ import com.example.utils.failure
 import com.example.utils.success
 import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
+import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.Courier
+import pt.isel.liftdrop.LocationDTO
+import pt.isel.services.google.GeocodingServices
 
 sealed class UserError {
     data object ClientNotFound : UserError()
@@ -14,9 +17,15 @@ sealed class UserError {
     data object CourierNotFound : UserError()
 }
 
+sealed class LocationError {
+    data object LocationNotFound : LocationError()
+    data object InvalidAddress : LocationError()
+}
+
 @Named
 class UserService(
     private val transactionManager: TransactionManager,
+    private val geocodingServices: GeocodingServices,
 ) {
     fun getCourierIdByToken(token: String): Either<UserError, Int> {
         return transactionManager.run {
@@ -55,6 +64,31 @@ class UserService(
             } else {
                 success(client)
             }
+        }
+    }
+
+
+    fun addPickUpLocation(
+        address: Address,
+        item: String,
+        restaurantName: String,
+        locationId: Int,
+        price: Double,
+        eta: Int,
+        ): Either<LocationError, Int> {
+        val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString())
+            ?: return failure(LocationError.InvalidAddress)
+
+        return transactionManager.run {
+            val locId =
+                it.locationRepository
+                    .createLocation(
+                        LocationDTO(loc.first, loc.second),
+                        address
+                    )
+            val s = it.locationRepository.addItemToLocation(item, restaurantName, locId, price, eta)
+
+            return@run success(s)
         }
     }
 }

@@ -20,5 +20,13 @@ interface LocationRepository {
         locationId: Int,
     ): Int?
 
+    fun addItemToLocation(
+        item: String,
+        restaurantName: String,
+        locationId: Int,
+        price: Double,
+        eta: Int,
+    ): Int
+
     fun clear()
 }

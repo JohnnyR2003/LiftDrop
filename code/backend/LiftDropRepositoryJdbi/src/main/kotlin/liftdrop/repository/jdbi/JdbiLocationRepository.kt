@@ -95,6 +95,29 @@ class JdbiLocationRepository(
             .mapTo<LocationDTO>()
             .first()
 
+    override fun addItemToLocation(
+        item: String,
+        restaurantName: String,
+        locationId: Int,
+        price: Double,
+        eta: Int,
+    ): Int {
+        return handle
+            .createUpdate(
+                """
+                INSERT INTO liftdrop.item (designation, establishment, establishment_location, price, ETA)
+                VALUES (:item, :restaurantName, :locationId, :price, :eta)
+                """,
+            ).bind("item", item)
+            .bind("restaurantName", restaurantName)
+            .bind("locationId", locationId)
+            .bind("price", price)
+            .bind("eta", eta)
+            .executeAndReturnGeneratedKeys()
+            .mapTo<Int>()
+            .one()
+    }
+
     override fun clear() {
         handle.createUpdate("TRUNCATE TABLE liftdrop.location CASCADE;").execute()
     }
