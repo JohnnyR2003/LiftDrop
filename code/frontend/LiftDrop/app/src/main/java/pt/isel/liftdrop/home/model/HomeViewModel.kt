@@ -139,7 +139,6 @@ class HomeViewModel(
             price = details.price
         )
     }
-
     fun launchNavigationAppChooser(
         context: Context,
         pickupLat: Double,
@@ -147,18 +146,30 @@ class HomeViewModel(
         dropOffLat: Double,
         dropOffLng: Double
     ) {
-        val uri = ("https://www.google.com/maps/dir/?api=1" +
+        // Google Maps URI with pickup as waypoint and drop-off as destination
+        val googleMapsUri = ("https://www.google.com/maps/dir/?api=1" +
                 "&origin=My+Location" +
+                "&waypoints=optimize:false|$pickupLat,$pickupLng" +
                 "&destination=$dropOffLat,$dropOffLng" +
-                "&waypoints=$pickupLat,$pickupLng" +
-                "&travelmode=driving").toUri()
+                "&travelmode=driving" +
+                "&dir_action=navigate").toUri()
+        val googleMapsIntent = Intent(Intent.ACTION_VIEW, googleMapsUri).apply {
+            setPackage("com.google.android.apps.maps")
+        }
 
-        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+        // Waze URI to pickup location only
+        val wazeUri = "https://waze.com/ul?ll=$pickupLat,$pickupLng&navigate=yes".toUri()
+        val wazeIntent = Intent(Intent.ACTION_VIEW, wazeUri).apply {
+            setPackage("com.waze")
+        }
+
+        // Create chooser intent
+        val chooserIntent = Intent.createChooser(googleMapsIntent, "Choose an app for navigation").apply {
+            putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(wazeIntent))
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
 
-        val chooser = Intent.createChooser(intent, "Choose an app for navigation")
-        context.startActivity(chooser)
+        context.startActivity(chooserIntent)
     }
 
 }
