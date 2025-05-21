@@ -22,5 +22,13 @@ interface LocationRepository {
 
     fun getClientDropOffLocation(clientId: Int): Int?
 
+    fun createItem(
+        establishment: String,
+        establishmentLocationId: Int,
+        designation: String,
+        price: Double,
+        eta: Long,
+    ): Int
+
     fun clear()
 }
