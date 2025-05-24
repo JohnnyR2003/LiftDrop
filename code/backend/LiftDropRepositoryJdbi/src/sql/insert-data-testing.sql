@@ -30,7 +30,7 @@ VALUES (1, 38.743424, -9.138986, 1, 'New York City'),
        (7, 38.73908, -9.12461, 1, 'Olaias'),
        (8, 38.74362, -9.13896, 1, 'Avenida de Roma'),
        (9, 38.74140, -9.14667, 1, 'Campo Pequeno'),
-       (10, 38.74000, -9.15000, 1, 'Alameda');
+       (10, 53.3474083662021, -6.260227758198164, 1, 'Bachelors street');
 
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
@@ -86,7 +86,8 @@ VALUES
     (7, 'SUBWAY ALVALADE', 7, 'Turkey Sub', 6.19, 2000),
     (8, 'PASTELARIA BELÉM', 8, 'Pastel de Nata', 1.50, 900),
     (9, 'DONER KEBAB CAMPO PEQUENO', 9, 'Doner Kebab Wrap', 5.75, 1500),
-    (10, 'BURGER KING CAMPO PEQUENO', 9, 'Chicken Wings', 4.99, 1800);
+    (10, 'BURGER KING CAMPO PEQUENO', 9, 'Chicken Wings', 4.99, 1800),
+    (11, 'OCONNELS DUBLIN', 10, 'Fish and Chips', 12.5, 3000);
 
 --deliveries todo
 

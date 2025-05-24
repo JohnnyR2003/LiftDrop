@@ -121,7 +121,8 @@ class HomeActivity : ComponentActivity() {
                         LoginActivity.navigate(this@HomeActivity)
                         finish()
                     }
-                }
+                },
+                userToken = userInfo?.bearer.toString()
             )
         }
     }

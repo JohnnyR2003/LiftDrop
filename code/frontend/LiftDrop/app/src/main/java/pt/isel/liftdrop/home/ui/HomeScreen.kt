@@ -43,7 +43,11 @@ data class HomeScreenState(
     val dailyEarnings: String,
     val isUserLoggedIn: Boolean,
     val isListening: Boolean,
-    val incomingRequest: CourierRequestDetails? // New!
+    val isRequestAccepted: Boolean = false,
+    val isPickedUp: Boolean = false,
+    val isDelivered: Boolean = false,
+    val incomingRequest: Boolean = false,
+    val requestDetails: CourierRequestDetails? = null
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -51,7 +55,7 @@ data class HomeScreenState(
 fun HomeScreen(
     viewModel: HomeViewModel,
     state: HomeScreenState,
-    userToken: String = "",
+    userToken: String,
     onMenuClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onStartClick: () -> Unit = {},
@@ -125,87 +129,195 @@ fun HomeScreen(
                 }
             }
 
-            if (state.incomingRequest != null) {
+            if (state.incomingRequest) {
+                val requestDetails = state.requestDetails!!
                 val context = LocalContext.current
                 IncomingRequestCard(
-                    request = state.incomingRequest,
+                    request = requestDetails,
                     onAccept = { viewModel.acceptRequest(
-                        state.incomingRequest.requestId,
-                        userToken, context,
-                        state.incomingRequest.pickupLatitude,
-                        state.incomingRequest.pickupLongitude,
-                        state.incomingRequest.dropoffLatitude,
-                        state.incomingRequest.dropoffLongitude
+                        requestDetails.requestId,
+                        userToken,
+                        context,
+                        requestDetails.pickupLatitude,
+                        requestDetails.pickupLongitude,
                     ) },
-                    onDecline = { viewModel.declineRequest(state.incomingRequest.requestId) }
+                    onDecline = { viewModel.declineRequest(state.requestDetails.requestId) }
                 )
             }
             else {
-                // START button with white border
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 87.dp)
-                        .align(Alignment.BottomCenter),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .background(Color.White, shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val buttonColor = if (state.isListening) Color.Red else Color.Green
-                        val buttonText = if (state.isListening) "STOP" else "START"
-
-                        Button(
-                            onClick = onStartClick,
-                            shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-                            modifier = Modifier.size(110.dp)
+                if(state.isRequestAccepted) {
+                    if (!state.isPickedUp) {
+                        val context = LocalContext.current
+                        // Instead of the start button show a rectangular rounded button saying pick up
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 87.dp)
+                                .align(Alignment.BottomCenter),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = buttonText,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                maxLines = 1
-                            )
+                            Button(
+                                onClick = { viewModel.pickupOrder(
+                                    state.requestDetails!!.requestId,
+                                    state.requestDetails.courierId,
+                                    userToken,
+                                    context
+                                ) },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(
+                                        0xFF384259
+                                    )
+                                ),
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .height(48.dp)
+                                    .fillMaxWidth(0.8f)
+                            ) {
+                                Text(
+                                    text = "Pick Up",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    } else if(!state.isDelivered){
+                        // Instead of the start button show a rectangular rounded button saying deliver
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 87.dp)
+                                .align(Alignment.BottomCenter),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Button(
+                                onClick = { viewModel.deliverOrder(
+                                    state.requestDetails!!.requestId,
+                                    state.requestDetails.courierId,
+                                    userToken
+                                ) },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(
+                                        0xFF384259
+                                    )
+                                ),
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .height(48.dp)
+                                    .fillMaxWidth(0.8f)
+                            ) {
+                                Text(
+                                    text = "Deliver",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+                    else{
+                        // Instead of the start button show a rectangular rounded button saying drop off
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 87.dp)
+                                .align(Alignment.BottomCenter),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Button(
+                                onClick = { /* Handle drop off */ },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(
+                                        0xFF384259
+                                    )
+                                ),
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .height(48.dp)
+                                    .fillMaxWidth(0.8f)
+                            ) {
+                                Text(
+                                    text = "Drop Off",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }
+                else{
+                    // START button with white border
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 87.dp)
+                            .align(Alignment.BottomCenter),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .background(Color.White, shape = CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val buttonColor = if (state.isListening) Color.Red else Color.Green
+                            val buttonText = if (state.isListening) "STOP" else "START"
 
-                // Bottom info text
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .background(Color.White),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (state.isListening) {
-                        Text(
-                            text = "Listening for orders...",
-                            fontSize = 16.sp,
-                            color = Color(0xFF384259),
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    } else {
-                        Text(
-                            "It's lunch time!",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = Color(0xFF384259)
-                        )
-                        Text(
-                            "Check the map for the busiest restaurants",
-                            fontSize = 14.sp,
-                            color = Color(0xFF384259),
-                            modifier = Modifier.padding(bottom = 20.dp)
-                        )
+                            Button(
+                                onClick = onStartClick,
+                                shape = CircleShape,
+                                colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+                                modifier = Modifier.size(110.dp)
+                            ) {
+                                Text(
+                                    text = buttonText,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
-                }
-            }
+
+                    // Bottom info text
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .background(Color.White),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (state.isListening) {
+                            Text(
+                                text = "Listening for orders...",
+                                fontSize = 16.sp,
+                                color = Color(0xFF384259),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        } else {
+                            Text(
+                                "It's lunch time!",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color(0xFF384259)
+                            )
+                            Text(
+                                "Check the map for the busiest restaurants",
+                                fontSize = 14.sp,
+                                color = Color(0xFF384259),
+                                modifier = Modifier.padding(bottom = 20.dp)
+                            )
+                        }
+                    }
+                } }
         }
     }
 }
@@ -232,12 +344,24 @@ fun HomeScreenPreview() {
             dailyEarnings = "12.50",
             isUserLoggedIn = true,
             isListening = false,
-            incomingRequest = null
+            incomingRequest = false,
+            requestDetails = CourierRequestDetails(
+                requestId = "1",
+                courierId = "1",
+                pickupAddress = "123 Main St",
+                dropoffAddress = "456 Elm St",
+                pickupLatitude = 40.7128,
+                pickupLongitude = -74.0060,
+                dropoffLatitude = 40.7306,
+                dropoffLongitude = -73.9352,
+                price = "12.50",
+            ),
         ),
         onMenuClick = {},
         onNotificationClick = {},
         onStartClick = {},
-        onLogoutClick = {}
+        onLogoutClick = {},
+        userToken = "mockToken"
     )
 }
 

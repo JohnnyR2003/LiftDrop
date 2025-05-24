@@ -1,8 +1,10 @@
 package pt.isel.liftdrop.home.model
 
+import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -24,6 +26,10 @@ interface HomeService {
     suspend fun acceptRequest(requestId: String, token: String): Boolean
 
     suspend fun rejectRequest(requestId: String): Boolean
+
+    suspend fun pickupOrder(requestId: String, courierId: String, token: String): Boolean
+
+    suspend fun deliverOrder(requestId: String, courierId: String, token: String): Boolean
 
     suspend fun updateCourierLocation(courierId: String, lat: Double?, lon: Double?): Boolean
 
@@ -110,6 +116,69 @@ class RealHomeService(
 """.trimIndent()
 
         return webSocket?.send(messageJson) == true
+    }
+
+    override suspend fun pickupOrder(requestId: String, courierId: String, token: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            Log.d(
+                "HomeService",
+                "pickupOrder() called with requestId: $requestId, courierId: $courierId, token: $token"
+            )
+
+            val jsonBody = """
+            {
+                "requestId": ${requestId.toInt()},
+                "courierId": ${courierId.toInt()}
+            }
+        """.trimIndent()
+
+            Log.d("HomeService", "Request JSON Body: $jsonBody")
+
+            val body = jsonBody.toRequestBody("application/json".toMediaType())
+
+            val request = Request.Builder()
+                .url("$HOST/courier/pickedUpOrder")
+                .addHeader("Authorization", "Bearer $token")
+                .post(body)
+                .build()
+
+            try {
+                httpClient.newCall(request).execute().use { response ->
+                    val responseBody = response.body?.string()
+                    Log.d("HomeService", "Response Code: ${response.code}")
+                    Log.d("HomeService", "Raw Response Body: $responseBody")
+
+                    if (!response.isSuccessful) {
+                        throw IOException("Unsuccessful response: ${response.code}\n$responseBody")
+                    }
+
+                    return@withContext Gson().fromJson(responseBody, Boolean::class.java)
+                }
+            } catch (e: Exception) {
+                Log.e("HomeService", "Error during pickupOrder request", e)
+                throw e
+            }
+        }
+    }
+
+    override suspend fun deliverOrder(
+        requestId: String,
+        courierId: String,
+        token: String
+    ): Boolean {
+        val body = ("{\"requestId\": \"${requestId.toInt()}\", \"courierId\": ${courierId.toInt()}}").toRequestBody(ApplicationJsonType)
+
+        val request = Request.Builder()
+            .url("$HOST/courier/deliveredOrder")
+            .addHeader("Authorization", "Bearer $token")
+            .post(body)
+            .build()
+
+        httpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("$response")
+            val responseBody = response.body?.string()
+            return jsonEncoder.fromJson(responseBody, Boolean::class.java)
+        }
     }
 
     override suspend fun getDailyEarnings(token: String): Double {

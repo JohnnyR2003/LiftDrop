@@ -184,7 +184,10 @@ class CourierController(
      * Marks an order as picked up, indicating that the courier has collected it from the sender.
      */
     @PostMapping("/pickedUpOrder")
-    fun pickUpOrder(input: PickupOrderInputModel): ResponseEntity<Any> {
+    fun pickUpOrder(
+        @RequestBody input: PickupOrderInputModel,
+    ): ResponseEntity<Any> {
+        println("Received pickup request: $input")
         val request =
             courierService.pickupDelivery(
                 requestId = input.requestId,
@@ -195,14 +198,14 @@ class CourierController(
             is Success -> {
                 // Handle successful order pickup
                 println("Order picked up successfully by courier with courierId: ${input.courierId}")
-                ResponseEntity.ok("Order picked up")
+                ResponseEntity.ok(true)
             }
             is Failure -> {
                 // Handle order pickup error
                 println("Failed to pick up order")
                 ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to pick up order")
+                    .body(false)
             }
         }
     }
@@ -211,11 +214,13 @@ class CourierController(
      * Marks an order as delivered, indicating that the courier has successfully handed it to the recipient.
      */
     @PostMapping("/deliveredOrder")
-    fun deliverOrder(input: DeliverOrderInputModel): ResponseEntity<Any> {
+    fun deliverOrder(
+        @RequestBody input: DeliverOrderInputModel,
+    ): ResponseEntity<Any> {
         val request =
             courierService.deliver(
-                requestId = 0,
-                courierId = 0,
+                requestId = input.orderId,
+                courierId = input.courierId,
             )
 
         return when (request) {

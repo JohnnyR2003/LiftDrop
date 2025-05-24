@@ -72,6 +72,7 @@ class GeocodingServices(
                         courier.courierId,
                         DeliveryRequestMessage(
                             requestId = requestId,
+                            courierId = courier.courierId,
                             pickupLatitude = requestDetails.pickupLocation.latitude,
                             pickupLongitude = requestDetails.pickupLocation.longitude,
                             pickupAddress = requestDetails.pickupAddress,

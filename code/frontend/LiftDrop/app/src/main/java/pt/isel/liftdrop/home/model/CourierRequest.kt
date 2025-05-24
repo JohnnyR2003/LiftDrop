@@ -11,6 +11,7 @@ data class CourierRequest(
 
 @Serializable
 data class CourierRequestDetails(
+    val courierId : String,
     val requestId: String,
     val pickupLatitude: Double,
     val pickupLongitude: Double,

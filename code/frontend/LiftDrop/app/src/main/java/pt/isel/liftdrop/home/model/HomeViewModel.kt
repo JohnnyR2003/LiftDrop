@@ -12,13 +12,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
-import pt.isel.liftdrop.location.LocationRepository
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.UserInfoRepository
-import pt.isel.liftdrop.services.LocationTrackingService
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.Serializable
+
 
 class HomeViewModel(
     private val homeService: HomeService,
@@ -31,7 +27,18 @@ class HomeViewModel(
             dailyEarnings = "0.00",
             isUserLoggedIn = userRepo.userInfo != null,
             isListening = false,
-            incomingRequest = null
+            incomingRequest = false,
+            requestDetails = CourierRequestDetails(
+                requestId = "",
+                courierId = "",
+                pickupLatitude = 0.0,
+                pickupLongitude = 0.0,
+                dropoffLatitude = 0.0,
+                dropoffLongitude = 0.0,
+                pickupAddress = "",
+                dropoffAddress = "",
+                price = "0.0"
+            ),
         )
     )
     val homeScreenState: StateFlow<HomeScreenState> = _state.asStateFlow()
@@ -51,7 +58,7 @@ class HomeViewModel(
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Logout failed: ${e.message}")
             } finally {
-                _state.update { it.copy(isUserLoggedIn = false, incomingRequest = null, isListening = false) }
+                _state.update { it.copy(isUserLoggedIn = false, incomingRequest = false, isListening = false) }
             }
         }
     }
@@ -73,7 +80,7 @@ class HomeViewModel(
                 token = token,
                 onMessage = { message ->
                     val request = parseRequestDetails(message)
-                    _state.update { it.copy(incomingRequest = request, isListening = true) }
+                    _state.update { it.copy(incomingRequest = true, isListening = false, requestDetails = request) }
                 },
                 onFailure = {
                     _state.update { it.copy(isListening = false) }
@@ -86,7 +93,7 @@ class HomeViewModel(
     fun stopListening() {
         viewModelScope.launch {
             homeService.stopListening()
-            _state.update { it.copy(isListening = false, incomingRequest = null) }
+            _state.update { it.copy(isListening = false, incomingRequest = false) }
         }
     }
 
@@ -96,14 +103,12 @@ class HomeViewModel(
         context: Context,
         pickupLat: Double,
         pickupLon: Double,
-        dropOffLat: Double,
-        dropOffLon: Double
     ) {
         viewModelScope.launch {
             try {
                 if (homeService.acceptRequest(requestId, token)) {
-                    _state.update { it.copy(incomingRequest = null) }
-                    launchNavigationAppChooser(context, pickupLat, pickupLon, dropOffLat, dropOffLon)
+                    _state.update { it.copy(incomingRequest = false, isRequestAccepted = true) }
+                    launchNavigationAppChooser(context, pickupLat, pickupLon)
                 } else {
                     Log.e("HomeViewModel", "Accept request failed")
                 }
@@ -118,9 +123,39 @@ class HomeViewModel(
         viewModelScope.launch {
             try {
                 homeService.rejectRequest(requestId)
-                _state.update { it.copy(incomingRequest = null) }
+                _state.update { it.copy(incomingRequest = false, isListening = true) }
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Decline error: ${e.message}")
+            }
+        }
+    }
+
+    fun pickupOrder(requestId: String, courierId: String, token: String, context: Context){
+        Log.d("HomeViewModel", "pickupOrder() called with requestId: $requestId, courierId: $courierId, token: $token")
+        viewModelScope.launch{
+            try{
+               homeService.pickupOrder(requestId, courierId, token)
+                Log.d("HomeViewModel", "Order picked up successfully")
+                // Update state to reflect that the order has been picked up
+               _state.update { it.copy(isPickedUp = true) }
+                launchNavigationAppChooser(
+                    context,
+                    _state.value.requestDetails!!.dropoffLatitude,
+                    _state.value.requestDetails!!.dropoffLongitude
+                )
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Pickup error: ${e.message}")
+            }
+        }
+    }
+
+    fun deliverOrder(requestId: String, courierId: String, token: String){
+        viewModelScope.launch{
+            try{
+                homeService.deliverOrder(requestId, courierId, token)
+                _state.update { it.copy(isDelivered = true) }
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Deliver error: ${e.message}")
             }
         }
     }
@@ -130,6 +165,7 @@ class HomeViewModel(
         val details = mapper.readValue(message, CourierRequestDetails::class.java)
         return CourierRequestDetails(
             requestId = details.requestId,
+            courierId = details.courierId,
             pickupLatitude = details.pickupLatitude,
             pickupLongitude = details.pickupLongitude,
             dropoffLatitude = details.dropoffLatitude,
@@ -141,16 +177,13 @@ class HomeViewModel(
     }
     fun launchNavigationAppChooser(
         context: Context,
-        pickupLat: Double,
-        pickupLng: Double,
-        dropOffLat: Double,
-        dropOffLng: Double
+        Lat: Double,
+        Lng: Double,
     ) {
         // Google Maps URI with pickup as waypoint and drop-off as destination
         val googleMapsUri = ("https://www.google.com/maps/dir/?api=1" +
                 "&origin=My+Location" +
-                "&waypoints=optimize:false|$pickupLat,$pickupLng" +
-                "&destination=$dropOffLat,$dropOffLng" +
+                "&destination=$Lat,$Lng" +
                 "&travelmode=driving" +
                 "&dir_action=navigate").toUri()
         val googleMapsIntent = Intent(Intent.ACTION_VIEW, googleMapsUri).apply {
@@ -158,7 +191,7 @@ class HomeViewModel(
         }
 
         // Waze URI to pickup location only
-        val wazeUri = "https://waze.com/ul?ll=$pickupLat,$pickupLng&navigate=yes".toUri()
+        val wazeUri = "https://waze.com/ul?ll=$Lat,$Lng&navigate=yes".toUri()
         val wazeIntent = Intent(Intent.ACTION_VIEW, wazeUri).apply {
             setPackage("com.waze")
         }
