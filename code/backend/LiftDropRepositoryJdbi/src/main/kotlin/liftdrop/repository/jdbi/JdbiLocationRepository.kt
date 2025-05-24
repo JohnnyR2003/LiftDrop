@@ -107,6 +107,29 @@ class JdbiLocationRepository(
             .findOne()
             .orElse(null)
 
+    override fun createItem(
+        establishment: String,
+        establishmentLocationId: Int,
+        designation: String,
+        price: Double,
+        eta: Long,
+    ): Int {
+        return handle
+            .createUpdate(
+                """
+            INSERT INTO liftdrop.item (establishment, establishment_location, designation, price, ETA)
+            VALUES (:establishment, :establishmentLocation, :designation, :price, :eta)
+            """,
+            ).bind("establishment", establishment)
+            .bind("establishmentLocation", establishmentLocationId)
+            .bind("designation", designation)
+            .bind("price", price)
+            .bind("eta", eta)
+            .executeAndReturnGeneratedKeys("item_id") // specify column to get the ID directly
+            .mapTo<Int>()
+            .one()
+    }
+
     override fun clear() {
         handle.createUpdate("TRUNCATE TABLE liftdrop.location CASCADE;").execute()
     }
