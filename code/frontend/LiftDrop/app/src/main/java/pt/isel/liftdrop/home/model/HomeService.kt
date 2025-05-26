@@ -119,7 +119,7 @@ class RealHomeService(
     }
 
     override suspend fun pickupOrder(requestId: String, courierId: String, token: String): Boolean {
-        return withContext(Dispatchers.IO) {
+        //return withContext(Dispatchers.IO) {
             Log.d(
                 "HomeService",
                 "pickupOrder() called with requestId: $requestId, courierId: $courierId, token: $token"
@@ -152,13 +152,13 @@ class RealHomeService(
                         throw IOException("Unsuccessful response: ${response.code}\n$responseBody")
                     }
 
-                    return@withContext Gson().fromJson(responseBody, Boolean::class.java)
+                    return Gson().fromJson(responseBody, Boolean::class.java)
                 }
             } catch (e: Exception) {
                 Log.e("HomeService", "Error during pickupOrder request", e)
                 throw e
             }
-        }
+        //}
     }
 
     override suspend fun deliverOrder(
@@ -166,7 +166,7 @@ class RealHomeService(
         courierId: String,
         token: String
     ): Boolean {
-        return withContext(Dispatchers.IO) {
+        //return withContext(Dispatchers.IO) {
             val body =
                 ("{\"requestId\": \"${requestId.toInt()}\", \"courierId\": ${courierId.toInt()}}").toRequestBody(
                     ApplicationJsonType
@@ -181,17 +181,17 @@ class RealHomeService(
                 httpClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) throw IOException("$response")
                     val responseBody = response.body?.string()
-                    return@withContext jsonEncoder.fromJson(responseBody, Boolean::class.java)
+                    return jsonEncoder.fromJson(responseBody, Boolean::class.java)
                 }
             } catch (e: Exception) {
                 Log.e("HomeService", "Error during deliverOrder request", e)
                 throw e
             }
-        }
+       // }
     }
 
     override suspend fun getDailyEarnings(courierId: String, token: String): Double {
-        return withContext(Dispatchers.IO) {
+        //return withContext(Dispatchers.IO) {
             val request = Request.Builder()
                 .url("$HOST/courier/fetchDailyEarnings/$courierId")
                 .addHeader("Authorization", "Bearer $token")
@@ -200,9 +200,9 @@ class RealHomeService(
             httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) throw IOException("$response")
                 val responseBody = response.body?.string()
-                return@withContext jsonEncoder.fromJson(responseBody, Double::class.java)
+                return jsonEncoder.fromJson(responseBody, Double::class.java)
             }
-        }
+        //}
     }
 
     override suspend fun updateCourierLocation(courierId: String, lat: Double?, lon: Double?): Boolean {

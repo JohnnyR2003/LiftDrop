@@ -1,5 +1,6 @@
 package pt.isel.liftdrop.home.ui
 
+import SessionManager.isUserLoggedIn
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -26,9 +27,7 @@ import pt.isel.liftdrop.TAG
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.login.ui.LoginActivity
 import pt.isel.liftdrop.services.LocationForegroundService
-import pt.isel.liftdrop.utils.SessionManager.isUserLoggedIn
 import pt.isel.liftdrop.utils.viewModelInit
-import androidx.core.net.toUri
 
 class HomeActivity : ComponentActivity() {
 
@@ -56,9 +55,9 @@ class HomeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.v(TAG, "HomeActivity.onCreate() on process ${android.os.Process.myPid()}")
 
-        if (!isUserLoggedIn(this)) {
+        if (!SessionManager.isUserLoggedIn(this)) {
             LoginActivity.navigate(this)
-            return
+            finish()
         }
 
         locationPermissionLauncher = registerForActivityResult(
@@ -116,9 +115,8 @@ class HomeActivity : ComponentActivity() {
                 },
                 onLogoutClick = {
                     CoroutineScope(Dispatchers.IO).launch {
-                        val user = repo.userInfoRepo.userInfo
                         stopLocationService()
-                        viewModel.logout(user?.bearer ?: "")
+                        viewModel.logout(this@HomeActivity)
                         LoginActivity.navigate(this@HomeActivity)
                         finish()
                     }

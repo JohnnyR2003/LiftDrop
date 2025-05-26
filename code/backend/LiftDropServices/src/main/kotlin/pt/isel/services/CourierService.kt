@@ -56,7 +56,7 @@ class CourierService(
             val courierCreation =
                 courierRepository.createCourier(
                     userId = id,
-                    isAvailable = true,
+                    isAvailable = false,
                 )
             success(courierCreation)
         }
@@ -220,8 +220,8 @@ class CourierService(
         courierId: Int,
     ): Either<CourierError, Boolean> {
         return transactionManager.run {
-            val clientRepository = it.courierRepository
-            val result = clientRepository.logoutCourier(token, courierId)
+            val courierRepository = it.courierRepository
+            val result = courierRepository.logoutCourier(token, courierId)
             if (result) {
                 return@run success(true)
             } else {

@@ -1,47 +1,48 @@
-package pt.isel.liftdrop.login
-
 import android.content.Context
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import pt.isel.liftdrop.login.model.UserInfo
 import pt.isel.liftdrop.login.model.UserInfoRepository
-import androidx.core.content.edit
 
-/**
- * A user information repository implementation supported in shared preferences
- */
-class UserInfoSharedPrefs(private val context: Context): UserInfoRepository {
+class UserInfoSharedPrefs(private val context: Context) : UserInfoRepository {
 
-    private val userUsernameKey = "Username"
-    private val userBearerKey = "Bearer"
-    private val userCourierIdKey = "CourierId"
+    companion object {
+        private const val PREFS_NAME = "UserInfoPrefs"
+        private const val KEY_USERNAME = "Username"
+        private const val KEY_BEARER = "Bearer"
+        private const val KEY_COURIER_ID = "CourierId"
+    }
 
-    private val prefs by lazy {
-        context.getSharedPreferences("UserInfoPrefs", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    private val _userInfoFlow = MutableStateFlow(readUserInfoFromPrefs())
+    override val userInfoFlow: StateFlow<UserInfo?> get() = _userInfoFlow
+
+    private fun readUserInfoFromPrefs(): UserInfo? {
+        val username = prefs.getString(KEY_USERNAME, null)
+        val bearer = prefs.getString(KEY_BEARER, null)
+        val courierId = prefs.getString(KEY_COURIER_ID, null)
+        return if (username != null && bearer != null)
+            UserInfo(username, bearer, courierId.toString())
+        else
+            null
     }
 
     override var userInfo: UserInfo?
-        get() {
-            val savedUsername = prefs.getString(userUsernameKey, null)
-            val savedBearer = prefs.getString(userBearerKey,null)
-            val savedCourierId = prefs.getString(userCourierIdKey, null)
-
-            return if (savedUsername != null && savedBearer != null)
-                UserInfo(savedUsername, savedBearer, savedCourierId ?: "")
-            else
-                null
-        }
-
+        get() = _userInfoFlow.value
         set(value) {
-            if (value == null)
-                prefs.edit {
-                    remove(userUsernameKey)
-                        .remove(userBearerKey)
-                        .remove(userCourierIdKey)
+            with(prefs.edit()) {
+                if (value == null) {
+                    remove(KEY_USERNAME)
+                    remove(KEY_BEARER)
+                    remove(KEY_COURIER_ID)
+                } else {
+                    putString(KEY_USERNAME, value.username)
+                    putString(KEY_BEARER, value.bearer)
+                    putString(KEY_COURIER_ID, value.courierId)
                 }
-            else
-                prefs.edit {
-                    putString(userUsernameKey, value.username)
-                        .putString(userBearerKey, value.bearer)
-                        .putString(userCourierIdKey, value.courierId)
-                }
+                apply()
+            }
+            _userInfoFlow.value = value
         }
 }

@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import pt.isel.liftdrop.AuthenticatedCourier
 import pt.isel.liftdrop.model.*
 import pt.isel.services.CourierService
 import pt.isel.services.google.GeocodingServices
@@ -88,18 +87,32 @@ class CourierController(
     }
 
     @DeleteMapping("/logout")
-    fun logout(user: AuthenticatedCourier): ResponseEntity<Any> {
-        val result = courierService.logoutCourier(user.token, user.courier.user.id)
-        val expiredCookie =
-            ResponseCookie
-                .from("auth_token", "")
-                .path("/")
-                .maxAge(0) // Expire immediately
-                .build()
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
-            .body("Logout successful")
+    fun logout(
+        @RequestHeader("Authorization") token: String,
+        @RequestBody user: LogoutOutputModel,
+    ): ResponseEntity<Any> {
+        val bearerToken = token.removePrefix("Bearer ").trim()
+        val result = courierService.logoutCourier(bearerToken, user.courierId)
+        return when (result) {
+            is Either.Right -> {
+                println("Courier logged out successfully")
+                val expiredCookie =
+                    ResponseCookie
+                        .from("auth_token", "")
+                        .path("/")
+                        .maxAge(0)
+                        .build()
+
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+                    .body("Logout successful")
+            }
+            is Either.Left -> {
+                println("Failed to log out courier")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
     }
 
     @PostMapping("/updateLocation")

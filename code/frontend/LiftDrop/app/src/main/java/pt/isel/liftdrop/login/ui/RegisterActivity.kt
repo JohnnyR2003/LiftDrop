@@ -13,12 +13,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.TAG
-import pt.isel.liftdrop.home.ui.HomeActivity
-import pt.isel.liftdrop.home.ui.HomeScreen
 import pt.isel.liftdrop.login.model.LoginViewModel
 import pt.isel.liftdrop.login.model.UserInfo
-import pt.isel.liftdrop.login.ui.LoginActivity
-import pt.isel.liftdrop.utils.SessionManager
 import pt.isel.liftdrop.utils.viewModelInit
 
 class RegisterActivity : ComponentActivity() {
