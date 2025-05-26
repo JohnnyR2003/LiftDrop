@@ -73,7 +73,7 @@ class ClientService(
 
             val locId = locationRepository.createLocation(LocationDTO(loc.first, loc.second), address)
 
-            val dropOff = locationRepository.createDropOffLocation(clientId, locId)
+            locationRepository.createDropOffLocation(clientId, locId)
 
             return@run success(clientCreation)
         }
@@ -196,6 +196,22 @@ class ClientService(
                 return@run failure(ClientError.ClientNotFound)
             } else {
                 return@run success(locationId)
+            }
+        }
+
+
+    fun giveRating(
+        clientId: Int,
+        requestId: Int,
+        rating: Int,
+    ): Either<ClientError, Boolean> =
+        transactionManager.run {
+            val requestRepository = it.requestRepository
+            //val result = requestRepository.giveRating(clientId, requestId, rating)
+            if (true) {
+                return@run success(true)
+            } else {
+                return@run failure(ClientError.ClientNotFound)
             }
         }
 }
