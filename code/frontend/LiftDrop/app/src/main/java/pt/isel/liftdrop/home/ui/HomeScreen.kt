@@ -134,18 +134,19 @@ fun HomeScreen(
                 val context = LocalContext.current
                 IncomingRequestCard(
                     request = requestDetails,
-                    onAccept = { viewModel.acceptRequest(
-                        requestDetails.requestId,
-                        userToken,
-                        context,
-                        requestDetails.pickupLatitude,
-                        requestDetails.pickupLongitude,
-                    ) },
+                    onAccept = {
+                        viewModel.acceptRequest(
+                            requestDetails.requestId,
+                            userToken,
+                            context,
+                            requestDetails.pickupLatitude,
+                            requestDetails.pickupLongitude,
+                        )
+                    },
                     onDecline = { viewModel.declineRequest(state.requestDetails.requestId) }
                 )
-            }
-            else {
-                if(state.isRequestAccepted) {
+            } else {
+                if (state.isRequestAccepted) {
                     if (!state.isPickedUp) {
                         val context = LocalContext.current
                         // Instead of the start button show a rectangular rounded button saying pick up
@@ -157,12 +158,14 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Button(
-                                onClick = { viewModel.pickupOrder(
-                                    state.requestDetails!!.requestId,
-                                    state.requestDetails.courierId,
-                                    userToken,
-                                    context
-                                ) },
+                                onClick = {
+                                    viewModel.pickupOrder(
+                                        state.requestDetails!!.requestId,
+                                        state.requestDetails.courierId,
+                                        userToken,
+                                        context
+                                    )
+                                },
                                 shape = RoundedCornerShape(16.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(
@@ -183,7 +186,8 @@ fun HomeScreen(
                                 )
                             }
                         }
-                    } else if(!state.isDelivered){
+                    }
+                    if (!state.isDelivered) {
                         // Instead of the start button show a rectangular rounded button saying deliver
                         Box(
                             modifier = Modifier
@@ -193,11 +197,13 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Button(
-                                onClick = { viewModel.deliverOrder(
-                                    state.requestDetails!!.requestId,
-                                    state.requestDetails.courierId,
-                                    userToken
-                                ) },
+                                onClick = {
+                                    viewModel.deliverOrder(
+                                        state.requestDetails!!.requestId,
+                                        state.requestDetails.courierId,
+                                        userToken
+                                    )
+                                },
                                 shape = RoundedCornerShape(16.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(
@@ -219,40 +225,7 @@ fun HomeScreen(
                             }
                         }
                     }
-                    else{
-                        // Instead of the start button show a rectangular rounded button saying drop off
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 87.dp)
-                                .align(Alignment.BottomCenter),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Button(
-                                onClick = { /* Handle drop off */ },
-                                shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(
-                                        0xFF384259
-                                    )
-                                ),
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .height(48.dp)
-                                    .fillMaxWidth(0.8f)
-                            ) {
-                                Text(
-                                    text = "Drop Off",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    maxLines = 1
-                                )
-                            }
-                        }
-                    }
-                }
-                else{
+                } else {
                     // START button with white border
                     Box(
                         modifier = Modifier
@@ -317,7 +290,8 @@ fun HomeScreen(
                             )
                         }
                     }
-                } }
+                }
+            }
         }
     }
 }

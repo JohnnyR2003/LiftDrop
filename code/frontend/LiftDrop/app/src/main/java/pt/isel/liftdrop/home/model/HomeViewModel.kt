@@ -63,11 +63,12 @@ class HomeViewModel(
         }
     }
 
-    fun fetchDailyEarnings(token: String) {
+    fun fetchDailyEarnings(courierId: String, token: String) {
         viewModelScope.launch {
             try {
-                val amount = homeService.getDailyEarnings(token)
-                _state.update { it.copy(dailyEarnings = String.format("%.2f", amount)) }
+                val amount = homeService.getDailyEarnings(courierId, token)
+                _state.update { it.copy(dailyEarnings = amount.toString()) }
+                Log.d("HomeViewModel", "Daily earnings fetched: $amount")
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Earnings fetch failed: ${e.message}")
             }
@@ -153,7 +154,8 @@ class HomeViewModel(
         viewModelScope.launch{
             try{
                 homeService.deliverOrder(requestId, courierId, token)
-                _state.update { it.copy(isDelivered = true) }
+                _state.update { it.copy(isDelivered = true, isRequestAccepted = false, isListening = true) }
+                fetchDailyEarnings(courierId, token)
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Deliver error: ${e.message}")
             }

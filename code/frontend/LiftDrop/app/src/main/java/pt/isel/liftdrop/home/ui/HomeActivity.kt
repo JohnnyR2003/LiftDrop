@@ -86,6 +86,7 @@ class HomeActivity : ComponentActivity() {
 
             LaunchedEffect(userInfo?.courierId) {
                 if (userInfo != null && userInfo.courierId != "null" && userInfo.courierId.isNotBlank() && !viewModel.serviceStarted.value) {
+                    viewModel.fetchDailyEarnings(userInfo.courierId, userInfo.bearer)
                     if (hasLocationPermissions()) {
                         startLocationService(this@HomeActivity, userInfo.bearer, userInfo.courierId)
                         Log.i(TAG, "Starting location service with token: ${userInfo.bearer} and courierId: ${userInfo.courierId}")
