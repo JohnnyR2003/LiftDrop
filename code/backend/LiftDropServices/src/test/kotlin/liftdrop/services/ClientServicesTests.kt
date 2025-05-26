@@ -140,13 +140,13 @@ class ClientServiceTest {
             val locationRepo = it.locationRepository
             val requestRepo = it.requestRepository
 
-            val dropoffLocationId =
-                locationRepo.createLocation(
-                    LocationDTO(40.4168, -3.7038),
-                    testAddress2,
-                )
-
-            val dropoff = locationRepo.getLocationById(dropoffLocationId)
+//            val dropoffLocationId =
+//                locationRepo.createLocation(
+//                    LocationDTO(40.4168, -3.7038),
+//                    testAddress2,
+//                )
+//
+//            val dropoff = locationRepo.getLocationById(dropoffLocationId)
 
             val requestId =
                 runBlocking {

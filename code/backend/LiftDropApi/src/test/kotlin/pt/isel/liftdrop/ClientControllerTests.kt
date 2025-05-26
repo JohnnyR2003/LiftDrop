@@ -10,7 +10,9 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import pt.isel.liftdrop.model.AddressInputModel
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
+import pt.isel.liftdrop.model.RequestInputModel
 import pt.isel.services.ClientService
+import pt.isel.services.LocationServices
 import pt.isel.services.utils.Codify.encodePassword
 import kotlin.test.Test
 import kotlin.test.assertIs
@@ -21,6 +23,9 @@ import kotlin.test.assertTrue
 class ClientControllerTests {
     @Autowired
     private lateinit var clientService: ClientService
+
+    @Autowired
+    private lateinit var locationServices: LocationServices
 
     @LocalServerPort
     var port: Int = 0
@@ -167,28 +172,54 @@ class ClientControllerTests {
 
         assert(true)
 
-//        val order = RequestInputModel(
-//            itemDesignation = "Pizza",
-//            restaurantName = "Pizza Place",
-//            dropOffLocation = AddressInputModel(
-//                street = "Main St",
-//                number = 123,
-//                city = "Springfield",
-//                country = "USA"
-//            )
-//        )
-//
-//        val response =
-//            client
-//                .post()
-//                .uri("/client/makeOrder")
-//                .bodyValue(order)
-//                .exchange()
-//                .expectStatus()
-//                .isOk
-//                .returnResult(String::class.java)
-//
-//        assertIs<Success>(response)
+        val registerClient = RegisterClientInputModel(
+            name = "a",
+            email = "a@gmail.com",
+            password = "password",
+            address = AddressInputModel(
+                street = "R. Bernardim Ribeiro",
+                city = "Odivelas",
+                country = "Portugal",
+                zipcode = "2620-266",
+                streetNumber = "5",
+                floor = null,
+            )
+        )
+        // Register a new client
+        createClient(client, registerClient)
+
+        val token = clientService.loginClient(registerClient.email, registerClient.password)
+        assertIs<Success<String>>(token)
+//      Av. Dom João II 2, 1990-156 Lisboa, Portugal
+        locationServices.addPickUpLocation(
+            Address(
+                country = "Portugal",
+                city = "Lisboa",
+                street = "Av. Dom João II",
+                streetNumber = "2",
+                floor = null,
+                zipCode = "1990-156"
+            ),
+            "item",
+            "restaurantName",
+            10.0,
+            10L
+        )
+
+        val response =
+            client
+                .post()
+                .uri("/client/makeOrder")
+                .cookie("auth_token", token.value)
+                .bodyValue(
+                    RequestInputModel(
+                        restaurantName = "restaurantName",
+                        itemDesignation = "item"
+                    )
+                )
+                .exchange()
+                .expectStatus()
+                .isOk
     }
 
 

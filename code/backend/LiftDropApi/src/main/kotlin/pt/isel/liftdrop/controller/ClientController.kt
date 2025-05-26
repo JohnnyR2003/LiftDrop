@@ -17,6 +17,7 @@ import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.model.AddressInputModel
+import pt.isel.liftdrop.model.ClassificationInputModel
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.LoginOutputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
@@ -64,16 +65,6 @@ class ClientController(
                     .body("Failed to create order")
             }
         }
-    }
-
-    @GetMapping("/getOrderStatus")
-    fun getOrderStatus() {
-        TODO()
-    }
-
-    @GetMapping("/getETA")
-    fun getETA() {
-        TODO()
     }
 
     @PostMapping("/register")
@@ -214,6 +205,32 @@ class ClientController(
                 ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to add drop-off location")
+            }
+        }
+    }
+
+    fun giveClassification(
+        client: AuthenticatedClient,
+        classification: ClassificationInputModel,
+    ): ResponseEntity<Any> {
+        val result =
+            clientService
+                .giveRating(
+                    client.client.user.id,
+                    classification.requestId,
+                    classification.rating,
+                )
+
+        return when (result) {
+            is Success -> {
+                println("Classification given successfully")
+                ResponseEntity.ok("Classification given successfully")
+            }
+            is Failure -> {
+                println("Failed to give classification")
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to give classification")
             }
         }
     }

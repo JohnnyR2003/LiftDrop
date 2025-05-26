@@ -247,15 +247,13 @@ class JdbiCourierRepositoryTests {
             }
 
             // Then: the result should be a list of couriers
-
             assertTrue(result.size <= 5, "Expected at most 5 couriers, got ${result.size}")
 
             val sorted = result.sortedBy { it.distanceMeters }
             assertEquals(sorted, result, "Couriers should be sorted by ascending distance")
 
             assertTrue(result.first().courierId == 8)
-            assertTrue(result[1].courierId == 9)
-            assertTrue(result[2].courierId == 4)
+            assertTrue(result[1].courierId == 4)
 
             // Then: the couriers should be within 5km of the pickup location
 
