@@ -16,7 +16,6 @@ import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.home.ui.HomeActivity
 import pt.isel.liftdrop.login.model.LoginViewModel
 import pt.isel.liftdrop.login.model.UserInfo
-import pt.isel.liftdrop.utils.SessionManager
 import pt.isel.liftdrop.utils.viewModelInit
 import kotlin.getValue
 

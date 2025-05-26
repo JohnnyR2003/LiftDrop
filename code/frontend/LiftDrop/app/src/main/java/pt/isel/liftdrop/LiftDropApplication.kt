@@ -1,26 +1,23 @@
 package pt.isel.liftdrop
 
+import UserInfoSharedPrefs
 import android.app.Application
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import androidx.work.*
 import pt.isel.liftdrop.about.model.AboutService
 import pt.isel.liftdrop.about.model.RealAboutService
 import pt.isel.liftdrop.home.model.HomeService
 import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.location.LocationRepository
 import pt.isel.liftdrop.location.LocationRepositoryImpl
-import pt.isel.liftdrop.login.UserInfoSharedPrefs
-import java.util.concurrent.TimeUnit
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.login.model.UserInfoRepository
 import pt.isel.liftdrop.services.LocationTrackingService
 import pt.isel.liftdrop.services.RealLocationTrackingService
-import pt.isel.liftdrop.utils.LiftDropWorker
 
 
 const val TAG = "LiftDropApp"

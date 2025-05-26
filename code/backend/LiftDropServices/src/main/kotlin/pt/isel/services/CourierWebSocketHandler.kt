@@ -28,6 +28,7 @@ class CourierWebSocketHandler(
             if (courierId is Either.Right) {
                 val id = courierId.value
                 sessions[id] = session
+                courierService.toggleAvailability(id)
             } else {
                 session.close(CloseStatus.NOT_ACCEPTABLE)
             }
@@ -92,6 +93,14 @@ class CourierWebSocketHandler(
         status: CloseStatus,
     ) {
         sessions.entries.removeIf { it.value == session }
+
+        val authHeader = session.handshakeHeaders["Authorization"]?.firstOrNull()
+
+        val token = authHeader?.removePrefix("Bearer ")?.trim()
+        if (!token.isNullOrBlank()) {
+            val id = userService.getCourierIdByToken(token)
+            if (id is Either.Right) courierService.toggleAvailability(id.value)
+        }
     }
 
     fun sendDeliveryRequestToCourier(

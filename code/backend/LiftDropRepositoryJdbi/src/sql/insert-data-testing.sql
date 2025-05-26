@@ -45,8 +45,8 @@ VALUES (4, 1, 0.00, true),
        (6, 3, 0.00, false),
        (7, 4, 0.00, false),
        (8, 7, 0.00, true),
-       (9, 8, 0.00, true),
-       (10, 9, 0.00, true);
+       (9, 8, 0.00, false),
+       (10, 9, 0.00, false);
 
 
 -- Insert requests (depends on Clients and Couriers)

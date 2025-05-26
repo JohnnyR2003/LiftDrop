@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import pt.isel.liftdrop.HOST
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
 import pt.isel.liftdrop.ApplicationJsonType
 import okhttp3.RequestBody.Companion.toRequestBody
 import pt.isel.liftdrop.home.model.IntResponse
@@ -18,7 +19,7 @@ interface LoginService {
 
     suspend fun login(username: String, password: String): Token
 
-    suspend fun logout(token: String): Boolean
+    suspend fun logout(token: String, courierId: String): Boolean
 
     suspend fun getCourierIdByToken(token: String): Int
 
@@ -59,21 +60,26 @@ class RealLoginService(
         }
     }
 
-    override suspend fun logout(token: String): Boolean {
+    override suspend fun logout(token: String, courierId: String): Boolean {
+        val jsonBody = """{"courierId": $courierId}"""
+        val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+
         val request = Request.Builder()
             .url("$HOST/courier/logout")
             .addHeader("Authorization", "Bearer $token")
-            .delete()
+            .delete(requestBody)
             .build()
+
         httpClient.newCall(request).execute().use { response ->
-            return if (response.isSuccessful) {
-                val body = response.body?.string()
-                body == "true"
+            if (response.isSuccessful) {
+                return true
             } else {
                 throw ResponseException(response.body?.string().orEmpty())
             }
         }
     }
+
+
 
     override suspend fun getCourierIdByToken(token: String): Int {
         val request = Request.Builder()

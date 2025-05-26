@@ -5,14 +5,17 @@ import android.content.Intent
 import android.location.Location
 import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.login.model.LoginService
+import pt.isel.liftdrop.login.model.UserInfo
 import pt.isel.liftdrop.login.model.UserInfoRepository
 
 
@@ -43,6 +46,8 @@ class HomeViewModel(
     )
     val homeScreenState: StateFlow<HomeScreenState> = _state.asStateFlow()
 
+    val userInfoFlow: StateFlow<UserInfo?> = userRepo.userInfoFlow
+
     val _serviceStarted = MutableStateFlow<Boolean>(false)
     val serviceStarted: StateFlow<Boolean> = _serviceStarted.asStateFlow()
 
@@ -51,20 +56,37 @@ class HomeViewModel(
         _state.update { it.copy(isUserLoggedIn = true) }
     }
 
-    fun logout(token: String) {
-        viewModelScope.launch {
+    fun logout(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                loginService.logout(token)
+                val token = userRepo.userInfo?.bearer
+                val courierId = userRepo.userInfo?.courierId
+                if (token != null && courierId != null) {
+                    loginService.logout(token, courierId)
+                }
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Logout failed: ${e.message}")
             } finally {
-                _state.update { it.copy(isUserLoggedIn = false, incomingRequest = false, isListening = false) }
+                userRepo.userInfo = null
+                SessionManager.clearSession(context) // <-- ADD THIS
+                _state.update {
+                    it.copy(
+                        isUserLoggedIn = false,
+                        incomingRequest = false,
+                        isListening = false,
+                        isPickedUp = false,
+                        isDelivered = false,
+                        isRequestAccepted = false,
+                        requestDetails = null
+                    )
+                }
             }
         }
     }
 
+
     fun fetchDailyEarnings(courierId: String, token: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO){
             try {
                 val amount = homeService.getDailyEarnings(courierId, token)
                 _state.update { it.copy(dailyEarnings = amount.toString()) }
@@ -108,7 +130,11 @@ class HomeViewModel(
         viewModelScope.launch {
             try {
                 if (homeService.acceptRequest(requestId, token)) {
-                    _state.update { it.copy(incomingRequest = false, isRequestAccepted = true) }
+                    _state.update { it.copy(
+                        incomingRequest = false,
+                        isRequestAccepted = true,
+                        isDelivered = false
+                    ) }
                     launchNavigationAppChooser(context, pickupLat, pickupLon)
                 } else {
                     Log.e("HomeViewModel", "Accept request failed")
@@ -133,7 +159,7 @@ class HomeViewModel(
 
     fun pickupOrder(requestId: String, courierId: String, token: String, context: Context){
         Log.d("HomeViewModel", "pickupOrder() called with requestId: $requestId, courierId: $courierId, token: $token")
-        viewModelScope.launch{
+        viewModelScope.launch(Dispatchers.IO){
             try{
                homeService.pickupOrder(requestId, courierId, token)
                 Log.d("HomeViewModel", "Order picked up successfully")
@@ -151,10 +177,17 @@ class HomeViewModel(
     }
 
     fun deliverOrder(requestId: String, courierId: String, token: String){
-        viewModelScope.launch{
+        viewModelScope.launch(Dispatchers.IO){
             try{
                 homeService.deliverOrder(requestId, courierId, token)
-                _state.update { it.copy(isDelivered = true, isRequestAccepted = false, isListening = true) }
+                _state.update { it.copy(
+                    requestDetails = null,
+                    incomingRequest = false,
+                    isDelivered = true,
+                    isRequestAccepted = false,
+                    isListening = true,
+                    isPickedUp = false,
+                ) }
                 fetchDailyEarnings(courierId, token)
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Deliver error: ${e.message}")

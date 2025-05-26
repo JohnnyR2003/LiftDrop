@@ -1,5 +1,6 @@
 package pt.isel.liftdrop.home.ui
 
+import UserInfoSharedPrefs
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -35,7 +36,6 @@ import pt.isel.liftdrop.home.model.CourierRequest
 import pt.isel.liftdrop.home.model.CourierRequestDetails
 import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.location.LocationRepositoryImpl
-import pt.isel.liftdrop.login.UserInfoSharedPrefs
 import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.services.RealLocationTrackingService
 
@@ -186,8 +186,7 @@ fun HomeScreen(
                                 )
                             }
                         }
-                    }
-                    if (!state.isDelivered) {
+                    }else {
                         // Instead of the start button show a rectangular rounded button saying deliver
                         Box(
                             modifier = Modifier
