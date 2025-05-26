@@ -40,11 +40,12 @@ CREATE TABLE liftdrop.client(
 
 
 CREATE TABLE liftdrop.courier (
-                                  courier_id                         INT PRIMARY KEY,
-                                  current_location                INT DEFAULT NULL,
-                                  is_available                    BOOLEAN DEFAULT FALSE,
-                                  FOREIGN KEY (courier_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE,
-                                  FOREIGN KEY (current_location)  REFERENCES liftdrop.location (location_id) ON DELETE SET NULL
+                                courier_id                      INT PRIMARY KEY,
+                                current_location                INT DEFAULT NULL,
+                                is_available                    BOOLEAN DEFAULT FALSE,
+                                daily_earnings                  DOUBLE PRECISION,
+                                FOREIGN KEY (courier_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE,
+                                FOREIGN KEY (current_location)  REFERENCES liftdrop.location (location_id) ON DELETE SET NULL
 );
 
 CREATE TABLE liftdrop.request (
@@ -106,7 +107,7 @@ CREATE TABLE liftdrop.item (
                                establishment                   TEXT,
                                establishment_location          INT,
                                designation                     TEXT,
-                               price                           NUMERIC,
+                               price                           DOUBLE PRECISION,
                                ETA                             BIGINT,
                                FOREIGN KEY (establishment_location) REFERENCES liftdrop.location(location_id) ON DELETE CASCADE
 );

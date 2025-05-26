@@ -55,50 +55,52 @@ class GeocodingServices(
         pickupLat: Double,
         pickupLon: Double,
         requestId: Int,
-    ) {
-        val rankedCouriers = fetchRankedCouriersByTravelTime(pickupLat, pickupLon)
-        if (rankedCouriers is Either.Right) {
-            val couriers = rankedCouriers.value
+    ): Boolean {
+        while (true) {
+            val rankedCouriers = fetchRankedCouriersByTravelTime(pickupLat, pickupLon)
+            if (rankedCouriers is Either.Right) {
+                val couriers = rankedCouriers.value
 
-            for (courier in couriers) {
-                println("Sent assignment request to courier: ${courier.courierId}")
-                val deferredResponse = AssignmentCoordinator.register(requestId)
+                for (courier in couriers) {
+                    println("Sent assignment request to courier: ${courier.courierId}")
+                    val deferredResponse = AssignmentCoordinator.register(requestId)
 
-                transactionManager.run { it ->
-                    val requestDetails = it.requestRepository.getRequestForCourierById(requestId)
+                    transactionManager.run { it ->
+                        val requestDetails = it.requestRepository.getRequestForCourierById(requestId)
 
-                    // Send the assignment request via WebSocket
-                    courierWebSocketHandler.sendDeliveryRequestToCourier(
-                        courier.courierId,
-                        DeliveryRequestMessage(
-                            requestId = requestId,
-                            courierId = courier.courierId,
-                            pickupLatitude = requestDetails.pickupLocation.latitude,
-                            pickupLongitude = requestDetails.pickupLocation.longitude,
-                            pickupAddress = requestDetails.pickupAddress,
-                            dropoffLatitude = requestDetails.dropoffLocation.latitude,
-                            dropoffLongitude = requestDetails.dropoffLocation.longitude,
-                            dropoffAddress = requestDetails.dropoffAddress,
-                            price = requestDetails.price,
-                        ),
-                    )
-                }
-
-                // Wait for the courier’s response or timeout (e.g., 15s)
-                val accepted =
-                    try {
-                        withTimeout(20_000) {
-                            deferredResponse.await()
-                        }
-                    } catch (e: TimeoutCancellationException) {
-                        false
+                        // Send the assignment request via WebSocket
+                        courierWebSocketHandler.sendDeliveryRequestToCourier(
+                            courier.courierId,
+                            DeliveryRequestMessage(
+                                requestId = requestId,
+                                courierId = courier.courierId,
+                                pickupLatitude = requestDetails.pickupLocation.latitude,
+                                pickupLongitude = requestDetails.pickupLocation.longitude,
+                                pickupAddress = requestDetails.pickupAddress,
+                                dropoffLatitude = requestDetails.dropoffLocation.latitude,
+                                dropoffLongitude = requestDetails.dropoffLocation.longitude,
+                                dropoffAddress = requestDetails.dropoffAddress,
+                                price = requestDetails.price,
+                            ),
+                        )
                     }
 
-                if (accepted) {
-                    // Successfully assigned
-                    break
+                    // Wait for the courier’s response or timeout (e.g., 15s)
+                    val accepted =
+                        try {
+                            withTimeout(20_000) {
+                                deferredResponse.await()
+                            }
+                        } catch (e: TimeoutCancellationException) {
+                            false
+                        }
+
+                    if (accepted) {
+                        return true
+                    }
                 }
             }
+            return false
         }
     }
 

@@ -53,6 +53,8 @@ interface CourierRepository {
         pickupLng: Double,
     ): List<CourierWithLocation>
 
+    fun fetchDailyEarnings(courierId: Int): Double?
+
     fun createCourierSession(
         userId: Int,
         sessionToken: String,

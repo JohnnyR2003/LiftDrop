@@ -161,7 +161,11 @@ class ClientService(
                 )
 
             CoroutineScope(Dispatchers.Default).launch {
-                geocodingServices.handleCourierAssignment(pickupLocation.latitude, pickupLocation.longitude, requestId)
+                geocodingServices.handleCourierAssignment(
+                    pickupLocation.latitude,
+                    pickupLocation.longitude,
+                    requestId,
+                )
             }
             return@run success(requestId)
         }

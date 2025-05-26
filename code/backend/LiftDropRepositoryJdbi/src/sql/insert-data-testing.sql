@@ -30,7 +30,7 @@ VALUES (1, 38.743424, -9.138986, 1, 'New York City'),
        (7, 38.73908, -9.12461, 1, 'Olaias'),
        (8, 38.74362, -9.13896, 1, 'Avenida de Roma'),
        (9, 38.74140, -9.14667, 1, 'Campo Pequeno'),
-       (10, 53.3474083662021, -6.260227758198164, 1, 'Bachelors street');
+       (10, 53.427749,  -6.243933, 1, 'Bachelors street');
 
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
@@ -39,14 +39,14 @@ VALUES (1, 1),
        (3, 3);
 
 -- Insert couriers (depends on Users and Location)
-INSERT INTO liftdrop."courier" (courier_id, current_location, is_available)
-VALUES (4, 1, true),
-       (5, 2, false),
-       (6, 3, false),
-       (7, 4, false),
-       (8, 7, true),
-       (9, 8, true),
-       (10, 9, true);
+INSERT INTO liftdrop."courier" (courier_id, current_location, daily_earnings, is_available)
+VALUES (4, 1, 0.00, true),
+       (5, 2, 0.00, false),
+       (6, 3, 0.00, false),
+       (7, 4, 0.00, false),
+       (8, 7, 0.00, true),
+       (9, 8, 0.00, true),
+       (10, 9, 0.00, true);
 
 
 -- Insert requests (depends on Clients and Couriers)
@@ -60,8 +60,8 @@ VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800),
 
 -- Insert request details (depends on Request and Location)
 INSERT INTO liftdrop."request_details" (request_id, description, pickup_location, dropoff_location)
-VALUES (1, 'Pickup documents', 1, 2),
-       (2, 'Deliver food package', 2, 3);
+VALUES (1, 'Chicken Wings', 1, 2),
+       (2, 'Big Mac', 2, 3);
 
 -- INSERT INTO liftdrop."pickup_spot" (location_id, latitude, longitude, address, name)
 -- VALUES (1, 40.7128, -74.0060, 1, 'Pickup Spot 1'),
@@ -87,7 +87,7 @@ VALUES
     (8, 'PASTELARIA BELÉM', 8, 'Pastel de Nata', 1.50, 900),
     (9, 'DONER KEBAB CAMPO PEQUENO', 9, 'Doner Kebab Wrap', 5.75, 1500),
     (10, 'BURGER KING CAMPO PEQUENO', 9, 'Chicken Wings', 4.99, 1800),
-    (11, 'OCONNELS DUBLIN', 10, 'Fish and Chips', 12.5, 3000);
+    (11, 'DUBLIN AIRPORT', 10, 'Fish and Chips', 12.5, 3000);
 
 --deliveries todo
 

@@ -31,8 +31,8 @@ class JdbiCourierRepository(
         handle
             .createUpdate(
                 """
-            INSERT INTO liftdrop.courier (courier_id, is_available)
-            VALUES (:courier_id, :is_available)
+            INSERT INTO liftdrop.courier (courier_id, is_available, daily_earnings)
+            VALUES (:courier_id, :is_available, 0.00)
             """,
             ).bind("courier_id", userId)
             .bind("is_available", isAvailable)
@@ -289,7 +289,35 @@ class JdbiCourierRepository(
                 .bind("requestId", requestId)
                 .execute()
 
-        return updatedRequest > 0
+        val deliveryEarnings =
+            handle
+                .createQuery(
+                    """
+                    SELECT i.price
+                    FROM liftdrop.item i join liftdrop.request_details rd on rd.description = i.designation
+                    join liftdrop.request r on rd.request_id = r.request_id
+                    WHERE rd.request_id = :requestId and r.courier_id = :courierId
+                """,
+                ).bind("requestId", requestId)
+                .bind("courierId", courierId)
+                .mapTo<Double>()
+                .first()
+
+        val updateCourierStatusAndEarnings =
+            handle
+                .createUpdate(
+                    """
+            UPDATE liftdrop.courier
+            SET 
+                is_available = TRUE,
+                daily_earnings = daily_earnings + :deliveryEarnings
+            WHERE courier_id = :courierId
+            """,
+                ).bind("courierId", courierId)
+                .bind("deliveryEarnings", deliveryEarnings)
+                .execute()
+
+        return updatedRequest > 0 && updateCourierStatusAndEarnings > 0
     }
 
     /**
@@ -302,7 +330,7 @@ class JdbiCourierRepository(
         handle
             .createQuery(
                 """
-                SELECT * FROM liftdrop.courier c join liftdrop."user" u on u.user_id = c.courier_id
+                SELECT * FROM liftdrop.courier c join liftdrop.user u on u.user_id = c.courier_id
                 WHERE c.courier_id = :courier_id
                 """,
             ).bind("courier_id", userId)
@@ -397,6 +425,22 @@ class JdbiCourierRepository(
                     distanceMeters = rs.getDouble("distance_meters"),
                 )
             }.list()
+
+    override fun fetchDailyEarnings(courierId: Int): Double? {
+        val dailyEarnings =
+            handle
+                .createQuery(
+                    """
+                    SELECT daily_earnings
+                    FROM liftdrop.courier
+                    WHERE courier_id = :courierId
+                    """.trimIndent(),
+                ).bind("courierId", courierId)
+                .mapTo<Double>()
+                .firstOrNull()
+
+        return dailyEarnings
+    }
 
     override fun createCourierSession(
         userId: Int,

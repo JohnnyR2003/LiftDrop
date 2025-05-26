@@ -1,6 +1,6 @@
 package pt.isel.liftdrop.model
 
 data class DeliverOrderInputModel(
-    val orderId: Int,
+    val requestId: Int,
     val courierId: Int,
 )

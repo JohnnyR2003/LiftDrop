@@ -191,6 +191,18 @@ class CourierService(
         }
     }
 
+    fun fetchDailyEarnings(courierId: Int): Either<CourierError, Double> {
+        return transactionManager.run {
+            val courierRepository = it.courierRepository
+            val dailyEarnings = courierRepository.fetchDailyEarnings(courierId)
+            if (dailyEarnings != null) {
+                success(dailyEarnings)
+            } else {
+                return@run failure(CourierError.CourierNotFound)
+            }
+        }
+    }
+
     fun toggleAvailability(courierId: Int): Either<CourierError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
