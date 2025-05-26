@@ -136,7 +136,7 @@ fun RegisterScreen(
 
             Button(
                 onClick = {
-                    onRegisterRequest(firstName.value, lastName.value, email.value, password.value)
+                    onRegisterRequest(firstName.value.trim(), lastName.value.trim(), email.value.trim(), password.value.trim())
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(

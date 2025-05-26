@@ -31,17 +31,7 @@ class HomeViewModel(
             isUserLoggedIn = userRepo.userInfo != null,
             isListening = false,
             incomingRequest = false,
-            requestDetails = CourierRequestDetails(
-                requestId = "",
-                courierId = "",
-                pickupLatitude = 0.0,
-                pickupLongitude = 0.0,
-                dropoffLatitude = 0.0,
-                dropoffLongitude = 0.0,
-                pickupAddress = "",
-                dropoffAddress = "",
-                price = "0.0"
-            ),
+            requestDetails = null,
         )
     )
     val homeScreenState: StateFlow<HomeScreenState> = _state.asStateFlow()
@@ -103,7 +93,15 @@ class HomeViewModel(
                 token = token,
                 onMessage = { message ->
                     val request = parseRequestDetails(message)
-                    _state.update { it.copy(incomingRequest = true, isListening = false, requestDetails = request) }
+                    if(_state.value.requestDetails == null) {
+                        _state.update {
+                            it.copy(
+                                incomingRequest = true,
+                                isListening = false,
+                                requestDetails = request
+                            )
+                        }
+                    }
                 },
                 onFailure = {
                     _state.update { it.copy(isListening = false) }
@@ -161,10 +159,10 @@ class HomeViewModel(
         Log.d("HomeViewModel", "pickupOrder() called with requestId: $requestId, courierId: $courierId, token: $token")
         viewModelScope.launch(Dispatchers.IO){
             try{
-               homeService.pickupOrder(requestId, courierId, token)
+                homeService.pickupOrder(requestId, courierId, token)
                 Log.d("HomeViewModel", "Order picked up successfully")
                 // Update state to reflect that the order has been picked up
-               _state.update { it.copy(isPickedUp = true) }
+                _state.update { it.copy(isPickedUp = true) }
                 launchNavigationAppChooser(
                     context,
                     _state.value.requestDetails!!.dropoffLatitude,

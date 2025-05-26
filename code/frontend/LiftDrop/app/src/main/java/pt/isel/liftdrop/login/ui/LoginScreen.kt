@@ -58,9 +58,6 @@ fun LoginScreen(
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        /* topBar = {
-             TopBar(onBackRequested = { onBackRequest() })
-         },*/
         containerColor = Color.White
     ) { innerPadding ->
         Column(
@@ -123,7 +120,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(onClick = { onSignInRequest?.invoke(email.value, password.value) },
+                Button(onClick = { onSignInRequest?.invoke(email.value.trim(), password.value.trim()) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF384259),
