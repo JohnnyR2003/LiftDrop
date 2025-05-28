@@ -234,4 +234,9 @@ class ClientController(
             }
         }
     }
+
+    @GetMapping("/hello")
+    fun getHello(): ResponseEntity<String> {
+        return ResponseEntity.ok("Hello from ClientController!")
+    }
 }
