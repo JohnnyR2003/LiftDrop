@@ -4,7 +4,7 @@ FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
 # Copy Gradle wrapper and build files first (to cache dependencies better)
-COPY ./code/backend .
+COPY . .
 
 # Ensure the Gradle wrapper is executable
 RUN chmod +x ./gradlew
@@ -13,7 +13,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew build -x test
 
 # Copy the generated JAR (adjust path if different)
-COPY ./build/libs/LiftDropApi-0.0.1-SNAPSHOT.jar app.jar
+COPY ./LiftDropApi/build/libs/LiftDropApi-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose Spring Boot default port
 EXPOSE 8080
