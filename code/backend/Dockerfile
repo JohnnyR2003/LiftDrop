@@ -1,18 +1,16 @@
-FROM eclipse-temurin:21-jdk
+#
+# Build stage
+#
+FROM gradle:jdk21-jammy AS build
+COPY --chown=gradle:gradle . /home/gradle/src
+WORKDIR /home/gradle/src
+RUN gradle :LiftDropApi:build -x test --no-daemon
 
-WORKDIR /app
-
-# Copy everything (including LiftDropApi and build files)
-COPY . .
-
-# Make Gradle wrapper executable
-RUN chmod +x ./gradlew
-
-# Build only the LiftDropApi module (skip tests for speed)
-RUN ./gradlew :LiftDropApi:build -x test
-
-# Copy the generated JAR
-COPY LiftDropApi/build/libs/LiftDropApi-0.0.1-SNAPSHOT.jar app.jar
-
+LABEL org.name="liftdrop"
+#
+# Package stage
+#
+FROM eclipse-temurin:21-jdk-jammy
+COPY --from=build /home/gradle/src/LiftDropApi/build/libs/LiftDropApi-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","/app.jar"]
