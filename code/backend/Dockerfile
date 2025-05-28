@@ -3,6 +3,7 @@
 #
 FROM gradle:jdk21-jammy AS build
 COPY --chown=gradle:gradle . /home/gradle/src
+ENV PORT=8080
 WORKDIR /home/gradle/src
 RUN gradle :LiftDropApi:build -x test --no-daemon
 
