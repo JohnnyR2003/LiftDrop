@@ -1,0 +1,6 @@
+authtoken: 2wAmUFK3ep21ldciAD7Uq3wZYuh_6bDTYUnBu4v4RqDgJ82Xo
+tunnels:
+  liftdrop:
+    proto: http
+    addr: 8080
+    hostname: new-evolving-piranha.ngrok-free.app
