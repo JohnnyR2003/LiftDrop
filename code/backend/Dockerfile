@@ -13,26 +13,30 @@ LABEL org.name="liftdrop"
 #
 FROM eclipse-temurin:21-jdk-jammy
 
-# Install supervisor and curl
-RUN apt-get update && apt-get install -y supervisor curl unzip
+# Install curl only (from base image repo, no need for apt mirrors)
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Download and install ngrok
-RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
-    && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list \
-    && apt-get update && apt-get install -y ngrok
+# Download and install ngrok binary directly (no apt)
+RUN curl -LO https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz && \
+    tar -xvzf ngrok-v3-stable-linux-amd64.tgz -C /usr/local/bin && \
+    rm ngrok-v3-stable-linux-amd64.tgz
 
-# Create ngrok config file
+# Authenticate ngrok with token (optional if you pass via env var instead)
+ENV NGROK_AUTHTOKEN=<your-ngrok-token>
+
+# Copy your ngrok config file if needed
 RUN mkdir -p /etc/ngrok
 COPY ngrok.yml /etc/ngrok/ngrok.yml
 
 # Copy built app
 COPY --from=build /home/gradle/src/LiftDropApi/build/libs/LiftDropApi-0.0.1-SNAPSHOT.jar /app.jar
 
-# Copy supervisor config
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Create a script to run both ngrok and your app
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
-# Set default PORT
+# Expose app port
 ENV PORT=${PORT:-8080}
 EXPOSE $PORT
 
-CMD ["/usr/bin/supervisord"]
+CMD ["/start.sh"]
