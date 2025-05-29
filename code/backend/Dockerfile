@@ -22,7 +22,7 @@ RUN curl -LO https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tg
     rm ngrok-v3-stable-linux-amd64.tgz
 
 # Authenticate ngrok with token (optional if you pass via env var instead)
-ENV NGROK_AUTHTOKEN=<your-ngrok-token>
+ENV NGROK_AUTHTOKEN=2wAmUFK3ep21ldciAD7Uq3wZYuh_6bDTYUnBu4v4RqDgJ82Xo
 
 # Copy your ngrok config file if needed
 RUN mkdir -p /etc/ngrok

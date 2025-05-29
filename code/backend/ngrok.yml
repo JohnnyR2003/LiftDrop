@@ -3,4 +3,4 @@ tunnels:
   liftdrop:
     proto: http
     addr: 8080
-    hostname: new-evolving-piranha.ngrok-free.app
+    domain: new-evolving-piranha.ngrok-free.app
