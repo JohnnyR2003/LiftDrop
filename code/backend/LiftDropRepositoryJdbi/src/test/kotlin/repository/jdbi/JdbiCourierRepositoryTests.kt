@@ -185,12 +185,16 @@ class JdbiCourierRepositoryTests {
             assert(loggedInClientId?.first == courierId) { "Logged in client ID should match" }
 
             // Given: a request ID associated with a delivery to be completed
-            val requestId = 1 // Replace with an actual request ID from your database
+            val requestId = 2 // Replace with an actual request ID from your database
 
             // When: accepting the request to create a delivery
             val isAccepted = courierRepository.acceptRequest(requestId, courierId)
             // Then: the request should be accepted successfully
             assert(isAccepted) { "Request should be accepted" }
+
+            val isPickedUp = courierRepository.pickupDelivery(requestId, courierId)
+            // Then: the delivery should be picked up successfully
+            assert(isPickedUp) { "Delivery should be picked up" }
 
             // When: completing the delivery
             val isCompleted = courierRepository.completeDelivery(requestId, courierId)

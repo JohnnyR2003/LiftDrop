@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pt.isel.liftdrop.services.http.APIResult
 
 class LoginViewModel(
     private val loginService: LoginService,
@@ -31,7 +32,13 @@ class LoginViewModel(
             _isLoading.value = true
             _token.value =
                 try {
-                    loginService.login(username, password)
+                    val token = loginService.login(username, password)
+                    if(token is APIResult.Success) {
+                        Token(token = token.data.token,
+                        )
+                    } else {
+                        null // Handle APIResult.Error case
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, e.toString())
                     val errorMessage = e.toString().split(": ").last()
@@ -40,7 +47,13 @@ class LoginViewModel(
                 }
             _courierId.value =
                 try{
-                    loginService.getCourierIdByToken(token.value?.token.toString()).toString()
+                    loginService.getCourierIdByToken(token.value?.token.toString()).let {
+                        if (it is APIResult.Success) {
+                            it.data.id.toString()
+                        } else {
+                            null // Handle APIResult.Error case
+                        }
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, e.toString())
                     val errorMessage = e.toString().split(": ").last()
@@ -56,7 +69,12 @@ class LoginViewModel(
             _isLoading.value = true
             _token.value =
                 try {
-                    loginService.register(email, password, username)
+                    val id = loginService.register(email, password, username)
+                    if(id is APIResult.Success) {
+                        Token(token = id.data.id.toString())
+                    } else {
+                        null // Handle APIResult.Error case
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, e.toString())
                     val errorMessage = e.toString().split(": ").last()

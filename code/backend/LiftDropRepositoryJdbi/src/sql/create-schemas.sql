@@ -1,9 +1,11 @@
-drop schema if exists liftdrop cascade;
-CREATE EXTENSION IF NOT EXISTS cube;
-CREATE EXTENSION IF NOT EXISTS earthdistance;
-create schema liftdrop;
+DROP SCHEMA IF EXISTS liftdrop CASCADE;
+CREATE SCHEMA liftdrop;
 SET search_path TO liftdrop;
 
+-- Now create the extensions
+CREATE EXTENSION IF NOT EXISTS cube;
+CREATE EXTENSION IF NOT EXISTS earthdistance;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE TABLE liftdrop.user (
                                user_id                         SERIAL UNIQUE PRIMARY KEY,
                                email                           TEXT UNIQUE NOT NULL,
@@ -121,3 +123,5 @@ CREATE TABLE liftdrop.sessions (
 --     expires_at TIMESTAMP DEFAULT NOW() + INTERVAL '1 hour',
                                    FOREIGN KEY (user_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE
 );
+
+CREATE INDEX ON liftdrop.item USING GIN (establishment gin_trgm_ops);

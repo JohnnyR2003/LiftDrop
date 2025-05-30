@@ -5,7 +5,6 @@ import com.example.utils.failure
 import com.example.utils.success
 import com.google.gson.JsonParser
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
@@ -26,8 +25,8 @@ import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.pipeline.pt.isel.liftdrop.DeliveryRequestMessage
 import pt.isel.services.AssignmentCoordinator
-import pt.isel.services.CourierError
 import pt.isel.services.CourierWebSocketHandler
+import pt.isel.services.courier.CourierError
 
 @Named("GeocodingServices")
 class GeocodingServices(

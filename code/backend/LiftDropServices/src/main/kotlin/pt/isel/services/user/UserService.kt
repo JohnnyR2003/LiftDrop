@@ -1,15 +1,12 @@
-package pt.isel.services
+package pt.isel.services.user
 
 import com.example.utils.Either
 import com.example.utils.failure
 import com.example.utils.success
 import jakarta.inject.Named
 import liftdrop.repository.TransactionManager
-import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.Courier
-import pt.isel.liftdrop.LocationDTO
-import pt.isel.services.google.GeocodingServices
 
 sealed class UserError {
     data object ClientNotFound : UserError()
@@ -19,6 +16,7 @@ sealed class UserError {
 
 sealed class LocationError {
     data object LocationNotFound : LocationError()
+
     data object InvalidAddress : LocationError()
 }
 
@@ -65,7 +63,4 @@ class UserService(
             }
         }
     }
-
-
-
 }

@@ -1,4 +1,4 @@
-package pt.isel.services
+package pt.isel.services.courier
 
 import com.example.utils.Either
 import com.example.utils.failure

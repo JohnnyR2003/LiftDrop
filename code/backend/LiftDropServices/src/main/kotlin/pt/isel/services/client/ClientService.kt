@@ -1,4 +1,4 @@
-package pt.isel.services
+package pt.isel.services.client
 
 import com.example.utils.Either
 import com.example.utils.failure
@@ -128,45 +128,55 @@ class ClientService(
         client: Client,
         description: String,
         restaurantName: String,
-    ): Either<ClientError, Int> =
+    ): Either<RequestCreationError, Int> =
         transactionManager.run {
             val requestRepository = it.requestRepository
             val locationRepository = it.locationRepository
+
             val requestId =
                 requestRepository.createRequest(
                     clientId = client.user.id,
                     eta = 0,
                 )
 
-            val pickupLocation = locationRepository.getRestaurantLocationByItem(description, restaurantName)
-
-            val pickupAddress: Address =
-                geocodingServices.reverseGeocode(
-                    pickupLocation.latitude,
-                    pickupLocation.longitude,
-                )
-
-            val pickupLocationId = locationRepository.createLocation(pickupLocation, pickupAddress)
-
             val dropOffLocationId =
                 locationRepository.getClientDropOffLocation(client.user.id)
-                    ?: return@run failure(ClientError.ClientNotFound)
+                    ?: return@run failure(RequestCreationError.ClientAddressNotFound)
 
-            requestRepository
-                .createRequestDetails(
-                    requestId = requestId,
-                    description = description,
-                    pickupLocationId = pickupLocationId,
-                    dropoffLocationId = dropOffLocationId,
+            val restaurantLocation =
+                locationRepository.getClosestRestaurantLocation(restaurantName, dropOffLocationId)
+                    ?: return@run failure(RequestCreationError.RestaurantNotFound)
+
+            val itemExists =
+                locationRepository.itemExistsAtRestaurant(description, restaurantName)
+            if (!itemExists) return@run failure(RequestCreationError.ItemNotFound)
+
+            // Is it really necessary to reverse geocode the restaurant location?
+            // and create a new location?
+            val pickupAddress =
+                geocodingServices.reverseGeocode(
+                    restaurantLocation.latitude,
+                    restaurantLocation.longitude,
                 )
+
+            val pickupLocationId =
+                locationRepository.createLocation(restaurantLocation, pickupAddress)
+
+            requestRepository.createRequestDetails(
+                requestId = requestId,
+                description = description,
+                pickupLocationId = pickupLocationId,
+                dropoffLocationId = dropOffLocationId,
+            )
 
             CoroutineScope(Dispatchers.Default).launch {
                 geocodingServices.handleCourierAssignment(
-                    pickupLocation.latitude,
-                    pickupLocation.longitude,
+                    restaurantLocation.latitude,
+                    restaurantLocation.longitude,
                     requestId,
                 )
             }
+
             return@run success(requestId)
         }
 
@@ -199,7 +209,6 @@ class ClientService(
             }
         }
 
-
     fun giveRating(
         clientId: Int,
         requestId: Int,
@@ -207,7 +216,7 @@ class ClientService(
     ): Either<ClientError, Boolean> =
         transactionManager.run {
             val requestRepository = it.requestRepository
-            //val result = requestRepository.giveRating(clientId, requestId, rating)
+            // val result = requestRepository.giveRating(clientId, requestId, rating)
             if (true) {
                 return@run success(true)
             } else {

@@ -38,6 +38,7 @@ import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.location.LocationRepositoryImpl
 import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.services.RealLocationTrackingService
+import pt.isel.liftdrop.services.http.HttpService
 
 data class HomeScreenState(
     val dailyEarnings: String,
@@ -295,11 +296,16 @@ fun HomeScreen(
     }
 }
 
+val httpService = HttpService(
+    baseUrl = "https://liftdrop-api.isel.pt",
+    client = OkHttpClient(),
+    gson = GsonBuilder().create()
+)
 val mockJson = GsonBuilder()
     .create()
 val mockHttpClient: OkHttpClient = OkHttpClient()
 val homeService = RealHomeService(mockHttpClient, mockJson)
-val loginService = RealLoginService(mockHttpClient, mockJson)
+val loginService = RealLoginService(httpService)
 
 
 @SuppressLint("ViewModelConstructorInComposable")

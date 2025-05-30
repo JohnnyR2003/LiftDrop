@@ -7,33 +7,27 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.web.socket.CloseStatus
+import org.springframework.web.socket.WebSocketHandler
+import org.springframework.web.socket.WebSocketMessage
+import org.springframework.web.socket.WebSocketSession
+import org.springframework.web.socket.client.standard.StandardWebSocketClient
 import pt.isel.liftdrop.model.AddressInputModel
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
 import pt.isel.liftdrop.model.RegisterCourierInputModel
 import pt.isel.liftdrop.model.RequestInputModel
-import pt.isel.liftdrop.model.StartListeningInputModel
-import pt.isel.services.ClientService
-import pt.isel.services.CourierService
 import pt.isel.services.LocationServices
+import pt.isel.services.client.ClientService
+import pt.isel.services.courier.CourierService
 import pt.isel.services.utils.Codify.encodePassword
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertIs
-import org.springframework.web.socket.WebSocketHandler
-import org.springframework.web.socket.WebSocketSession
-import org.springframework.web.socket.WebSocketMessage
-import org.springframework.web.socket.CloseStatus
-import org.springframework.web.socket.client.standard.StandardWebSocketClient
-import java.util.concurrent.TimeUnit
-import kotlin.test.DefaultAsserter.assertNotNull
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CourierControllerTests {
-
     @Autowired
     private lateinit var courierService: CourierService
 
@@ -65,18 +59,21 @@ class CourierControllerTests {
     fun `register with courier`() {
         val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/courier").build()
 
-        val registerCourier = RegisterCourierInputModel(
-            name = "b",
-            email = "courier@gmail.com",
-            password = "randomPassword",
-        )
+        val registerCourier =
+            RegisterCourierInputModel(
+                name = "b",
+                email = "courier@gmail.com",
+                password = "randomPassword",
+            )
 
-        val response = client.post()
-            .uri("/register")
-            .bodyValue(registerCourier)
-            .exchange()
-            .expectStatus()
-            .isOk
+        val response =
+            client
+                .post()
+                .uri("/register")
+                .bodyValue(registerCourier)
+                .exchange()
+                .expectStatus()
+                .isOk
         val responseBody = response.expectBody(String::class.java).returnResult().responseBody
     }
 
@@ -84,31 +81,35 @@ class CourierControllerTests {
     fun `login with courier`() {
         val courier = WebTestClient.bindToServer().baseUrl("http://localhost:$port/courier").build()
 
+        val registerCourier =
+            RegisterCourierInputModel(
+                name = "b",
+                email = "courier@gmail.com",
+                password = "randomPassword",
+            )
 
-        val registerCourier = RegisterCourierInputModel(
-            name = "b",
-            email = "courier@gmail.com",
-            password = "randomPassword",
-        )
-
-        courier.post()
+        courier
+            .post()
             .uri("/register")
             .bodyValue(registerCourier)
             .exchange()
             .expectStatus()
             .isOk
 
-        val loginCourier = LoginInputModel(
-            email = "courier@gmail.com",
-            password = "randomPassword",
-        )
+        val loginCourier =
+            LoginInputModel(
+                email = "courier@gmail.com",
+                password = "randomPassword",
+            )
 
-        val response = courier.post()
-            .uri("/login")
-            .bodyValue(loginCourier)
-            .exchange()
-            .expectStatus()
-            .isOk
+        val response =
+            courier
+                .post()
+                .uri("/login")
+                .bodyValue(loginCourier)
+                .exchange()
+                .expectStatus()
+                .isOk
     }
 
     @Test
@@ -121,45 +122,48 @@ class CourierControllerTests {
         val uri = "ws://localhost:$port/ws/courier"
         val session = webSocketClient.execute(webSocketHandler, uri).get()
 
-
         val courier = WebTestClient.bindToServer().baseUrl("http://localhost:$port/courier").build()
         val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api").build()
 
+        val registerCourier =
+            RegisterCourierInputModel(
+                name = "b",
+                email = "courier@gmail.com",
+                password = "randomPassword",
+            )
 
-        val registerCourier = RegisterCourierInputModel(
-            name = "b",
-            email = "courier@gmail.com",
-            password = "randomPassword",
-        )
-
-        courier.post()
+        courier
+            .post()
             .uri("/register")
             .bodyValue(registerCourier)
             .exchange()
             .expectStatus()
             .isOk
 
-        val loginCourier = LoginInputModel(
-            email = "courier@gmail.com",
-            password = "randomPassword",
-        )
+        val loginCourier =
+            LoginInputModel(
+                email = "courier@gmail.com",
+                password = "randomPassword",
+            )
 
         val courierToken = courierService.loginCourier(loginCourier.email, loginCourier.password)
         assertIs<Success<String>>(courierToken)
 
-        val registerClient = RegisterClientInputModel(
-            name = "a",
-            email = "a@gmail.com",
-            password = "password",
-            address = AddressInputModel(
-                street = "R. Bernardim Ribeiro",
-                city = "Odivelas",
-                country = "Portugal",
-                zipcode = "2620-266",
-                streetNumber = "5",
-                floor = null,
+        val registerClient =
+            RegisterClientInputModel(
+                name = "a",
+                email = "a@gmail.com",
+                password = "password",
+                address =
+                    AddressInputModel(
+                        street = "R. Bernardim Ribeiro",
+                        city = "Odivelas",
+                        country = "Portugal",
+                        zipcode = "2620-266",
+                        streetNumber = "5",
+                        floor = null,
+                    ),
             )
-        )
         // Register a new client
         createClient(client, registerClient)
 
@@ -173,12 +177,12 @@ class CourierControllerTests {
                 street = "Av. Dom João II",
                 streetNumber = "2",
                 floor = null,
-                zipCode = "1990-156"
+                zipCode = "1990-156",
             ),
             "item",
             "restaurantName",
             10.0,
-            10L
+            10L,
         )
 
 //        courier.post()
@@ -196,10 +200,9 @@ class CourierControllerTests {
                 .bodyValue(
                     RequestInputModel(
                         restaurantName = "restaurantName",
-                        itemDesignation = "item"
-                    )
-                )
-                .exchange()
+                        itemDesignation = "item",
+                    ),
+                ).exchange()
                 .expectStatus()
                 .isOk
 
@@ -208,14 +211,18 @@ class CourierControllerTests {
 //        assertNotNull(webSocketHandler.lastMessage)        // Verify message content
     }
 
-    private fun createClient(client: WebTestClient, registerClient: RegisterClientInputModel) {
+    private fun createClient(
+        client: WebTestClient,
+        registerClient: RegisterClientInputModel,
+    ) {
         trxManager.run {
-            val userId = it.usersRepository.createUser(
-                registerClient.email,
-                registerClient.password.encodePassword(),
-                registerClient.name,
-                UserRole.CLIENT
-            )
+            val userId =
+                it.usersRepository.createUser(
+                    registerClient.email,
+                    registerClient.password.encodePassword(),
+                    registerClient.name,
+                    UserRole.CLIENT,
+                )
             it.clientRepository.createClient(
                 userId,
                 Address(
@@ -224,63 +231,66 @@ class CourierControllerTests {
                     registerClient.address.street,
                     registerClient.address.streetNumber,
                     registerClient.address.floor,
-                    registerClient.address.zipcode
-                )
+                    registerClient.address.zipcode,
+                ),
             )
-            val locId = it.locationRepository.createLocation(
-                LocationDTO(38.80694, -9.189583),
-                Address(
-                    registerClient.address.country,
-                    registerClient.address.city,
-                    registerClient.address.street,
-                    registerClient.address.streetNumber,
-                    registerClient.address.floor,
-                    registerClient.address.zipcode
+            val locId =
+                it.locationRepository.createLocation(
+                    LocationDTO(38.80694, -9.189583),
+                    Address(
+                        registerClient.address.country,
+                        registerClient.address.city,
+                        registerClient.address.street,
+                        registerClient.address.streetNumber,
+                        registerClient.address.floor,
+                        registerClient.address.zipcode,
+                    ),
                 )
-            )
             it.locationRepository.createDropOffLocation(
                 userId,
-                locId
+                locId,
             )
         }
     }
 }
 
 class TestWebSocketHandler : WebSocketHandler {
-    private val messageReceived = CountDownLatch(1)  // Tracks message receipt
-    var lastMessage: String? = null                  // Stores the received message
+    private val messageReceived = CountDownLatch(1) // Tracks message receipt
+    var lastMessage: String? = null // Stores the received message
+
     override fun afterConnectionEstablished(session: WebSocketSession) {
         // This method is called when the WebSocket connection is established
         println("WebSocket connection established: ${session.id}")
     }
 
-    override fun handleMessage(session: WebSocketSession, message: WebSocketMessage<*>) {
+    override fun handleMessage(
+        session: WebSocketSession,
+        message: WebSocketMessage<*>,
+    ) {
         lastMessage = message.payload.toString()
         messageReceived.countDown()
     }
 
     override fun handleTransportError(
         session: WebSocketSession,
-        exception: Throwable
+        exception: Throwable,
     ) {
         println("WebSocket transport error: ${exception.message}")
         exception.printStackTrace()
-        messageReceived.countDown()  // Ensure the latch is decremented even on error
+        messageReceived.countDown() // Ensure the latch is decremented even on error
     }
 
     override fun afterConnectionClosed(
         session: WebSocketSession,
-        closeStatus: CloseStatus
+        closeStatus: CloseStatus,
     ) {
         println("WebSocket connection closed: ${session.id}, status: $closeStatus")
-        messageReceived.countDown()  // Ensure the latch is decremented when the connection closes
+        messageReceived.countDown() // Ensure the latch is decremented when the connection closes
     }
 
     override fun supportsPartialMessages(): Boolean {
-        return false  // This handler does not support partial messages
+        return false // This handler does not support partial messages
     }
 
-    fun waitForMessage(timeoutMs: Long): Boolean {
-        return messageReceived.await(timeoutMs, TimeUnit.MILLISECONDS)
-    }
+    fun waitForMessage(timeoutMs: Long): Boolean = messageReceived.await(timeoutMs, TimeUnit.MILLISECONDS)
 }

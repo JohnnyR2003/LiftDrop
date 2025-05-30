@@ -9,6 +9,8 @@ import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import pt.isel.pipeline.pt.isel.liftdrop.DeliveryRequestMessage
+import pt.isel.services.courier.CourierService
+import pt.isel.services.user.UserService
 import java.util.concurrent.ConcurrentHashMap
 
 @Service

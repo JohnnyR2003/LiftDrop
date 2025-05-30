@@ -11,13 +11,12 @@ import pt.isel.liftdrop.model.AddressInputModel
 import pt.isel.liftdrop.model.LoginInputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
 import pt.isel.liftdrop.model.RequestInputModel
-import pt.isel.services.ClientService
 import pt.isel.services.LocationServices
+import pt.isel.services.client.ClientService
 import pt.isel.services.utils.Codify.encodePassword
 import kotlin.test.Test
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
-
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ClientControllerTests {
@@ -45,24 +44,25 @@ class ClientControllerTests {
         }
     }
 
-
     @Test
     fun `registerClient should create a new client`() {
         val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api").build()
 
-        val registerClient = RegisterClientInputModel(
-            name = "a",
-            email = "a@gmail.com",
-            password = "password",
-            address = AddressInputModel(
-                street = "R. Bernardim Ribeiro",
-                city = "Odivelas",
-                country = "Portugal",
-                zipcode = "2620-266",
-                streetNumber = "5",
-                floor = null,
+        val registerClient =
+            RegisterClientInputModel(
+                name = "a",
+                email = "a@gmail.com",
+                password = "password",
+                address =
+                    AddressInputModel(
+                        street = "R. Bernardim Ribeiro",
+                        city = "Odivelas",
+                        country = "Portugal",
+                        zipcode = "2620-266",
+                        streetNumber = "5",
+                        floor = null,
+                    ),
             )
-        )
 
         val response =
             client
@@ -82,56 +82,79 @@ class ClientControllerTests {
     }
 
     @Test
-    fun `login should return a token`(){
+    fun `login should return a token`() {
         val client: WebTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api").build()
 
-        val registerClient = RegisterClientInputModel(
-            name = "a",
-            email = "a@gmail.com",
-            password = "password",
-            address = AddressInputModel(
-                street = "R. Bernardim Ribeiro",
-                city = "Odivelas",
-                country = "Portugal",
-                zipcode = "2620-266",
-                streetNumber = "5",
-                floor = null,
+        val registerClient =
+            RegisterClientInputModel(
+                name = "a",
+                email = "a@gmail.com",
+                password = "password",
+                address =
+                    AddressInputModel(
+                        street = "R. Bernardim Ribeiro",
+                        city = "Odivelas",
+                        country = "Portugal",
+                        zipcode = "2620-266",
+                        streetNumber = "5",
+                        floor = null,
+                    ),
             )
-        )
         // Register a new client
         createClient(client, registerClient)
 
         // Test successful login
         val validLogin = LoginInputModel(email = "a@gmail.com", password = "password")
-        client.post()
+        client
+            .post()
             .uri("/client/login")
             .bodyValue(validLogin)
             .exchange()
-            .expectStatus().isOk
+            .expectStatus()
+            .isOk
             .expectBody()
-            .jsonPath("$.token").isNotEmpty
-            .jsonPath("$.token").value<String> { token ->
+            .jsonPath("$.token")
+            .isNotEmpty
+            .jsonPath("$.token")
+            .value<String> { token ->
                 assertTrue(token.length >= 32, "Token should be at least 32 characters")
             }
 
         // Test invalid password
         val invalidPassword = LoginInputModel(email = "test@example.com", password = "wrong_password")
-        client.post()
+        client
+            .post()
             .uri("/client/login")
             .bodyValue(invalidPassword)
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus()
+            .isNotFound
     }
 
     @Test
     fun `create a dropOff Location should return success`() {
         val client: WebTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api").build()
 
-        val registerClient = RegisterClientInputModel(
-            name = "a",
-            email = "a@gmail.com",
-            password = "password",
-            address = AddressInputModel(
+        val registerClient =
+            RegisterClientInputModel(
+                name = "a",
+                email = "a@gmail.com",
+                password = "password",
+                address =
+                    AddressInputModel(
+                        street = "R. Bernardim Ribeiro",
+                        city = "Odivelas",
+                        country = "Portugal",
+                        zipcode = "2620-266",
+                        streetNumber = "5",
+                        floor = null,
+                    ),
+            )
+        // Register a new client
+        createClient(client, registerClient)
+
+        val dropOffLocation =
+            AddressInputModel(
                 street = "R. Bernardim Ribeiro",
                 city = "Odivelas",
                 country = "Portugal",
@@ -139,18 +162,6 @@ class ClientControllerTests {
                 streetNumber = "5",
                 floor = null,
             )
-        )
-        // Register a new client
-        createClient(client, registerClient)
-
-        val dropOffLocation = AddressInputModel(
-            street = "R. Bernardim Ribeiro",
-            city = "Odivelas",
-            country = "Portugal",
-            zipcode = "2620-266",
-            streetNumber = "5",
-            floor = null,
-        )
 
         val token = clientService.loginClient(registerClient.email, registerClient.password)
         assertIs<Success<String>>(token)
@@ -172,19 +183,21 @@ class ClientControllerTests {
 
         assert(true)
 
-        val registerClient = RegisterClientInputModel(
-            name = "a",
-            email = "a@gmail.com",
-            password = "password",
-            address = AddressInputModel(
-                street = "R. Bernardim Ribeiro",
-                city = "Odivelas",
-                country = "Portugal",
-                zipcode = "2620-266",
-                streetNumber = "5",
-                floor = null,
+        val registerClient =
+            RegisterClientInputModel(
+                name = "a",
+                email = "a@gmail.com",
+                password = "password",
+                address =
+                    AddressInputModel(
+                        street = "R. Bernardim Ribeiro",
+                        city = "Odivelas",
+                        country = "Portugal",
+                        zipcode = "2620-266",
+                        streetNumber = "5",
+                        floor = null,
+                    ),
             )
-        )
         // Register a new client
         createClient(client, registerClient)
 
@@ -198,12 +211,12 @@ class ClientControllerTests {
                 street = "Av. Dom João II",
                 streetNumber = "2",
                 floor = null,
-                zipCode = "1990-156"
+                zipCode = "1990-156",
             ),
             "item",
             "restaurantName",
             10.0,
-            10L
+            10L,
         )
 
         val response =
@@ -214,23 +227,25 @@ class ClientControllerTests {
                 .bodyValue(
                     RequestInputModel(
                         restaurantName = "restaurantName",
-                        itemDesignation = "item"
-                    )
-                )
-                .exchange()
+                        itemDesignation = "item",
+                    ),
+                ).exchange()
                 .expectStatus()
                 .isOk
     }
 
-
-    private fun createClient(client: WebTestClient, registerClient: RegisterClientInputModel) {
+    private fun createClient(
+        client: WebTestClient,
+        registerClient: RegisterClientInputModel,
+    ) {
         trxManager.run {
-            val userId = it.usersRepository.createUser(
-                registerClient.email,
-                registerClient.password.encodePassword(),
-                registerClient.name,
-                UserRole.CLIENT
-            )
+            val userId =
+                it.usersRepository.createUser(
+                    registerClient.email,
+                    registerClient.password.encodePassword(),
+                    registerClient.name,
+                    UserRole.CLIENT,
+                )
             it.clientRepository.createClient(
                 userId,
                 Address(
@@ -239,23 +254,24 @@ class ClientControllerTests {
                     registerClient.address.street,
                     registerClient.address.streetNumber,
                     registerClient.address.floor,
-                    registerClient.address.zipcode
-                )
+                    registerClient.address.zipcode,
+                ),
             )
-            val locId = it.locationRepository.createLocation(
-                LocationDTO(38.80694, -9.189583),
-                Address(
-                    registerClient.address.country,
-                    registerClient.address.city,
-                    registerClient.address.street,
-                    registerClient.address.streetNumber,
-                    registerClient.address.floor,
-                    registerClient.address.zipcode
+            val locId =
+                it.locationRepository.createLocation(
+                    LocationDTO(38.80694, -9.189583),
+                    Address(
+                        registerClient.address.country,
+                        registerClient.address.city,
+                        registerClient.address.street,
+                        registerClient.address.streetNumber,
+                        registerClient.address.floor,
+                        registerClient.address.zipcode,
+                    ),
                 )
-            )
             it.locationRepository.createDropOffLocation(
                 userId,
-                locId
+                locId,
             )
         }
     }

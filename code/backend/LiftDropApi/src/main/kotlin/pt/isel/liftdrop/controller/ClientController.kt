@@ -23,7 +23,9 @@ import pt.isel.liftdrop.model.LoginOutputModel
 import pt.isel.liftdrop.model.RegisterClientInputModel
 import pt.isel.liftdrop.model.RegisterUserOutput
 import pt.isel.liftdrop.model.RequestInputModel
-import pt.isel.services.ClientService
+import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
+import pt.isel.services.client.ClientService
+import pt.isel.services.client.RequestCreationError
 
 /**
  * Controller for client operations.
@@ -39,33 +41,41 @@ class ClientController(
     fun makeRequest(
         user: AuthenticatedClient,
         @RequestBody order: RequestInputModel,
-    ): ResponseEntity<Any> {
-        println("user: $user")
-        val result =
-            clientService
-                .makeRequest(
-                    Client(
-                        user.client.user,
-                    ),
+    ): ResponseEntity<Any> =
+        when (
+            val requestCreationResult =
+                clientService.makeRequest(
+                    Client(user.client.user),
                     order.itemDesignation,
                     order.restaurantName,
                 )
-
-        return when (result) {
+        ) {
             is Success -> {
-                // Handle successful order creation
-                println("Order created successfully with ID: ${result.value}")
-                ResponseEntity.ok(result.value)
+                val result = requestCreationResult.value
+                GlobalLogger.log("Order created successfully with ID: $result")
+                ResponseEntity.ok(result)
             }
             is Failure -> {
                 // Handle order creation error
-                println("Failed to create order")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to create order")
+                GlobalLogger.log("Failed to create order: ${requestCreationResult.value}")
+                when (requestCreationResult.value) {
+                    is RequestCreationError.RestaurantNotFound -> {
+                        ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body("Restaurant with name '${order.restaurantName}' not found")
+                    }
+                    is RequestCreationError.ItemNotFound -> {
+                        ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body("The item '${order.itemDesignation}' was not found in the restaurant '${order.restaurantName}'")
+                    }
+                    else ->
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Failed to create order")
+                }
             }
         }
-    }
 
     @PostMapping("/register")
     fun registerClient(
@@ -236,7 +246,5 @@ class ClientController(
     }
 
     @GetMapping("/hello")
-    fun getHello(): ResponseEntity<String> {
-        return ResponseEntity.ok("Hello from ClientController!")
-    }
+    fun getHello(): ResponseEntity<String> = ResponseEntity.ok("Hello from ClientController!")
 }

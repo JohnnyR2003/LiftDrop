@@ -4,7 +4,7 @@ import com.example.utils.Either
 import org.springframework.stereotype.Component
 import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.AuthenticatedCourier
-import pt.isel.services.UserService
+import pt.isel.services.user.UserService
 
 @Component
 class RequestTokenProcessor(

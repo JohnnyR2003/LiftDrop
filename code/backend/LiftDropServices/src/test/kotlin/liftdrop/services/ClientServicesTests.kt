@@ -11,14 +11,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.postgresql.ds.PGSimpleDataSource
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
-import pt.isel.liftdrop.LocationDTO
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
-import pt.isel.services.ClientService
-import pt.isel.services.CourierService
 import pt.isel.services.CourierWebSocketHandler
-import pt.isel.services.UserService
+import pt.isel.services.client.ClientService
+import pt.isel.services.courier.CourierService
 import pt.isel.services.google.GeocodingServices
+import pt.isel.services.user.UserService
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -139,14 +138,6 @@ class ClientServiceTest {
         transactionManager.run {
             val locationRepo = it.locationRepository
             val requestRepo = it.requestRepository
-
-//            val dropoffLocationId =
-//                locationRepo.createLocation(
-//                    LocationDTO(40.4168, -3.7038),
-//                    testAddress2,
-//                )
-//
-//            val dropoff = locationRepo.getLocationById(dropoffLocationId)
 
             val requestId =
                 runBlocking {

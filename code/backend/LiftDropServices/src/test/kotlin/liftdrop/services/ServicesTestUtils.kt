@@ -6,11 +6,11 @@ import org.jdbi.v3.core.Jdbi
 import org.postgresql.ds.PGSimpleDataSource
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.LocationDTO
-import pt.isel.services.ClientService
-import pt.isel.services.CourierService
 import pt.isel.services.CourierWebSocketHandler
-import pt.isel.services.UserService
+import pt.isel.services.client.ClientService
+import pt.isel.services.courier.CourierService
 import pt.isel.services.google.GeocodingServices
+import pt.isel.services.user.UserService
 import kotlin.math.abs
 import kotlin.random.Random
 

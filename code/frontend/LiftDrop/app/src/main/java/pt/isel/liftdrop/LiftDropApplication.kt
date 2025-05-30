@@ -18,9 +18,11 @@ import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.login.model.UserInfoRepository
 import pt.isel.liftdrop.services.LocationTrackingService
 import pt.isel.liftdrop.services.RealLocationTrackingService
+import pt.isel.liftdrop.services.http.HttpService
 
 
 const val TAG = "LiftDropApp"
+//const val HOST = "https://two025-lift-drop.onrender.com"
 const val HOST = "https://new-evolving-piranha.ngrok-free.app"
 val ApplicationJsonType = "application/json".toMediaType()
 
@@ -29,6 +31,7 @@ val ApplicationJsonType = "application/json".toMediaType()
  * The contract for the object that holds all the globally relevant dependencies.
  */
 interface DependenciesContainer {
+    val httpService: HttpService
     val loginService : LoginService
     val aboutService: AboutService
     val homeService: HomeService
@@ -50,8 +53,16 @@ class LiftDropApplication : DependenciesContainer, Application() {
             .create()
     }
 
+    override val httpService: HttpService by lazy {
+        HttpService(
+            baseUrl = HOST,
+            client = httpClient,
+            gson = jsonEncoder
+        )
+    }
+
     override val loginService: LoginService
-        get() = RealLoginService(httpClient, jsonEncoder)
+        get() = RealLoginService(httpService)
 
     override val aboutService: AboutService
         get() = RealAboutService(httpClient, jsonEncoder)

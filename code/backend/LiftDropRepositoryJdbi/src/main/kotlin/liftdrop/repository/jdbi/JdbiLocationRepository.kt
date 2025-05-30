@@ -79,21 +79,44 @@ class JdbiLocationRepository(
             .mapTo<Int>()
             .singleOrNull()
 
-    override fun getRestaurantLocationByItem(
-        item: String,
+    override fun getClosestRestaurantLocation(
         restaurantName: String,
-    ): LocationDTO =
+        clientLocationId: Int,
+    ): LocationDTO? =
         handle
             .createQuery(
                 """
-                SELECT l.latitude, l.longitude
-                FROM liftdrop.location l
-                JOIN liftdrop.item i ON l.location_id = i.establishment_location
-                WHERE i.designation = :item AND i.establishment = :restaurant_name
-                """,
-            ).bind("item", item)
-            .bind("restaurant_name", restaurantName)
+            SELECT l.latitude, l.longitude
+            FROM liftdrop.location l
+            JOIN liftdrop.item i ON l.location_id = i.establishment_location
+            JOIN liftdrop.location cl ON cl.location_id = :clientLocationId
+            WHERE i.establishment ILIKE :restaurant_name
+            ORDER BY ST_DistanceSphere(
+            ST_MakePoint(cl.longitude, cl.latitude),
+            ST_MakePoint(l.longitude, l.latitude)
+         ) 
+            LIMIT 1
+            """,
+            ).bind("restaurant_name", "%$restaurantName%") // partial & case-insensitive match
+            .bind("clientLocationId", clientLocationId)
             .mapTo<LocationDTO>()
+            .firstOrNull()
+
+    override fun itemExistsAtRestaurant(
+        item: String,
+        restaurantName: String,
+    ): Boolean =
+        handle
+            .createQuery(
+                """
+        SELECT EXISTS (
+            SELECT 1 FROM liftdrop.item
+            WHERE designation = :item AND establishment LIKE :restaurantName
+        )
+        """,
+            ).bind("item", item)
+            .bind("restaurantName", restaurantName)
+            .mapTo<Boolean>()
             .first()
 
     override fun getClientDropOffLocation(clientId: Int): Int? =
@@ -113,8 +136,8 @@ class JdbiLocationRepository(
         designation: String,
         price: Double,
         eta: Long,
-    ): Int {
-        return handle
+    ): Int =
+        handle
             .createUpdate(
                 """
             INSERT INTO liftdrop.item (establishment, establishment_location, designation, price, ETA)
@@ -128,7 +151,6 @@ class JdbiLocationRepository(
             .executeAndReturnGeneratedKeys("item_id") // specify column to get the ID directly
             .mapTo<Int>()
             .one()
-    }
 
     override fun clear() {
         handle.createUpdate("TRUNCATE TABLE liftdrop.location CASCADE;").execute()

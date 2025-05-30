@@ -15,22 +15,22 @@ VALUES (1, 'john.doe@example.com', 'hashed_password_1', 'John Doe', 'CLIENT'),
 
 --Insert Addresses
 INSERT INTO liftdrop."address" (address_id, country, city, street, house_number, floor, zip_code)
-VALUES (1, 'USA', 'New York', '5th Avenue', '123', '2nd', '10001'),
-       (2, 'USA', 'Los Angeles', 'Sunset Boulevard', '456', '3rd', '90001'),
-       (3, 'USA', 'San Francisco', 'Market Street', '789', '4th', '94101');
+VALUES (1, 'PORTUGAL', 'Lisbon', 'Avenida de Roma', '15', 'RC', '1000-264'),
+       (2, 'PORTUGAL', 'Lisbon', 'Avenida Fontes Pereira de Melo', '16', 'RC', '1050-116'),
+       (3, 'PORTUGAL', 'Lisbon', 'Avenida da República', '12', '1', '1050-191'),
+       (4, 'PORTUGAL', 'Lisbon', 'Rua Albert Einstein', '1', '2', '1500-676'),
+       (5, 'PORTUGAL', 'Lisbon', 'Avenida Dom João II', '40', '3', '1990-094'),
+       (6, 'PORTUGAL', 'Lisbon', 'Avenida da Liberdade', '2', 'RC', '1250-113');
+
 
 -- Insert locations next (no dependencies)
 INSERT INTO liftdrop."location" (location_id, latitude, longitude, address, name)
-VALUES (1, 38.743424, -9.138986, 1, 'New York City'),
-       (2, 34.0522, -118.2437, 2, 'Los Angeles'),
-       (3, 37.7749, -122.4194, 3, 'San Francisco'),
-       (4, 40.7306, -73.9352, 1, 'New York City'),
-       (5, 34.0522, -118.2437, 2, 'Los Angeles'),
-       (6, 37.7749, -122.4194, 3, 'San Francisco'),
-       (7, 38.73908, -9.12461, 1, 'Olaias'),
-       (8, 38.74362, -9.13896, 1, 'Avenida de Roma'),
-       (9, 38.74140, -9.14667, 1, 'Campo Pequeno'),
-       (10, 53.427749,  -6.243933, 1, 'Bachelors street');
+VALUES (1, 38.743424, -9.138986, 1, 'Avenida de Roma'),
+       (2, 38.7267130611275, -9.148917466507026, 2, 'Avenida Fontes Pereira de Melo'),
+       (3, 38.73548667805665, -9.144861015848331, 3, 'Avenida da Republica'),
+       (4, 38.75504773230685, -9.188669486292124 , 4, 'Centro Colombo'),
+       (5, 38.768230407427936, -9.09637567868234, 5, 'Centro Comercial Vasco da Gama'),
+       (6, 38.716107488039675, -9.142992520654982, 6, 'Avenida da Liberdade');
 
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
@@ -44,9 +44,9 @@ VALUES (4, 1, 0.00, true),
        (5, 2, 0.00, false),
        (6, 3, 0.00, false),
        (7, 4, 0.00, false),
-       (8, 7, 0.00, true),
-       (9, 8, 0.00, false),
-       (10, 9, 0.00, false);
+       (8, 5, 0.00, true),
+       (9, 6, 0.00, false),
+       (10, 4, 0.00, false);
 
 
 -- Insert requests (depends on Clients and Couriers)
@@ -78,16 +78,12 @@ VALUES (1, 'Chicken Wings', 1, 2),
 INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)
 VALUES
     (1, 'MC DONALDS Roma', 1, 'Big Mac', 5.99, 1800),
-    (2, 'BURGER KING SALDANHA', 2, 'Whopper', 6.49, 2700),
-    (3, 'KFC COLOMBO', 3, 'Zinger', 7.99, 3600),
-    (4, 'PIZZA HUT AVENIDA', 4, 'Pepperoni Pizza', 9.49, 3000),
-    (5, 'TACO BELL MARQUÊS', 5, 'Crunchwrap Supreme', 7.29, 2500),
-    (6, 'STARBUCKS OLIVAIS', 6, 'Caramel Macchiato', 4.89, 1200),
-    (7, 'SUBWAY ALVALADE', 7, 'Turkey Sub', 6.19, 2000),
-    (8, 'PASTELARIA BELÉM', 8, 'Pastel de Nata', 1.50, 900),
-    (9, 'DONER KEBAB CAMPO PEQUENO', 9, 'Doner Kebab Wrap', 5.75, 1500),
-    (10, 'BURGER KING CAMPO PEQUENO', 9, 'Chicken Wings', 4.99, 1800),
-    (11, 'DUBLIN AIRPORT', 10, 'Fish and Chips', 12.5, 3000);
+    (2, 'BURGER KING MARQUÊS', 2, 'Whopper', 6.49, 2700),
+    (3, 'MC DONALDS Saldanha', 3, 'McBifana', 5.99, 3000),
+    (4, 'KFC COLOMBO', 4, 'Chick & Share 9 Tenders', 7.49, 3000),
+    (5, 'TACO BELL VASCO DA GAMA', 5, 'Crunchwrap Supreme', 6.29, 2500),
+    (6, 'SUBWAY AVENIDA DA LIBERDADE', 6, 'Turkey Sub', 6.89, 1200);
+
 
 --deliveries todo
 
