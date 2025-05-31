@@ -24,10 +24,6 @@ class JdbiCourierRepository(
         userId: Int,
         isAvailable: Boolean,
     ): Int {
-        /*val address= LocationServices.getAddressFromCoordinates(
-            latitude = currentLocation.latitude,
-            longitude = currentLocation.longitude,
-        )*/
         handle
             .createUpdate(
                 """

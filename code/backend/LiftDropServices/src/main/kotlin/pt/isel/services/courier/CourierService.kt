@@ -13,24 +13,6 @@ import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.*
 
-sealed class CourierError {
-    data object CourierNotFound : CourierError()
-
-    data object UserNotFound : CourierError()
-
-    data object InvalidEmailOrPassword : CourierError()
-
-    data object PackageAlreadyDelivered : CourierError()
-
-    data object RequestNotAccepted : CourierError()
-
-    data object CourierEmailAlreadyExists : CourierError()
-
-    data object NoAvailableCouriers : CourierError()
-
-    data object NoCourierAvailable : CourierError()
-}
-
 @Service
 class CourierService(
     private val transactionManager: TransactionManager,
@@ -39,13 +21,13 @@ class CourierService(
         email: String,
         password: String,
         name: String,
-    ): Either<CourierError, Int> =
+    ): Either<CourierCreationError, Int> =
         transactionManager.run {
             val userRepository = it.usersRepository
             val courierRepository = it.courierRepository
-            if (userRepository.findUserByEmail(email) != null) {
-                return@run failure(CourierError.CourierEmailAlreadyExists)
-            }
+
+            if (userRepository.findUserByEmail(email) != null) return@run failure(CourierCreationError.CourierEmailAlreadyExists)
+
             val id =
                 userRepository.createUser(
                     email = email,
@@ -53,6 +35,7 @@ class CourierService(
                     name = name,
                     role = UserRole.COURIER,
                 )
+
             val courierCreation =
                 courierRepository.createCourier(
                     userId = id,
@@ -64,25 +47,23 @@ class CourierService(
     fun loginCourier(
         email: String,
         password: String,
-    ): Either<CourierError, String> =
+    ): Either<CourierLoginError, String> =
         transactionManager.run {
             val courierRepository = it.courierRepository
             val userRepository = it.usersRepository
+
+            if (email.isBlank() || password.isBlank()) return@run failure(CourierLoginError.BlankEmailOrPassword)
+
+            val user =
+                userRepository.findUserByEmail(email)
+                    ?: return@run failure(CourierLoginError.CourierNotFound)
 
             val passwordFromDatabase =
                 courierRepository
                     .loginCourier(
                         email = email,
                         password = password,
-                    )?.second ?: return@run failure(CourierError.InvalidEmailOrPassword)
-
-            val user =
-                userRepository.findUserByEmail(email)
-                    ?: return@run failure(CourierError.UserNotFound)
-
-            if (user.role != UserRole.COURIER) {
-                return@run failure(CourierError.InvalidEmailOrPassword)
-            }
+                    )?.second ?: return@run failure(CourierLoginError.InvalidEmailOrPassword)
 
             val sessionToken = UUID.randomUUID().toString()
 
@@ -93,7 +74,7 @@ class CourierService(
 
             return@run when (matchesPassword(password, passwordFromDatabase)) {
                 true -> success(sessionToken)
-                false -> failure(CourierError.InvalidEmailOrPassword)
+                false -> failure(CourierLoginError.WrongPassword)
             }
         }
 
@@ -130,12 +111,12 @@ class CourierService(
     fun pickupDelivery(
         requestId: Int,
         courierId: Int,
-    ): Either<CourierError, Boolean> {
+    ): Either<CourierDeliveryError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
             val request = courierRepository.pickupDelivery(requestId, courierId)
             if (!request) {
-                return@run failure(CourierError.PackageAlreadyDelivered)
+                return@run failure(CourierDeliveryError.PackageAlreadyPickedUp)
             } else {
                 success(true)
             }
@@ -145,12 +126,12 @@ class CourierService(
     fun deliver(
         requestId: Int,
         courierId: Int,
-    ): Either<CourierError, Boolean> {
+    ): Either<CourierDeliveryError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
             val request = courierRepository.completeDelivery(requestId, courierId)
             if (!request) {
-                return@run failure(CourierError.PackageAlreadyDelivered)
+                return@run failure(CourierDeliveryError.PackageAlreadyDelivered)
             } else {
                 success(true)
             }
@@ -173,7 +154,7 @@ class CourierService(
         courierId: Int,
         newLocation: LocationDTO,
         address: Address,
-    ): Either<CourierError, Boolean> {
+    ): Either<LocationUpdateError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
             val locationRepository = it.locationRepository
@@ -184,31 +165,31 @@ class CourierService(
                 )
             val updated = courierRepository.updateCourierLocation(courierId, locationId)
             if (!updated) {
-                return@run failure(CourierError.CourierNotFound)
+                return@run failure(LocationUpdateError.CourierNotFound)
             } else {
                 success(true)
             }
         }
     }
 
-    fun fetchDailyEarnings(courierId: Int): Either<CourierError, Double> {
+    fun fetchDailyEarnings(courierId: Int): Either<CourierEarningsError, Double> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
             val dailyEarnings = courierRepository.fetchDailyEarnings(courierId)
             if (dailyEarnings != null) {
                 success(dailyEarnings)
             } else {
-                return@run failure(CourierError.CourierNotFound)
+                return@run failure(CourierEarningsError.CourierNotFound)
             }
         }
     }
 
-    fun toggleAvailability(courierId: Int): Either<CourierError, Boolean> {
+    fun toggleAvailability(courierId: Int): Either<StateUpdateError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
             val updated = courierRepository.toggleAvailability(courierId)
             if (!updated) {
-                return@run failure(CourierError.CourierNotFound)
+                return@run failure(StateUpdateError.CourierNotFound)
             } else {
                 success(true)
             }
@@ -218,14 +199,14 @@ class CourierService(
     fun logoutCourier(
         token: String,
         courierId: Int,
-    ): Either<CourierError, Boolean> {
+    ): Either<CourierLogoutError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
             val result = courierRepository.logoutCourier(token, courierId)
             if (result) {
                 return@run success(true)
             } else {
-                return@run failure(CourierError.CourierNotFound)
+                return@run failure(CourierLogoutError.SessionNotFound)
             }
         }
     }

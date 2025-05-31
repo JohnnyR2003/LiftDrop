@@ -87,16 +87,16 @@ class ClientService(
                 return@run failure(ClientLoginError.BlankEmailOrPassword)
             }
 
+            val userId =
+                userRepository.findUserByEmail(email)?.id
+                    ?: return@run failure(ClientLoginError.ClientNotFound)
+
             val passwordFromDatabase =
                 clientRepository
                     .loginClient(
                         email = email,
                         password = password,
                     )?.second ?: return@run failure(ClientLoginError.InvalidEmailOrPassword)
-
-            val userId =
-                userRepository.findUserByEmail(email)?.id
-                    ?: return@run failure(ClientLoginError.ClientNotFound)
 
             val sessionToken = UUID.randomUUID().toString()
 

@@ -27,6 +27,7 @@ import pt.isel.pipeline.pt.isel.liftdrop.DeliveryRequestMessage
 import pt.isel.services.AssignmentCoordinator
 import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.courier.CourierError
+import pt.isel.services.courier.LocationUpdateError
 
 @Named("GeocodingServices")
 class GeocodingServices(
@@ -172,7 +173,7 @@ class GeocodingServices(
     fun reverseGeocode(
         lat: Double,
         lng: Double,
-    ): Address {
+    ): Either<LocationUpdateError, Address> {
         val url = "$baseUrl?latlng=$lat,$lng&key=$apiKey"
         val client = OkHttpClient()
         val request = Request.Builder().url(url).build()
@@ -182,7 +183,7 @@ class GeocodingServices(
 
         val json = JsonParser.parseString(body).asJsonObject
         val results = json["results"].asJsonArray
-        if (results.size() == 0) throw Exception("No address found")
+        if (results.size() == 0) return failure(LocationUpdateError.InvalidCoordinates)
 
         val addressComponents = results[0].asJsonObject["address_components"].asJsonArray
 
@@ -203,14 +204,17 @@ class GeocodingServices(
             }
         }
 
-        return Address(
-            country = country,
-            city = city,
-            street = street,
-            zipCode = zip,
-            streetNumber = houseNumber,
-            floor = null,
-        )
+        val address =
+            Address(
+                country = country,
+                city = city,
+                street = street,
+                zipCode = zip,
+                streetNumber = houseNumber,
+                floor = null,
+            )
+
+        return success(address)
     }
 
     fun getLatLngFromAddress(address: String): Pair<Double, Double>? {

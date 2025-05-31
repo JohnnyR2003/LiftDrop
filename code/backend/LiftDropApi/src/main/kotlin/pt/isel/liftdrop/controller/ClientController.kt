@@ -23,7 +23,12 @@ import pt.isel.liftdrop.model.RegisterClientInputModel
 import pt.isel.liftdrop.model.RegisterUserOutput
 import pt.isel.liftdrop.model.RequestInputModel
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
-import pt.isel.services.client.*
+import pt.isel.services.client.ClientCreationError
+import pt.isel.services.client.ClientLoginError
+import pt.isel.services.client.ClientLogoutError
+import pt.isel.services.client.ClientService
+import pt.isel.services.client.DropOffCreationError
+import pt.isel.services.client.RequestCreationError
 
 /**
  * Controller for client operations.
