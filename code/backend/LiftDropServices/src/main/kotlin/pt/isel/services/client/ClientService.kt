@@ -17,18 +17,6 @@ import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.UUID
 
-sealed class ClientError {
-    data object ClientNotFound : ClientError()
-
-    data object UserNotFound : ClientError()
-
-    data object InvalidEmailOrPassword : ClientError()
-
-    data object ClientEmailAlreadyExists : ClientError()
-
-    data object InvalidAddress : ClientError()
-}
-
 @Named
 class ClientService(
     private val transactionManager: TransactionManager,
@@ -39,12 +27,15 @@ class ClientService(
         password: String,
         name: String,
         address: Address,
-    ): Either<ClientError, Int> =
+    ): Either<ClientCreationError, Int> =
         transactionManager.run {
             val userRepository = it.usersRepository
             val clientRepository = it.clientRepository
             val locationRepository = it.locationRepository
-            // Create user
+
+            if (userRepository.findUserByEmail(email) != null) {
+                return@run failure(ClientCreationError.UserAlreadyExists)
+            }
 
             val userCreation =
                 userRepository.createUser(
@@ -54,36 +45,31 @@ class ClientService(
                     role = UserRole.CLIENT,
                 )
 
-            val user = userRepository.findUserByEmail(email) ?: throw IllegalStateException("User should be created")
-            val clientId = user.id
-
             val clientCreation =
                 clientRepository.createClient(
-                    clientId = clientId,
+                    clientId = userCreation,
                     address = address,
                 )
 
-            println("clientCreation: $userCreation")
-
             // Create a DropOff Location
-            val loc = geocodingServices.getLatLngFromAddress(address.toFormattedString())
-            if (loc == null) {
-                return@run failure(ClientError.InvalidAddress)
-            }
+            val dropOff =
+                geocodingServices.getLatLngFromAddress(address.toFormattedString())
+                    ?: return@run failure(ClientCreationError.InvalidAddress)
 
-            val locId = locationRepository.createLocation(LocationDTO(loc.first, loc.second), address)
+            val locId = locationRepository.createLocation(LocationDTO(dropOff.first, dropOff.second), address)
 
-            locationRepository.createDropOffLocation(clientId, locId)
+            locationRepository.createDropOffLocation(userCreation, locId)
+                ?: return@run failure(ClientCreationError.InvalidLocation)
 
             return@run success(clientCreation)
         }
 
-    fun getClientById(clientId: Int): Either<ClientError, Client>? =
+    fun getClientById(clientId: Int): Either<ClientLoginError, Client>? =
         transactionManager.run {
             val clientRepository = it.clientRepository
             val client = clientRepository.getClientByUserId(clientId)
             if (client == null) {
-                return@run failure(ClientError.ClientNotFound)
+                return@run failure(ClientLoginError.ClientNotFound)
             } else {
                 return@run success(client)
             }
@@ -92,21 +78,26 @@ class ClientService(
     fun loginClient(
         email: String,
         password: String,
-    ): Either<ClientError, String> =
+    ): Either<ClientLoginError, String> =
         transactionManager.run {
             val clientRepository = it.clientRepository
             val userRepository = it.usersRepository
+
+            if (email.isBlank() || password.isBlank()) {
+                return@run failure(ClientLoginError.BlankEmailOrPassword)
+            }
 
             val passwordFromDatabase =
                 clientRepository
                     .loginClient(
                         email = email,
                         password = password,
-                    )?.second ?: return@run failure(ClientError.InvalidEmailOrPassword)
+                    )?.second ?: return@run failure(ClientLoginError.InvalidEmailOrPassword)
 
             val userId =
                 userRepository.findUserByEmail(email)?.id
-                    ?: return@run failure(ClientError.UserNotFound)
+                    ?: return@run failure(ClientLoginError.ClientNotFound)
+
             val sessionToken = UUID.randomUUID().toString()
 
             clientRepository
@@ -119,7 +110,7 @@ class ClientService(
                     return@run success(sessionToken)
                 }
                 false -> {
-                    return@run failure(ClientError.InvalidEmailOrPassword)
+                    return@run failure(ClientLoginError.WrongPassword)
                 }
             }
         }
@@ -137,7 +128,7 @@ class ClientService(
                 requestRepository.createRequest(
                     clientId = client.user.id,
                     eta = 0,
-                )
+                ) ?: return@run failure(RequestCreationError.ClientNotFound)
 
             val dropOffLocationId =
                 locationRepository.getClientDropOffLocation(client.user.id)
@@ -174,47 +165,48 @@ class ClientService(
             return@run success(requestId)
         }
 
-    fun logoutClient(token: String): Either<ClientError, Boolean> =
+    fun logoutClient(token: String): Either<ClientLogoutError, Boolean> =
         transactionManager.run {
             val clientRepository = it.clientRepository
             val result = clientRepository.logoutClient(token)
             if (result) {
                 return@run success(true)
             } else {
-                return@run failure(ClientError.ClientNotFound)
+                return@run failure(ClientLogoutError.SessionNotFound)
             }
         }
 
     fun addDropOffLocation(
         clientId: Int,
         address: Address,
-    ): Either<ClientError, Int> =
+    ): Either<DropOffCreationError, Int> =
         transactionManager.run {
             val locationRepository = it.locationRepository
+
             val loc =
                 geocodingServices.getLatLngFromAddress(address.toFormattedString())
-                    ?: return@run failure(ClientError.InvalidAddress)
+                    ?: return@run failure(DropOffCreationError.InvalidAddress)
+
             val locationId = locationRepository.createLocation(LocationDTO(loc.first, loc.second), address)
-            val updated = locationRepository.createDropOffLocation(clientId, locationId)
-            if (updated == null) {
-                return@run failure(ClientError.ClientNotFound)
-            } else {
-                return@run success(locationId)
-            }
+
+            locationRepository.createDropOffLocation(clientId, locationId)
+                ?: return@run failure(DropOffCreationError.ClientNotFound)
+
+            return@run success(locationId)
         }
 
     fun giveRating(
         clientId: Int,
         requestId: Int,
         rating: Int,
-    ): Either<ClientError, Boolean> =
+    ): Either<ClientLoginError, Boolean> =
         transactionManager.run {
             val requestRepository = it.requestRepository
             // val result = requestRepository.giveRating(clientId, requestId, rating)
             if (true) {
                 return@run success(true)
             } else {
-                return@run failure(ClientError.ClientNotFound)
+                return@run failure(ClientLoginError.ClientNotFound)
             }
         }
 }

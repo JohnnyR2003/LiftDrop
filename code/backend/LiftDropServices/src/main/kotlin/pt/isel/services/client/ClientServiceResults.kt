@@ -5,5 +5,39 @@ sealed class RequestCreationError {
 
     data object ItemNotFound : RequestCreationError()
 
+    data object ClientNotFound : RequestCreationError()
+
     data object ClientAddressNotFound : RequestCreationError()
+}
+
+sealed class ClientCreationError {
+    data object UserAlreadyExists : ClientCreationError()
+
+    data object InvalidAddress : ClientCreationError()
+
+    data object InvalidLocation : ClientCreationError()
+}
+
+sealed class ClientLoginError {
+    data object ClientNotFound : ClientLoginError()
+
+    data object InvalidEmailOrPassword : ClientLoginError()
+
+    data object BlankEmailOrPassword : ClientLoginError()
+
+    data object WrongPassword : ClientLoginError()
+
+    data object ClientLoginEmailAlreadyExists : ClientLoginError()
+
+    data object InvalidAddress : ClientLoginError()
+}
+
+sealed class ClientLogoutError {
+    data object SessionNotFound : ClientLogoutError()
+}
+
+sealed class DropOffCreationError {
+    data object ClientNotFound : DropOffCreationError()
+
+    data object InvalidAddress : DropOffCreationError()
 }

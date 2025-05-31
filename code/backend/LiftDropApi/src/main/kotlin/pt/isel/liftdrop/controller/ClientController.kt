@@ -1,6 +1,5 @@
 package pt.isel.liftdrop.controller
 
-import com.example.utils.Either
 import com.example.utils.Failure
 import com.example.utils.Success
 import org.springframework.http.HttpHeaders
@@ -24,8 +23,7 @@ import pt.isel.liftdrop.model.RegisterClientInputModel
 import pt.isel.liftdrop.model.RegisterUserOutput
 import pt.isel.liftdrop.model.RequestInputModel
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
-import pt.isel.services.client.ClientService
-import pt.isel.services.client.RequestCreationError
+import pt.isel.services.client.*
 
 /**
  * Controller for client operations.
@@ -69,6 +67,16 @@ class ClientController(
                             .status(HttpStatus.NOT_FOUND)
                             .body("The item '${order.itemDesignation}' was not found in the restaurant '${order.restaurantName}'")
                     }
+                    is RequestCreationError.ClientNotFound -> {
+                        ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body("Client not found")
+                    }
+                    is RequestCreationError.ClientAddressNotFound -> {
+                        ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body("Client address not found")
+                    }
                     else ->
                         ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -81,7 +89,7 @@ class ClientController(
     fun registerClient(
         @RequestBody registerInput: RegisterClientInputModel,
     ): ResponseEntity<Any> {
-        val register =
+        val clientCreationResult =
             clientService
                 .registerClient(
                     registerInput.email,
@@ -97,13 +105,11 @@ class ClientController(
                     ),
                 )
 
-        return when (register) {
+        return when (clientCreationResult) {
             is Success -> {
-                // Handle successful registration
-                println("Client registered successfully with ID: ${register.value}")
                 ResponseEntity.ok(
                     RegisterUserOutput(
-                        register.value.toString(),
+                        clientCreationResult.value.toString(),
                         registerInput.name,
                         registerInput.email,
                         registerInput.password,
@@ -111,11 +117,28 @@ class ClientController(
                 )
             }
             is Failure -> {
-                // Handle registration error
-                println("Failed Registration")
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body("Email already exists")
+                when (clientCreationResult.value) {
+                    is ClientCreationError.UserAlreadyExists -> {
+                        ResponseEntity
+                            .status(HttpStatus.CONFLICT)
+                            .body("Email already exists")
+                    }
+                    is ClientCreationError.InvalidAddress -> {
+                        ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body("Invalid address provided")
+                    }
+                    is ClientCreationError.InvalidLocation -> {
+                        ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body("Invalid location provided")
+                    }
+                    else -> {
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Failed to register client")
+                    }
+                }
             }
         }
     }
@@ -124,21 +147,16 @@ class ClientController(
     fun login(
         @RequestBody input: LoginInputModel,
     ): ResponseEntity<Any> {
-        if (input.email.isBlank() || input.password.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid input")
-        }
-        val result =
+        val clientLoginResult =
             clientService
                 .loginClient(
                     input.email,
                     input.password,
                 )
-
-        return when (result) {
-            is Either.Right -> {
-                println("Client logged in successfully with token: ${result.value}")
-                val token = result.value
-                // Handle successful login
+        return when (clientLoginResult) {
+            is Success -> {
+                GlobalLogger.log("Client logged in successfully with token: ${clientLoginResult.value}")
+                val token = clientLoginResult.value
                 val cookie =
                     ResponseCookie
                         .from("auth_token", token)
@@ -150,21 +168,51 @@ class ClientController(
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
                     .body(LoginOutputModel(token))
             }
-            is Either.Left -> {
-                // Handle login error
-                println("Failed Login")
-                ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Invalid email or password")
+            is Failure -> {
+                when (clientLoginResult.value) {
+                    is ClientLoginError.ClientNotFound -> {
+                        ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body("Client not found")
+                    }
+                    is ClientLoginError.InvalidEmailOrPassword -> {
+                        ResponseEntity
+                            .status(HttpStatus.UNAUTHORIZED)
+                            .body("Invalid email or password")
+                    }
+                    is ClientLoginError.BlankEmailOrPassword -> {
+                        ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body("Email or password cannot be blank")
+                    }
+                    is ClientLoginError.WrongPassword -> {
+                        ResponseEntity
+                            .status(HttpStatus.UNAUTHORIZED)
+                            .body("Wrong password")
+                    }
+                    is ClientLoginError.ClientLoginEmailAlreadyExists -> {
+                        ResponseEntity
+                            .status(HttpStatus.CONFLICT)
+                            .body("Email already exists")
+                    }
+                    is ClientLoginError.InvalidAddress -> {
+                        ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body("Invalid address provided")
+                    }
+                    else -> {
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Failed to login client")
+                    }
+                }
             }
         }
     }
 
     @DeleteMapping("/logout")
-    fun logout(client: AuthenticatedClient): ResponseEntity<Any> {
-        val result = clientService.logoutClient(client.token)
-
-        return when (result) {
+    fun logout(client: AuthenticatedClient): ResponseEntity<Any> =
+        when (val clientLogoutResult = clientService.logoutClient(client.token)) {
             is Success -> {
                 val expiredCookie =
                     ResponseCookie
@@ -178,13 +226,20 @@ class ClientController(
                     .body("Logout successful")
             }
             is Failure -> {
-                println("Failed Logout")
-                ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Logout error")
+                when (clientLogoutResult.value) {
+                    is ClientLogoutError.SessionNotFound -> {
+                        ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body("Session not found")
+                    }
+                    else -> {
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Failed to logout client")
+                    }
+                }
             }
         }
-    }
 
     @PostMapping("/createDropOffLocation")
     fun addDropOffLocation(
@@ -210,11 +265,26 @@ class ClientController(
                 println("Drop-off location added successfully with ID: ${result.value}")
                 ResponseEntity.ok(result.value)
             }
+
             is Failure -> {
-                println("Failed to add drop-off location")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to add drop-off location")
+                when (result.value) {
+                    is DropOffCreationError.ClientNotFound -> {
+                        ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body("Client not found")
+                    }
+
+                    is DropOffCreationError.InvalidAddress -> {
+                        ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body("Invalid address provided")
+                    }
+                    else -> {
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Failed to add drop-off location")
+                    }
+                }
             }
         }
     }

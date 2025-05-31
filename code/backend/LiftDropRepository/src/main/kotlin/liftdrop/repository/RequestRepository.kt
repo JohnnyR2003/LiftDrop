@@ -7,7 +7,7 @@ interface RequestRepository {
     fun createRequest(
         clientId: Int,
         eta: Long?,
-    ): Int
+    ): Int?
 
     fun createRequestDetails(
         requestId: Int,

@@ -3,12 +3,9 @@ package pt.isel.liftdrop.services.http
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
-import com.google.gson.stream.JsonReader
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -16,9 +13,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.ResponseBody
 import pt.isel.liftdrop.ApplicationJsonType
-import pt.isel.liftdrop.HOST
-import pt.isel.liftdrop.login.model.RealLoginService.ResponseException
-import pt.isel.liftdrop.login.model.RealLoginService.UnexpectedResponseException
 import java.io.IOException
 import java.lang.reflect.Type
 import kotlin.coroutines.resume

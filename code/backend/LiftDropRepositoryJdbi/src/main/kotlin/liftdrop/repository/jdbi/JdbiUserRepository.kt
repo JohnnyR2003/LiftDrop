@@ -26,13 +26,8 @@ class JdbiUserRepository(
         password: String,
         name: String,
         role: UserRole,
-    ): Int { // check first if there's already a user with that email and or name
-        val existingUser = findUserByEmail(email)
-        if (existingUser != null && existingUser.email == email) {
-            println("User with email $email already exists.")
-            return 0
-        }
-        return handle
+    ): Int =
+        handle
             .createUpdate(
                 """
             INSERT INTO liftdrop.user (email, password, name, role)
@@ -45,7 +40,6 @@ class JdbiUserRepository(
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
-    }
 
     /**
      * Deletes a user from the database(Admin only).
@@ -53,9 +47,8 @@ class JdbiUserRepository(
      * @param email The email of the user to delete.
      * @return The number of rows affected by the delete operation.
      */
-    override fun deleteUser(email: String): Int {
-        findUserByEmail(email) ?: return 0
-        return handle
+    override fun deleteUser(email: String): Int =
+        handle
             .createUpdate(
                 """
             DELETE FROM liftdrop.user
@@ -63,7 +56,6 @@ class JdbiUserRepository(
             """,
             ).bind("email", email)
             .execute()
-    }
 
     /**
      * Gets a user by their name.
@@ -202,7 +194,6 @@ class JdbiUserRepository(
     override fun clear() {
         handle.createUpdate("TRUNCATE TABLE liftdrop.user RESTART IDENTITY CASCADE;").execute()
     }
-
 }
 
 private fun mapToUser(rs: ResultSet): User =

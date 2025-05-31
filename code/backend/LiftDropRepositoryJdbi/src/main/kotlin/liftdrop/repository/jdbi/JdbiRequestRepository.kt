@@ -12,8 +12,22 @@ class JdbiRequestRepository(
     override fun createRequest(
         clientId: Int,
         eta: Long?,
-    ): Int =
-        handle
+    ): Int? {
+        val clientExists =
+            handle
+                .createQuery(
+                    """
+            SELECT EXISTS (
+                SELECT 1 FROM liftdrop.client WHERE client_id = :client_id
+            )
+            """,
+                ).bind("client_id", clientId)
+                .mapTo<Boolean>()
+                .one()
+
+        if (!clientExists) return null
+
+        return handle
             .createUpdate(
                 """
             INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta)
@@ -25,6 +39,7 @@ class JdbiRequestRepository(
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()
+    }
 
     override fun createRequestDetails(
         requestId: Int,

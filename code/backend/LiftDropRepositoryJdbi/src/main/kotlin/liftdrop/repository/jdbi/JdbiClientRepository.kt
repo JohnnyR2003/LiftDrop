@@ -21,7 +21,7 @@ class JdbiClientRepository(
     override fun createClient(
         clientId: Int,
         address: Address,
-    ): Int { // first create address then create client with the address id
+    ): Int {
         val addressId =
             handle
                 .createUpdate(
@@ -119,8 +119,7 @@ class JdbiClientRepository(
                 VALUES (:userId, :sessionToken, EXTRACT(EPOCH FROM NOW()), :role)
                 RETURNING session_token
                 """.trimIndent(),
-            )
-            .bind("userId", userId)
+            ).bind("userId", userId)
             .bind("sessionToken", sessionToken)
             .bind("role", UserRole.CLIENT.name)
             .executeAndReturnGeneratedKeys()
@@ -132,11 +131,10 @@ class JdbiClientRepository(
             handle
                 .createUpdate(
                     """
-                DELETE FROM liftdrop.sessions
-                WHERE session_token = :sessionToken
-                """.trimIndent(),
-                )
-                .bind("sessionToken", sessionToken)
+                    DELETE FROM liftdrop.sessions
+                    WHERE session_token = :sessionToken
+                    """.trimIndent(),
+                ).bind("sessionToken", sessionToken)
                 .execute()
         return rowsUpdated > 0
     }
