@@ -14,7 +14,7 @@ interface LocationRepository {
     fun getClosestRestaurantLocation(
         restaurantName: String,
         clientLocationId: Int,
-    ): LocationDTO?
+    ): Pair<Int, LocationDTO>?
 
     fun itemExistsAtRestaurant(
         item: String,

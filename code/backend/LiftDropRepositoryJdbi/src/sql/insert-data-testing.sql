@@ -20,7 +20,8 @@ VALUES (1, 'PORTUGAL', 'Lisbon', 'Avenida de Roma', '15', 'RC', '1000-264'),
        (3, 'PORTUGAL', 'Lisbon', 'Avenida da República', '12', '1', '1050-191'),
        (4, 'PORTUGAL', 'Lisbon', 'Rua Albert Einstein', '1', '2', '1500-676'),
        (5, 'PORTUGAL', 'Lisbon', 'Avenida Dom João II', '40', '3', '1990-094'),
-       (6, 'PORTUGAL', 'Lisbon', 'Avenida da Liberdade', '2', 'RC', '1250-113');
+       (6, 'PORTUGAL', 'Lisbon', 'Avenida da Liberdade', '2', 'RC', '1250-113'),
+       (7, 'PORTUGAL', 'Odivelas', 'Av. Prof. Dr. Augusto Abreu Lopes', '2', 'RC', '2675-462');
 
 
 -- Insert locations next (no dependencies)
@@ -30,7 +31,8 @@ VALUES (1, 38.743424, -9.138986, 1, 'Avenida de Roma'),
        (3, 38.73548667805665, -9.144861015848331, 3, 'Avenida da Republica'),
        (4, 38.75504773230685, -9.188669486292124 , 4, 'Centro Colombo'),
        (5, 38.768230407427936, -9.09637567868234, 5, 'Centro Comercial Vasco da Gama'),
-       (6, 38.716107488039675, -9.142992520654982, 6, 'Avenida da Liberdade');
+       (6, 38.716107488039675, -9.142992520654982, 6, 'Avenida da Liberdade'),
+       (7, 38.794485074412876, -9.181222211849477, 7, 'McDonalds Odivelas');
 
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
@@ -79,10 +81,11 @@ INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, des
 VALUES
     (1, 'MC DONALDS Roma', 1, 'Big Mac', 5.99, 1800),
     (2, 'BURGER KING MARQUÊS', 2, 'Whopper', 6.49, 2700),
-    (3, 'MC DONALDS Saldanha', 3, 'McBifana', 5.99, 3000),
+    (3, 'MC DONALDS Saldanha', 3, 'Big Mac', 5.99, 2000),
     (4, 'KFC COLOMBO', 4, 'Chick & Share 9 Tenders', 7.49, 3000),
     (5, 'TACO BELL VASCO DA GAMA', 5, 'Crunchwrap Supreme', 6.29, 2500),
-    (6, 'SUBWAY AVENIDA DA LIBERDADE', 6, 'Turkey Sub', 6.89, 1200);
+    (6, 'SUBWAY AVENIDA DA LIBERDADE', 6, 'Turkey Sub', 6.89, 1200),
+    (7, 'MC DONALDS Odivelas', 7, 'Big Mac', 5.99, 1800);
 
 
 --deliveries todo

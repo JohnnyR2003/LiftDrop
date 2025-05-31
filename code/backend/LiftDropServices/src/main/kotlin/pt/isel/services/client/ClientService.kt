@@ -153,14 +153,8 @@ class ClientService(
 
             // Is it really necessary to reverse geocode the restaurant location?
             // and create a new location?
-            val pickupAddress =
-                geocodingServices.reverseGeocode(
-                    restaurantLocation.latitude,
-                    restaurantLocation.longitude,
-                )
 
-            val pickupLocationId =
-                locationRepository.createLocation(restaurantLocation, pickupAddress)
+            val pickupLocationId = restaurantLocation.first
 
             requestRepository.createRequestDetails(
                 requestId = requestId,
@@ -171,8 +165,8 @@ class ClientService(
 
             CoroutineScope(Dispatchers.Default).launch {
                 geocodingServices.handleCourierAssignment(
-                    restaurantLocation.latitude,
-                    restaurantLocation.longitude,
+                    restaurantLocation.second.latitude,
+                    restaurantLocation.second.longitude,
                     requestId,
                 )
             }

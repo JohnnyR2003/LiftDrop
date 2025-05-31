@@ -82,42 +82,53 @@ class JdbiLocationRepository(
     override fun getClosestRestaurantLocation(
         restaurantName: String,
         clientLocationId: Int,
-    ): LocationDTO? =
-        handle
+    ): Pair<Int, LocationDTO>? {
+        val normalizedRestaurantName = "%${restaurantName.trim().replace(" ", "%")}%"
+        return handle
             .createQuery(
                 """
-            SELECT l.latitude, l.longitude
-            FROM liftdrop.location l
-            JOIN liftdrop.item i ON l.location_id = i.establishment_location
-            JOIN liftdrop.location cl ON cl.location_id = :clientLocationId
-            WHERE i.establishment ILIKE :restaurant_name
-            ORDER BY ST_DistanceSphere(
-            ST_MakePoint(cl.longitude, cl.latitude),
-            ST_MakePoint(l.longitude, l.latitude)
-         ) 
-            LIMIT 1
-            """,
-            ).bind("restaurant_name", "%$restaurantName%") // partial & case-insensitive match
+        SELECT l.location_id AS location_id, l.latitude AS latitude, l.longitude AS longitude
+        FROM liftdrop.location l
+        JOIN liftdrop.item i ON l.location_id = i.establishment_location
+        JOIN liftdrop.location cl ON cl.location_id = :clientLocationId
+        WHERE i.establishment ILIKE :restaurant_name
+        ORDER BY ST_DistanceSphere(
+        ST_MakePoint(cl.longitude, cl.latitude),
+        ST_MakePoint(l.longitude, l.latitude)
+     )
+        LIMIT 1
+        """,
+            ).bind("restaurant_name", normalizedRestaurantName) // improved partial match
             .bind("clientLocationId", clientLocationId)
-            .mapTo<LocationDTO>()
-            .firstOrNull()
+            .map<Pair<Int, LocationDTO>?> { rs, _ ->
+                val address = rs.getInt("location_id")
+                val location =
+                    LocationDTO(
+                        latitude = rs.getDouble("latitude"),
+                        longitude = rs.getDouble("longitude"),
+                    )
+                Pair(address, location)
+            }.firstOrNull()
+    }
 
     override fun itemExistsAtRestaurant(
         item: String,
         restaurantName: String,
-    ): Boolean =
-        handle
+    ): Boolean {
+        val normalizedRestaurantName = "%${restaurantName.trim().replace(" ", "%")}%"
+        return handle
             .createQuery(
                 """
         SELECT EXISTS (
             SELECT 1 FROM liftdrop.item
-            WHERE designation = :item AND establishment LIKE :restaurantName
+            WHERE designation = :item AND establishment ILIKE :restaurantName
         )
         """,
             ).bind("item", item)
-            .bind("restaurantName", restaurantName)
+            .bind("restaurantName", normalizedRestaurantName)
             .mapTo<Boolean>()
             .first()
+    }
 
     override fun getClientDropOffLocation(clientId: Int): Int? =
         handle
