@@ -1,8 +1,10 @@
 package pt.isel.liftdrop
 
-import UserInfoSharedPrefs
 import android.app.Application
 import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.MediaType.Companion.toMediaType
@@ -13,12 +15,14 @@ import pt.isel.liftdrop.home.model.HomeService
 import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.location.LocationRepository
 import pt.isel.liftdrop.location.LocationRepositoryImpl
+import pt.isel.liftdrop.login.PreferencesDataStore
 import pt.isel.liftdrop.login.model.LoginService
+import pt.isel.liftdrop.login.model.PreferencesRepository
 import pt.isel.liftdrop.login.model.RealLoginService
-import pt.isel.liftdrop.login.model.UserInfoRepository
 import pt.isel.liftdrop.services.LocationTrackingService
 import pt.isel.liftdrop.services.RealLocationTrackingService
 import pt.isel.liftdrop.services.http.HttpService
+import java.util.concurrent.TimeUnit
 
 
 const val TAG = "LiftDropApp"
@@ -36,15 +40,28 @@ interface DependenciesContainer {
     val aboutService: AboutService
     val homeService: HomeService
     //val courierService: CourierService
-    val userInfoRepo : UserInfoRepository
+    val preferencesRepository: PreferencesRepository
     val locationTrackingService: LocationTrackingService
     val locationRepo: LocationRepository
 }
 class LiftDropApplication : DependenciesContainer, Application() {
 
+    companion object {
+        /**
+         * The timeout for HTTP requests
+         */
+        private const val timeout = 10L
+        const val LIFTDROP_DATASTORE = "liftdrop_datastore"
+    }
+
+    private val dataStore: DataStore<Preferences> by preferencesDataStore(LIFTDROP_DATASTORE)
+
+    override val preferencesRepository: PreferencesRepository
+        get() = PreferencesDataStore(dataStore)
+
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            //.cache(Cache(directory = cacheDir, maxSize = 50 * 1024 * 1024))
+            .callTimeout(timeout, TimeUnit.SECONDS)
             .build()
     }
 
@@ -69,9 +86,6 @@ class LiftDropApplication : DependenciesContainer, Application() {
 
     override val homeService: HomeService
         get() = RealHomeService(httpClient, jsonEncoder)
-
-    override val userInfoRepo: UserInfoRepository
-        get() = UserInfoSharedPrefs(this)
 
     override val locationTrackingService: LocationTrackingService
         get() = RealLocationTrackingService(httpClient, homeService, jsonEncoder, this)

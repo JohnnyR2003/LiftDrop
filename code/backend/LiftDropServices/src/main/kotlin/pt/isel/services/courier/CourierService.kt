@@ -47,7 +47,7 @@ class CourierService(
     fun loginCourier(
         email: String,
         password: String,
-    ): Either<CourierLoginError, String> =
+    ): Either<CourierLoginError, UserDetails> =
         transactionManager.run {
             val courierRepository = it.courierRepository
             val userRepository = it.usersRepository
@@ -73,7 +73,15 @@ class CourierService(
             )
 
             return@run when (matchesPassword(password, passwordFromDatabase)) {
-                true -> success(sessionToken)
+                true ->
+                    success(
+                        UserDetails(
+                            courierId = user.id,
+                            username = user.name,
+                            email = user.email,
+                            token = sessionToken,
+                        ),
+                    )
                 false -> failure(CourierLoginError.WrongPassword)
             }
         }

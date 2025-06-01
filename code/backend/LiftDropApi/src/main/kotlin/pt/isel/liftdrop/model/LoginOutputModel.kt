@@ -1,5 +1,8 @@
 package pt.isel.liftdrop.model
 
 data class LoginOutputModel(
-    val token: String
+    val id: Int,
+    val username: String,
+    val email: String,
+    val token: String,
 )

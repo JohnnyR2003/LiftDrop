@@ -9,6 +9,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import pt.isel.liftdrop.TAG
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -16,6 +19,7 @@ import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.home.ui.HomeActivity
 import pt.isel.liftdrop.login.model.LoginViewModel
 import pt.isel.liftdrop.login.model.UserInfo
+import pt.isel.liftdrop.register.ui.RegisterActivity
 import pt.isel.liftdrop.utils.viewModelInit
 import kotlin.getValue
 
@@ -26,7 +30,10 @@ class LoginActivity : ComponentActivity() {
     }
     private val viewModel: LoginViewModel by viewModels {
         viewModelInit {
-            LoginViewModel(repo.loginService)
+            LoginViewModel(
+                repo.loginService,
+                repo.preferencesRepository
+            )
         }
     }
 
@@ -45,41 +52,23 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.v(TAG, "LoginActivity.onCreate() on process ${android.os.Process.myPid()}")
 
-        val initialEmail = intent.getStringExtra("email") ?: ""
-        val initialPassword = intent.getStringExtra("password") ?: ""
+        lifecycleScope.launch {
+            viewModel.stateFlow.collect {
+                if (it is LoginScreenState.Login && it.isLoggedIn) {
+                    HomeActivity.navigate(this@LoginActivity)
+                    viewModel.resetToIdle()
+                }
+            }
+        }
 
         setContent {
-            val loadingState by viewModel.isLoading.collectAsState()
-            val token by viewModel.token.collectAsState()
-            val error by viewModel.error.collectAsState()
+            val state = viewModel.stateFlow.collectAsState(initial = LoginScreenState.Idle).value
 
             LoginScreen(
-                state = LoginScreenState(token, loadingState, error),
-                initialEmail = initialEmail,
-                initialPassword = initialPassword,
+                isLoggingIn = state is LoginScreenState.Login && !state.isLoggedIn,
+                screenState = state,
                 onSignInRequest = { username, password ->
-                    viewModel.fetchLoginToken(username, password)
-                    runBlocking {
-                        launch {
-                            while (viewModel.isLoading.value);
-                            val tok = viewModel.token.value
-                            val courierId = viewModel.courierId.value
-                            if (tok != null && courierId != "") {
-                                repo.userInfoRepo.userInfo = UserInfo(username, tok.token,
-                                    courierId.toString()
-                                )
-                                if(repo.userInfoRepo.userInfo?.bearer != null) {
-                                    SessionManager.setUserToken(this@LoginActivity, tok.token)
-                                    HomeActivity.navigate(this@LoginActivity)
-                                    finish()
-                                }
-                            }
-                        }
-                    }
-                    viewModel.resetError()
-                },
-                onBackRequest = {
-                    finish()
+                    viewModel.login(username, password)
                 },
                 onNavigateToRegister = {
                     RegisterActivity.navigate(this@LoginActivity)

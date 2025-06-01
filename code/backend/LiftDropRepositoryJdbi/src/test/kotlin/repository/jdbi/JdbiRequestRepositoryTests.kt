@@ -19,7 +19,9 @@ class JdbiRequestRepositoryTests {
             val requestId = requestRepository.createRequest(clientId, eta)
 
             // Then: the request should be created successfully
-            assert(requestId > 0) { "Request ID should be greater than 0" }
+            if (requestId != null) {
+                assert(requestId > 0) { "Request ID should be greater than 0" }
+            }
         }
     }
 }

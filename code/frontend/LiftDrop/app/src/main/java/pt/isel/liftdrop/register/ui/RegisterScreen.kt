@@ -1,4 +1,4 @@
-package pt.isel.liftdrop.login.ui
+package pt.isel.liftdrop.register.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -25,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,22 +35,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.android.gms.maps.model.LatLng
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import pt.isel.liftdrop.location.LocationServices
+import pt.isel.liftdrop.domain.IOState
+import pt.isel.liftdrop.domain.Register
+import pt.isel.liftdrop.login.ui.LoginScreenState
+import pt.isel.liftdrop.login.ui.ensureInputBounds
 import pt.isel.liftdrop.ui.TopBar
 
 @Composable
 fun RegisterScreen(
-    state: LoginScreenState,
+    state: RegisterScreenState,
     onRegisterRequest: (String, String, String, String) -> Unit,
     onBackRequest: () -> Unit
 ) {
@@ -80,11 +78,11 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(text = "Create an Account", fontSize = 24.sp, color = Color(0xFF384259))
+            Text(text = stringResource(Register.title), fontSize = 24.sp, color = Color(0xFF384259))
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(text = "First Name", fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
+            Text(text = stringResource(Register.firstNameLabel), fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
             TextField(
                 value = firstName.value,
                 onValueChange = { firstName.value = ensureInputBounds(it) },
@@ -94,7 +92,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = "Last Name", fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
+            Text(text = stringResource(Register.lastNameLabel), fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
             TextField(
                 value = lastName.value,
                 onValueChange = { lastName.value = ensureInputBounds(it) },
@@ -104,7 +102,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = "Email", fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
+            Text(text = stringResource(Register.emailLabel), fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
             TextField(
                 value = email.value,
                 onValueChange = { email.value = ensureInputBounds(it) },
@@ -115,7 +113,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = "Password", fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
+            Text(text = stringResource(Register.passwordLabel), fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
             TextField(
                 value = password.value,
                 onValueChange = { password.value = ensureInputBounds(it) },
@@ -144,14 +142,17 @@ fun RegisterScreen(
                     contentColor = Color.White
                 )
             ) {
-                Text(text = "Register")
+                Text(text = stringResource(Register.submitTextButton))
             }
 
-            state.error?.let {
-                Toast.makeText(LocalContext.current, it, Toast.LENGTH_LONG).show()
+            if (state.isFail()) {
+                Text(
+                    text = stringResource(Register.invalidCredentials),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
             }
-
-            if (state.loadingState) {
+            if (state.isLoading()) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(text = "Loading...", color = MaterialTheme.colorScheme.primary)
             }

@@ -2,8 +2,6 @@ package pt.isel.liftdrop.home.model
 
 import android.util.Log
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -23,7 +21,7 @@ interface HomeService {
 
     suspend fun acceptRequest(requestId: String, token: String): Boolean
 
-    suspend fun rejectRequest(requestId: String): Boolean
+    suspend fun declineRequest(requestId: String): Boolean
 
     suspend fun pickupOrder(requestId: String, courierId: String, token: String): Boolean
 
@@ -106,7 +104,7 @@ class RealHomeService(
         return webSocket?.send(messageJson) == true
     }
 
-    override suspend fun rejectRequest(requestId: String): Boolean {
+    override suspend fun declineRequest(requestId: String): Boolean {
         val messageJson = """
     {
         "type": "RESPONSE",

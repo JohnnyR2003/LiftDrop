@@ -4,88 +4,62 @@ package pt.isel.liftdrop.login.model
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import pt.isel.liftdrop.TAG
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pt.isel.liftdrop.login.ui.LoginScreenState
 import pt.isel.liftdrop.services.http.APIResult
 
 class LoginViewModel(
-    private val loginService: LoginService,
+    private val service: LoginService,
+    private val preferences: PreferencesRepository,
 ) : ViewModel() {
 
-    private val _isLoading = MutableStateFlow<Boolean>(false)
-    val isLoading = _isLoading.asStateFlow()
+    val stateFlow: Flow<LoginScreenState>
+        get() = _stateFlow.asStateFlow()
 
-    private val _token = MutableStateFlow<Token?>(null)
-    val token = _token.asStateFlow()
+    private val _stateFlow: MutableStateFlow<LoginScreenState> =
+        MutableStateFlow(LoginScreenState.Idle)
 
-    private val _courierId = MutableStateFlow<String?>(null)
-    val courierId = _courierId.asStateFlow()
+    @Throws(IllegalStateException::class)
+    fun login(username: String, password: String) {
+        _stateFlow.value = LoginScreenState.Login()
+        viewModelScope.launch {
+            Log.v("Login", "fetching for login....")
+            val result = runCatching { service.login(username, password) }
+            Log.v("Login", "fetched done....")
+            if (result.isFailure) {
+                _stateFlow.value = LoginScreenState.Error(
+                    result.exceptionOrNull() ?: Exception("Unknown error")
+                )
+            } else {
+                // Log.v("Login", "fetched done and is ${result.getOrNull()}")
+                preferences.setUserInfo(result.getOrThrow())
+                _stateFlow.value = LoginScreenState.Login(
+                    userInfo = UserInfo(
+                        courierId = result.getOrThrow().courierId,
+                        username = result.getOrThrow().username,
+                        email = result.getOrThrow().email,
+                        bearer = result.getOrThrow().bearer
+                    ),
+                    isLoggedIn = true
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error = _error.asStateFlow()
+                )
 
-    fun fetchLoginToken(username: String, password: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isLoading.value = true
-            _token.value =
-                try {
-                    val token = loginService.login(username, password)
-                    if(token is APIResult.Success) {
-                        Token(token = token.data.token,
-                        )
-                    } else {
-                        null // Handle APIResult.Error case
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, e.toString())
-                    val errorMessage = e.toString().split(": ").last()
-                    _error.value = errorMessage
-                    null
-                }
-            _courierId.value =
-                try{
-                    loginService.getCourierIdByToken(token.value?.token.toString()).let {
-                        if (it is APIResult.Success) {
-                            it.data.id.toString()
-                        } else {
-                            null // Handle APIResult.Error case
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, e.toString())
-                    val errorMessage = e.toString().split(": ").last()
-                    _error.value = errorMessage
-                    null
-                }
-            _isLoading.value = false
+            }
         }
     }
 
-    fun fetchRegisterToken(email: String, username: String, password: String, location: Pair<Double, Double>?) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isLoading.value = true
-            _token.value =
-                try {
-                    val id = loginService.register(email, password, username)
-                    if(id is APIResult.Success) {
-                        Token(token = id.data.id.toString())
-                    } else {
-                        null // Handle APIResult.Error case
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, e.toString())
-                    val errorMessage = e.toString().split(": ").last()
-                    _error.value = errorMessage
-                    null
-                }
-            _isLoading.value = false
+    @Throws(IllegalStateException::class)
+    fun resetToIdle() {
+        check(_stateFlow.value is LoginScreenState.Login || _stateFlow.value is LoginScreenState.Error) {
+            "The view model is not in the Login state or in the Error state."
         }
-    }
-
-    fun resetError(){
-        _error.value = null
+        _stateFlow.value = LoginScreenState.Idle
     }
 }

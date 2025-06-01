@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -35,22 +36,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pt.isel.liftdrop.R
-import pt.isel.liftdrop.login.model.Token
-import pt.isel.liftdrop.ui.TopBar
+import pt.isel.liftdrop.domain.Login.emailLabel
+import pt.isel.liftdrop.domain.Login.forgotPasswordText
+import pt.isel.liftdrop.domain.Login.googleLoginText
+import pt.isel.liftdrop.domain.Login.loginFailedMessage
+import pt.isel.liftdrop.domain.Login.noAccountMessage
+import pt.isel.liftdrop.domain.Login.passwordLabel
+import pt.isel.liftdrop.domain.Login.submitButtonText
 
-data class LoginScreenState(
-    val token: Token? = null,
-    val loadingState: Boolean = false,
-    val error: String? = null,
-)
 
 @Composable
 fun LoginScreen(
-    state: LoginScreenState = LoginScreenState(),
-    initialEmail: String = "",
-    initialPassword: String = "",
+    isLoggingIn: Boolean = false,
+    screenState: LoginScreenState,
     onSignInRequest: ((String, String) -> Unit)? = null,
-    onBackRequest: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
     val email = rememberSaveable { mutableStateOf("") }
@@ -68,7 +67,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            if (!state.loadingState) {
+            if (!isLoggingIn) {
                 Image(
                     painter = painterResource(id = R.drawable.logold),
                     contentDescription = "Logo",
@@ -81,7 +80,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(text = "Enter your email", fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
+                Text(text = stringResource(emailLabel), fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
                 TextField(
                     value = email.value,
                     onValueChange = { email.value = ensureInputBounds(it) },
@@ -92,7 +91,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(text = "Enter your password", fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
+                Text(text = stringResource(passwordLabel), fontSize = 14.sp, color = Color(0xFF384259), modifier = Modifier.align(Alignment.Start))
                 TextField(
                     value = password.value,
                     onValueChange = { password.value = ensureInputBounds(it) },
@@ -112,7 +111,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Forgot password?",
+                    text = stringResource(forgotPasswordText),
                     fontSize = 14.sp,
                     color = Color(0xFF384259),
                     modifier = Modifier.align(Alignment.End)
@@ -127,18 +126,21 @@ fun LoginScreen(
                         contentColor = Color.White
                     ),
                 ){
-                    Text(text = "Login")
+                    Text(text = stringResource(submitButtonText))
                 }
 
-                state.error?.let {
-                    Toast.makeText(LocalContext.current, it, Toast.LENGTH_LONG).show()
+                if (screenState is LoginScreenState.Error) {
+                    Text(
+                        stringResource(loginFailedMessage),
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextButton(onClick = onNavigateToRegister) {
                     Text(
-                        text = "Don't have an account? Sign up",
+                        text = stringResource(noAccountMessage),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -162,7 +164,7 @@ fun LoginScreen(
                         modifier = Modifier.height(24.dp).width(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Continue with Google")
+                    Text(text = stringResource(googleLoginText))
                 }
             } else {
                 Text(

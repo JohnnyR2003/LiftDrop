@@ -56,6 +56,8 @@ android {
 }
 
 dependencies {
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.datastore:datastore-core:1.0.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")

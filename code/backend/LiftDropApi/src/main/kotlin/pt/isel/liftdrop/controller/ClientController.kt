@@ -15,13 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.Client
-import pt.isel.liftdrop.model.AddressInputModel
-import pt.isel.liftdrop.model.ClassificationInputModel
-import pt.isel.liftdrop.model.LoginInputModel
-import pt.isel.liftdrop.model.LoginOutputModel
-import pt.isel.liftdrop.model.RegisterClientInputModel
-import pt.isel.liftdrop.model.RegisterUserOutput
-import pt.isel.liftdrop.model.RequestInputModel
+import pt.isel.liftdrop.model.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.client.ClientCreationError
 import pt.isel.services.client.ClientLoginError
@@ -171,7 +165,7 @@ class ClientController(
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(LoginOutputModel(token))
+                    .body(ClientLoginOutputModel(token = token))
             }
             is Failure -> {
                 when (clientLoginResult.value) {

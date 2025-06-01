@@ -1,5 +1,6 @@
 package pt.isel.liftdrop.services.http
 
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
@@ -29,7 +30,7 @@ class HttpService(
         pathParams: Map<String, Any?>? = null,
         queryParams: Map<String, Any?>? = null,
         token: String? = null
-    ): APIResult<T> {
+    ): T {
         val url = baseUrl + endpoint.params(pathParams, queryParams)
         val request = Request.Builder()
             .url(url)
@@ -46,7 +47,7 @@ class HttpService(
         pathParams: Map<String, Any?>? = null,
         queryParams: Map<String, Any?>? = null,
         token: String? = null
-    ): APIResult<T> {
+    ): T {
         val url = baseUrl + endpoint.params(pathParams, queryParams)
         val jsonBody = gson.toJsonBody(body)
         val request = Request.Builder()
@@ -64,7 +65,7 @@ class HttpService(
         pathParams: Map<String, Any?>? = null,
         queryParams: Map<String, Any?>? = null,
         token: String? = null
-    ): APIResult<T> {
+    ): T {
         val url = baseUrl + endpoint.params(pathParams, queryParams)
         val jsonBody = gson.toJsonBody(body)
         val request = Request.Builder()
@@ -79,21 +80,17 @@ class HttpService(
     fun Gson.toJsonBody(body: Any?): RequestBody =
         toJson(body).toRequestBody(ApplicationJsonType)
 
-    suspend inline fun <reified T> Request.executeAndParse(): APIResult<T> =
+    suspend inline fun <reified T> Request.executeAndParse(): T =
         send(client) { res ->
             when {
-                res.isSuccessful -> {
-                    val parsed = handleResponse<T>(res, object : TypeToken<T>() {}.type)
-                    APIResult.success(parsed)
-                }
+                res.isSuccessful -> handleResponse<T>(res, object : TypeToken<T>() {}.type)
                 res.code == 502 -> throw InvalidResponseException("Could not connect to server")
                 res.body?.isProblem == true -> {
                     val errorJson = res.body?.string()
-                    APIResult.failure(gson.fromJson(errorJson, Problem::class.java))
+                    throw ResponseException(gson.fromJson(errorJson, Problem::class.java).toString())
                 }
                 else -> throw InvalidResponseException("Unexpected response")
             }
-
         }
 
     suspend fun <T> Request.send(client: OkHttpClient, handler: (Response) -> T): T =
@@ -117,16 +114,23 @@ class HttpService(
 
     fun <T> handleResponse(response: Response, type: Type): T {
         val contentType = response.body?.contentType()
-        return if (response.isSuccessful && contentType != null && contentType == ApplicationJsonType) {
+        val body = response.body?.string()
+
+        if (response.isSuccessful && contentType != null && contentType.subtype == "json" && !body.isNullOrEmpty()) {
+            Log.v("HttpService", "Response successful: ${response.code} - ${response.message}")
+            Log.v("HttpService", "Response body: $body") // Log para depuração
             try {
-                val body = response.body?.string()
-                gson.fromJson<T>(body, type)
+                return gson.fromJson<T>(body, type)
             } catch (e: JsonSyntaxException) {
+                Log.e("HttpService", "Invalid JSON syntax: ${e.message}")
+                throw UnexpectedResponseException(response)
+            } catch (e: IllegalStateException) {
+                Log.e("HttpService", "Unexpected JSON structure: ${e.message}")
                 throw UnexpectedResponseException(response)
             }
         } else {
-            val body = response.body?.string()
-            throw ResponseException(body.orEmpty())
+            Log.e("HttpService", "Unexpected response: ${response.code} - ${response.message}")
+            throw UnexpectedResponseException(response)
         }
     }
 

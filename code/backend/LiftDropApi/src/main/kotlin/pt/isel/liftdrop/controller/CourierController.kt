@@ -15,15 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import pt.isel.liftdrop.model.DeliverOrderInputModel
-import pt.isel.liftdrop.model.LocationUpdateInputModel
-import pt.isel.liftdrop.model.LoginInputModel
-import pt.isel.liftdrop.model.LoginOutputModel
-import pt.isel.liftdrop.model.LogoutOutputModel
-import pt.isel.liftdrop.model.PickupOrderInputModel
-import pt.isel.liftdrop.model.RegisterCourierInputModel
-import pt.isel.liftdrop.model.RegisterCourierOutputModel
-import pt.isel.liftdrop.model.StartListeningInputModel
+import pt.isel.liftdrop.model.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.courier.*
 import pt.isel.services.google.GeocodingServices
@@ -84,7 +76,7 @@ class CourierController(
         return when (courierLoginResult) {
             is Success -> {
                 GlobalLogger.log("Client logged in successfully with token: ${courierLoginResult.value}")
-                val token = courierLoginResult.value
+                val token = courierLoginResult.value.token
                 // Handle successful login
                 val cookie =
                     ResponseCookie
@@ -95,7 +87,14 @@ class CourierController(
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(LoginOutputModel(token))
+                    .body(
+                        LoginOutputModel(
+                            id = courierLoginResult.value.courierId,
+                            username = courierLoginResult.value.username,
+                            email = courierLoginResult.value.email,
+                            token = courierLoginResult.value.token,
+                        ),
+                    )
             }
             is Failure -> {
                 when (courierLoginResult.value) {
