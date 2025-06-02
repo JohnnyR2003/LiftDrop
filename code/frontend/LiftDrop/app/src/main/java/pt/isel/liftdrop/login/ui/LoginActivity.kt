@@ -52,6 +52,15 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.v(TAG, "LoginActivity.onCreate() on process ${android.os.Process.myPid()}")
 
+        // Check if the user is already logged in
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                if(repo.preferencesRepository.isLoggedIn()){
+                    HomeActivity.navigate(this@LoginActivity)
+                }
+            }
+        }
+
         lifecycleScope.launch {
             viewModel.stateFlow.collect {
                 if (it is LoginScreenState.Login && it.isLoggedIn) {

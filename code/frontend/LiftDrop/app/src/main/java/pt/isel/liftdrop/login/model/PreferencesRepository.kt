@@ -1,6 +1,9 @@
 package pt.isel.liftdrop.login.model
 
 interface PreferencesRepository {
+
+    suspend fun isLoggedIn(): Boolean
+
     /**
      * Gets the user info if it exists, null otherwise.
      */

@@ -12,6 +12,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import pt.isel.liftdrop.ApplicationJsonType
 import pt.isel.liftdrop.HOST
+import pt.isel.liftdrop.services.http.HttpService
 import java.io.IOException
 
 interface HomeService {
@@ -35,8 +36,7 @@ interface HomeService {
 }
 
 class RealHomeService(
-    private val httpClient: OkHttpClient,
-    private val jsonEncoder: Gson
+    private val httpService: HttpService,
 ) : HomeService {
 
     private var webSocket: WebSocket? = null
@@ -117,46 +117,16 @@ class RealHomeService(
     }
 
     override suspend fun pickupOrder(requestId: String, courierId: String, token: String): Boolean {
-        //return withContext(Dispatchers.IO) {
-            Log.d(
-                "HomeService",
-                "pickupOrder() called with requestId: $requestId, courierId: $courierId, token: $token"
-            )
+        val body = PickupOrderInputModel(
+            requestId = requestId.toInt(),
+            courierId = courierId.toInt()
+        )
 
-            val jsonBody = """
-            {
-                "requestId": ${requestId.toInt()},
-                "courierId": ${courierId.toInt()}
-            }
-        """.trimIndent()
-
-            Log.d("HomeService", "Request JSON Body: $jsonBody")
-
-            val body = jsonBody.toRequestBody("application/json".toMediaType())
-
-            val request = Request.Builder()
-                .url("$HOST/courier/pickedUpOrder")
-                .addHeader("Authorization", "Bearer $token")
-                .post(body)
-                .build()
-
-            try {
-                httpClient.newCall(request).execute().use { response ->
-                    val responseBody = response.body?.string()
-                    Log.d("HomeService", "Response Code: ${response.code}")
-                    Log.d("HomeService", "Raw Response Body: $responseBody")
-
-                    if (!response.isSuccessful) {
-                        throw IOException("Unsuccessful response: ${response.code}\n$responseBody")
-                    }
-
-                    return Gson().fromJson(responseBody, Boolean::class.java)
-                }
-            } catch (e: Exception) {
-                Log.e("HomeService", "Error during pickupOrder request", e)
-                throw e
-            }
-        //}
+        return httpService.post<Boolean>(
+            endpoint = "/courier/pickedUpOrder",
+            body = body,
+            token = token
+        )
     }
 
     override suspend fun deliverOrder(
@@ -164,43 +134,23 @@ class RealHomeService(
         courierId: String,
         token: String
     ): Boolean {
-        //return withContext(Dispatchers.IO) {
-            val body =
-                ("{\"requestId\": \"${requestId.toInt()}\", \"courierId\": ${courierId.toInt()}}").toRequestBody(
-                    ApplicationJsonType
-                )
+        val body = DeliverOrderInputModel(
+            requestId = requestId.toInt(),
+            courierId = courierId.toInt()
+        )
 
-            val request = Request.Builder()
-                .url("$HOST/courier/deliveredOrder")
-                .addHeader("Authorization", "Bearer $token")
-                .post(body)
-                .build()
-            try {
-                httpClient.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) throw IOException("$response")
-                    val responseBody = response.body?.string()
-                    return jsonEncoder.fromJson(responseBody, Boolean::class.java)
-                }
-            } catch (e: Exception) {
-                Log.e("HomeService", "Error during deliverOrder request", e)
-                throw e
-            }
-       // }
+        return httpService.post<Boolean>(
+            endpoint = "/courier/deliveredOrder",
+            body = body,
+            token = token
+        )
     }
 
     override suspend fun getDailyEarnings(courierId: String, token: String): Double {
-        //return withContext(Dispatchers.IO) {
-            val request = Request.Builder()
-                .url("$HOST/courier/fetchDailyEarnings/$courierId")
-                .addHeader("Authorization", "Bearer $token")
-                .build()
-
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) throw IOException("$response")
-                val responseBody = response.body?.string()
-                return jsonEncoder.fromJson(responseBody, Double::class.java)
-            }
-        //}
+        return httpService.get<Double>(
+            endpoint = "/courier/fetchDailyEarnings/$courierId",
+            token = token
+        )
     }
 
     override suspend fun updateCourierLocation(courierId: String, lat: Double?, lon: Double?): Boolean {
@@ -208,29 +158,19 @@ class RealHomeService(
                 "\"latitude\": $lat" +
                 ", \"longitude\": $lon" +
                 "}").toRequestBody(ApplicationJsonType)
-        val request = Request.Builder()
-            .url("$HOST/courier/updateLocation")
-            .post(body)
-            .build()
 
-        httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("$response")
-            val responseBody = response.body?.string()
-            return jsonEncoder.fromJson(responseBody, Boolean::class.java)
-        }
+        return httpService.post<Boolean>(
+            endpoint = "/courier/updateLocation",
+            body = body,
+            token = null
+        )
     }
 
     override suspend fun getCourierIdByToken(token: String): Int {
-        val request = Request.Builder()
-            .url("$HOST/user/IdByToken")
-            .post(RequestBody.create(null, ByteArray(0))) // empty POST body
-            .addHeader("Authorization", "Bearer $token")
-            .build()
-
-        httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("$response")
-            val responseBody = response.body?.string()
-            return jsonEncoder.fromJson(responseBody, IntResponse::class.java).value
-        }
+        return httpService.post(
+            endpoint = "/user/IdByToken",
+            body = null,
+            token = token
+        )
     }
 }

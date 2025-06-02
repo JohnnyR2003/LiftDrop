@@ -23,19 +23,18 @@ import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.HOST
 import pt.isel.liftdrop.TAG
 import pt.isel.liftdrop.home.model.HomeService
+import pt.isel.liftdrop.services.http.HttpService
 import kotlin.coroutines.resumeWithException
 
 interface LocationTrackingService {
     suspend fun getCurrentLocation(): Location?
     fun startUpdating(authToken: String, courierId: String)
     fun stopUpdating()
-    fun sendLocationToBackend(lat: Double, lon: Double, courierId: String, authToken: String)
+    suspend fun sendLocationToBackend(lat: Double, lon: Double, courierId: String, authToken: String)
 }
 
 class RealLocationTrackingService(
     private val httpClient: OkHttpClient,
-    private val courierService: HomeService,
-    private val jsonEncoder: Gson,
     private val context: Context
 ): LocationTrackingService {
 
@@ -95,7 +94,7 @@ class RealLocationTrackingService(
         }
     }
 
-    override fun sendLocationToBackend(lat: Double, lon: Double, courierId: String, authToken: String) {
+    override suspend fun sendLocationToBackend(lat: Double, lon: Double, courierId: String, authToken: String) {
         val body = ("{\"courierId\": ${courierId.toInt()}, \"newLocation\": {" +
                 "\"latitude\": $lat" +
                 ", \"longitude\": $lon" +
@@ -107,8 +106,6 @@ class RealLocationTrackingService(
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
             .addHeader("Authorization", "Bearer $authToken")
-
-
 
         try {
             val response = httpClient.newCall(requestBuilder.build()).execute()

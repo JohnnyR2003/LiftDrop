@@ -13,8 +13,10 @@ import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import okhttp3.OkHttpClient
+import pt.isel.liftdrop.HOST
 import pt.isel.liftdrop.home.model.HomeService
 import pt.isel.liftdrop.home.model.RealHomeService
+import pt.isel.liftdrop.services.http.HttpService
 
 
 class LocationForegroundService : Service() {
@@ -28,9 +30,8 @@ class LocationForegroundService : Service() {
         super.onCreate()
         val httpClient = OkHttpClient()
         val jsonEncoder = Gson()
-        locationService = RealLocationTrackingService(
-            httpClient, RealHomeService(httpClient, jsonEncoder), jsonEncoder, applicationContext
-        )
+        val httpService = HttpService(HOST, httpClient, jsonEncoder)
+        locationService = RealLocationTrackingService(httpClient, applicationContext)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

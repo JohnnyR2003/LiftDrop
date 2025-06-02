@@ -39,7 +39,6 @@ interface DependenciesContainer {
     val loginService : LoginService
     val aboutService: AboutService
     val homeService: HomeService
-    //val courierService: CourierService
     val preferencesRepository: PreferencesRepository
     val locationTrackingService: LocationTrackingService
     val locationRepo: LocationRepository
@@ -82,13 +81,13 @@ class LiftDropApplication : DependenciesContainer, Application() {
         get() = RealLoginService(httpService)
 
     override val aboutService: AboutService
-        get() = RealAboutService(httpClient, jsonEncoder)
+        get() = RealAboutService(httpService)
 
     override val homeService: HomeService
-        get() = RealHomeService(httpClient, jsonEncoder)
+        get() = RealHomeService(httpService)
 
     override val locationTrackingService: LocationTrackingService
-        get() = RealLocationTrackingService(httpClient, homeService, jsonEncoder, this)
+        get() = RealLocationTrackingService(httpClient, this)
 
     override val locationRepo: LocationRepository
         get() = LocationRepositoryImpl(this)

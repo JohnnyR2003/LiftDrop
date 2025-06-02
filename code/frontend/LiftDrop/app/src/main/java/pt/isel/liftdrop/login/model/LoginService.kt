@@ -19,7 +19,6 @@ import pt.isel.liftdrop.login.model.input.LogoutInputModel
 import pt.isel.liftdrop.login.model.output.LoginOutputModel
 import pt.isel.liftdrop.login.model.output.RegisterOutputModel
 import pt.isel.liftdrop.login.model.output.UserOutputModel
-import pt.isel.liftdrop.services.http.APIResult
 import pt.isel.liftdrop.services.http.HttpService
 import java.io.IOException
 import java.lang.reflect.Type
@@ -79,7 +78,6 @@ class RealLoginService(
         return httpService.delete<Unit>(
             endpoint = "/courier/logout",
             body = body,
-            pathParams = mapOf("courierId" to courierId),
             token = token
         )
     }

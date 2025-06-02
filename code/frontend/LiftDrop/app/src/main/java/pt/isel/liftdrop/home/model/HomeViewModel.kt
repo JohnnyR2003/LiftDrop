@@ -73,10 +73,13 @@ class HomeViewModel(
 
 
     fun logout() {
-        if (_stateFlow.value !is HomeScreenState.Idle)
-            throw IllegalStateException("The view model is not in the idle state.")
-        //TODO: FIND A WAY TO WARN THE USER THAT THEY ARE LOGGING OUT
-        _stateFlow.value = HomeScreenState.Logout()
+        if (_stateFlow.value !is HomeScreenState.Idle || _stateFlow.value is HomeScreenState.Listening) {
+            _stateFlow.value =
+                HomeScreenState.Error(
+                    Exception("Cannot log out while the view model is not in the idle state or while listening for requests.")
+                )
+            //TODO: FIND A WAY TO WARN THE USER THAT THEY ARE LOGGING OUT
+        }
         viewModelScope.launch(Dispatchers.IO) {
             val userInfo = preferences.getUserInfo()
             if (userInfo != null) {

@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.login.ui.LoginScreenState
-import pt.isel.liftdrop.services.http.APIResult
 
 class LoginViewModel(
     private val service: LoginService,

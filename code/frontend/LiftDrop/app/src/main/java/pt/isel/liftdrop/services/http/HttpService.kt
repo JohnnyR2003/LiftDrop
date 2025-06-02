@@ -89,7 +89,7 @@ class HttpService(
                     val errorJson = res.body?.string()
                     throw ResponseException(gson.fromJson(errorJson, Problem::class.java).toString())
                 }
-                else -> throw InvalidResponseException("Unexpected response")
+                else -> throw InvalidResponseException(this.body.toString())
             }
         }
 
@@ -117,15 +117,11 @@ class HttpService(
         val body = response.body?.string()
 
         if (response.isSuccessful && contentType != null && contentType.subtype == "json" && !body.isNullOrEmpty()) {
-            Log.v("HttpService", "Response successful: ${response.code} - ${response.message}")
-            Log.v("HttpService", "Response body: $body") // Log para depuração
+            //Log.v("HttpService", "Response successful: ${response.code} - ${response.message}")
             try {
                 return gson.fromJson<T>(body, type)
             } catch (e: JsonSyntaxException) {
                 Log.e("HttpService", "Invalid JSON syntax: ${e.message}")
-                throw UnexpectedResponseException(response)
-            } catch (e: IllegalStateException) {
-                Log.e("HttpService", "Unexpected JSON structure: ${e.message}")
                 throw UnexpectedResponseException(response)
             }
         } else {

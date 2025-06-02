@@ -29,6 +29,8 @@ class PreferencesDataStore(
     private val tokenKey = stringPreferencesKey(USER_TOKEN_KEY)
     private val emailKey = stringPreferencesKey(USER_EMAIL_KEY)
 
+    override suspend fun isLoggedIn() = store.data.first()[tokenKey] != null
+
     override suspend fun getUserInfo(): UserInfo? {
         val preferences = store.data.first()
         val username = preferences[nameKey]
