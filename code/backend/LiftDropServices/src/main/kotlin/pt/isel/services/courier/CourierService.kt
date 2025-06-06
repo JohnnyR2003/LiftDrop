@@ -122,6 +122,12 @@ class CourierService(
     ): Either<CourierDeliveryError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
+            val locationRepository = it.locationRepository
+
+            val isCourierNearPickup = locationRepository.isCourierNearPickup(courierId, requestId)
+            if (!isCourierNearPickup) {
+                return@run failure(CourierDeliveryError.CourierNotNearPickup)
+            }
             val request = courierRepository.pickupDelivery(requestId, courierId)
             if (!request) {
                 return@run failure(CourierDeliveryError.PackageAlreadyPickedUp)
@@ -137,6 +143,12 @@ class CourierService(
     ): Either<CourierDeliveryError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
+            val locationRepository = it.locationRepository
+
+            val isCourierNearDropOff = locationRepository.isCourierNearDropOff(courierId, requestId)
+            if (!isCourierNearDropOff) {
+                return@run failure(CourierDeliveryError.CourierNotNearDropOff)
+            }
             val request = courierRepository.completeDelivery(requestId, courierId)
             if (!request) {
                 return@run failure(CourierDeliveryError.PackageAlreadyDelivered)
@@ -204,13 +216,10 @@ class CourierService(
         }
     }
 
-    fun logoutCourier(
-        token: String,
-        courierId: Int,
-    ): Either<CourierLogoutError, Boolean> {
+    fun logoutCourier(token: String): Either<CourierLogoutError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
-            val result = courierRepository.logoutCourier(token, courierId)
+            val result = courierRepository.logoutCourier(token)
             if (result) {
                 return@run success(true)
             } else {

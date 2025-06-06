@@ -36,13 +36,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pt.isel.liftdrop.R
-import pt.isel.liftdrop.domain.Login.emailLabel
-import pt.isel.liftdrop.domain.Login.forgotPasswordText
-import pt.isel.liftdrop.domain.Login.googleLoginText
-import pt.isel.liftdrop.domain.Login.loginFailedMessage
-import pt.isel.liftdrop.domain.Login.noAccountMessage
-import pt.isel.liftdrop.domain.Login.passwordLabel
-import pt.isel.liftdrop.domain.Login.submitButtonText
+import pt.isel.liftdrop.domain.login.Login.emailLabel
+import pt.isel.liftdrop.domain.login.Login.forgotPasswordText
+import pt.isel.liftdrop.domain.login.Login.googleLoginText
+import pt.isel.liftdrop.domain.login.Login.loginFailedMessage
+import pt.isel.liftdrop.domain.login.Login.noAccountMessage
+import pt.isel.liftdrop.domain.login.Login.passwordLabel
+import pt.isel.liftdrop.domain.login.Login.submitButtonText
+import pt.isel.liftdrop.domain.register.Email
+import pt.isel.liftdrop.domain.register.Password
 
 
 @Composable
@@ -119,7 +121,9 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(onClick = { onSignInRequest?.invoke(email.value.trim(), password.value.trim()) },
+                Button(enabled = Email.isValid(email.value.trim()) &&
+                        Password.isValid(password.value.trim()),
+                    onClick = { onSignInRequest?.invoke(email.value.trim(), password.value.trim()) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF384259),

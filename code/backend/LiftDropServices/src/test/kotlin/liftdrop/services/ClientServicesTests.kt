@@ -136,7 +136,6 @@ class ClientServiceTest {
         assertIs<Either.Right<Client>>(client)
 
         transactionManager.run {
-            val locationRepo = it.locationRepository
             val requestRepo = it.requestRepository
 
             val requestId =

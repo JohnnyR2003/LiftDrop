@@ -57,29 +57,24 @@ class ClientController(
                 GlobalLogger.log("Failed to create order: ${requestCreationResult.value}")
                 when (requestCreationResult.value) {
                     is RequestCreationError.RestaurantNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("Restaurant with name '${order.restaurantName}' not found")
+                        Problem.RestaurantNotFound
+                            .response(HttpStatus.NOT_FOUND)
                     }
                     is RequestCreationError.ItemNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("The item '${order.itemDesignation}' was not found in the restaurant '${order.restaurantName}'")
+                        Problem.ItemNotFound
+                            .response(HttpStatus.NOT_FOUND)
                     }
                     is RequestCreationError.ClientNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("Client not found")
+                        Problem.UserNotFound
+                            .response(HttpStatus.NOT_FOUND)
                     }
                     is RequestCreationError.ClientAddressNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("Client address not found")
+                        Problem.ClientAddressNotFound
+                            .response(HttpStatus.NOT_FOUND)
                     }
                     else ->
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to create order")
+                        Problem.InternalServerError
+                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
                 }
             }
         }
@@ -118,24 +113,20 @@ class ClientController(
             is Failure -> {
                 when (clientCreationResult.value) {
                     is ClientCreationError.UserAlreadyExists -> {
-                        ResponseEntity
-                            .status(HttpStatus.CONFLICT)
-                            .body("Email already exists")
+                        Problem.UserAlreadyExists
+                            .response(HttpStatus.CONFLICT)
                     }
                     is ClientCreationError.InvalidAddress -> {
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Invalid address provided")
+                        Problem.InvalidAddress
+                            .response(HttpStatus.BAD_REQUEST)
                     }
                     is ClientCreationError.InvalidLocation -> {
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Invalid location provided")
+                        Problem.InvalidLocation
+                            .response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to register client")
+                        Problem.InternalServerError
+                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -170,39 +161,32 @@ class ClientController(
             is Failure -> {
                 when (clientLoginResult.value) {
                     is ClientLoginError.ClientNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("Client not found")
+                        Problem.UserNotFound
+                            .response(HttpStatus.NOT_FOUND)
                     }
                     is ClientLoginError.InvalidEmailOrPassword -> {
-                        ResponseEntity
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .body("Invalid email or password")
+                        Problem.InvalidRequestContent
+                            .response(HttpStatus.BAD_REQUEST)
                     }
                     is ClientLoginError.BlankEmailOrPassword -> {
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Email or password cannot be blank")
+                        Problem.InvalidRequestContent
+                            .response(HttpStatus.BAD_REQUEST)
                     }
                     is ClientLoginError.WrongPassword -> {
-                        ResponseEntity
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .body("Wrong password")
+                        Problem.PasswordIsIncorrect
+                            .response(HttpStatus.UNAUTHORIZED)
                     }
                     is ClientLoginError.ClientLoginEmailAlreadyExists -> {
-                        ResponseEntity
-                            .status(HttpStatus.CONFLICT)
-                            .body("Email already exists")
+                        Problem.UserAlreadyExists
+                            .response(HttpStatus.CONFLICT)
                     }
                     is ClientLoginError.InvalidAddress -> {
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Invalid address provided")
+                        Problem.InvalidAddress
+                            .response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to login client")
+                        Problem.InternalServerError
+                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -227,14 +211,12 @@ class ClientController(
             is Failure -> {
                 when (clientLogoutResult.value) {
                     is ClientLogoutError.SessionNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("Session not found")
+                        Problem.SessionNotFound
+                            .response(HttpStatus.NOT_FOUND)
                     }
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to logout client")
+                        Problem.InternalServerError
+                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -268,20 +250,17 @@ class ClientController(
             is Failure -> {
                 when (result.value) {
                     is DropOffCreationError.ClientNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("Client not found")
+                        Problem.UserNotFound
+                            .response(HttpStatus.NOT_FOUND)
                     }
 
                     is DropOffCreationError.InvalidAddress -> {
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Invalid address provided")
+                        Problem.InvalidAddress
+                            .response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to add drop-off location")
+                        Problem.InternalServerError
+                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }

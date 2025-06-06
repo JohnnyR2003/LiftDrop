@@ -46,16 +46,10 @@ class CourierController(
             is Failure -> {
                 when (courierCreationResult.value) {
                     is CourierCreationError.CourierEmailAlreadyExists -> {
-                        println("Courier email already exists")
-                        ResponseEntity
-                            .status(HttpStatus.CONFLICT)
-                            .body("Courier email already exists")
+                        Problem.CourierAlreadyExists.response(HttpStatus.CONFLICT)
                     }
-
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to register courier")
+                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -77,12 +71,11 @@ class CourierController(
             is Success -> {
                 GlobalLogger.log("Client logged in successfully with token: ${courierLoginResult.value}")
                 val token = courierLoginResult.value.token
-                // Handle successful login
                 val cookie =
                     ResponseCookie
                         .from("auth_token", token)
-                        .path("/") // Path for which the cookie is valid
-                        .maxAge(3600 * 12) // Cookie expiration time
+                        .path("/")
+                        .maxAge(3600 * 12)
                         .build()
                 ResponseEntity
                     .status(HttpStatus.OK)
@@ -99,29 +92,19 @@ class CourierController(
             is Failure -> {
                 when (courierLoginResult.value) {
                     is CourierLoginError.BlankEmailOrPassword -> {
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Email and password cannot be blank")
+                        Problem.InvalidRequestContent.response(HttpStatus.BAD_REQUEST)
                     }
                     is CourierLoginError.CourierNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("Courier not found")
+                        Problem.CourierNotFound.response(HttpStatus.NOT_FOUND)
                     }
                     is CourierLoginError.InvalidEmailOrPassword -> {
-                        ResponseEntity
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .body("Invalid email or password")
+                        Problem.PasswordIsIncorrect.response(HttpStatus.UNAUTHORIZED)
                     }
                     is CourierLoginError.WrongPassword -> {
-                        ResponseEntity
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .body("Wrong password")
+                        Problem.PasswordIsIncorrect.response(HttpStatus.UNAUTHORIZED)
                     }
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to log in courier")
+                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -131,10 +114,9 @@ class CourierController(
     @DeleteMapping("/logout")
     fun logout(
         @RequestHeader("Authorization") token: String,
-        @RequestBody user: LogoutOutputModel,
     ): ResponseEntity<Any> {
         val bearerToken = token.removePrefix("Bearer ").trim()
-        val courierLogoutResult = courierService.logoutCourier(bearerToken, user.courierId)
+        val courierLogoutResult = courierService.logoutCourier(bearerToken)
         return when (courierLogoutResult) {
             is Either.Right -> {
                 val expiredCookie =
@@ -147,11 +129,15 @@ class CourierController(
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
-                    .body("Logout successful")
+                    .body(LogoutOutputModel(isLoggedOut = true))
             }
             is Either.Left -> {
-                println("Failed to log out courier")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+                when (courierLogoutResult.value) {
+                    is CourierLogoutError.SessionNotFound ->
+                        Problem.SessionNotFound.response(HttpStatus.NOT_FOUND)
+                    else ->
+                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
     }
@@ -179,26 +165,18 @@ class CourierController(
                     is Failure ->
                         when (updateLocationResult.value) {
                             is LocationUpdateError.CourierNotFound ->
-                                ResponseEntity
-                                    .status(HttpStatus.NOT_FOUND)
-                                    .body("Courier not found")
+                                Problem.CourierNotFound.response(HttpStatus.NOT_FOUND)
                             else ->
-                                ResponseEntity
-                                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                    .body("Failed to update courier location")
+                                Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
                         }
                 }
             }
             is Failure -> {
                 when (address.value) {
                     is LocationUpdateError.InvalidCoordinates ->
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Invalid coordinates provided")
+                        Problem.InvalidCoordinates.response(HttpStatus.BAD_REQUEST)
                     else ->
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to reverse geocode location")
+                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
                 }
             }
         }
@@ -223,14 +201,10 @@ class CourierController(
             is Failure -> {
                 when (request.value) {
                     is StateUpdateError.CourierNotFound -> {
-                        ResponseEntity
-                            .status(HttpStatus.NOT_FOUND)
-                            .body("Courier not found")
+                        Problem.CourierNotFound.response(HttpStatus.NOT_FOUND)
                     }
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to set courier status to waiting for orders")
+                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -266,14 +240,10 @@ class CourierController(
             is Failure -> {
                 when (request.value) {
                     is CourierDeliveryError.PackageAlreadyPickedUp -> {
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Package has already been picked up")
+                        Problem.PackageAlreadyPickedUp.response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to pick up order")
+                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -302,14 +272,10 @@ class CourierController(
             is Failure -> {
                 when (request.value) {
                     is CourierDeliveryError.PackageAlreadyDelivered -> {
-                        ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body("Package has already been delivered")
+                        Problem.PackageAlreadyDelivered.response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to deliver order")
+                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -325,9 +291,14 @@ class CourierController(
                 ResponseEntity.ok(request.value)
             }
             is Failure -> {
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error fetching courier's daily earnings")
+                when (request.value) {
+                    is CourierEarningsError.CourierNotFound -> {
+                        Problem.CourierNotFound.response(HttpStatus.NOT_FOUND)
+                    }
+                    else -> {
+                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                    }
+                }
             }
         }
 

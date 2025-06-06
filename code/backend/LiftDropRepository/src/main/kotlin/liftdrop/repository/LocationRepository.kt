@@ -16,6 +16,16 @@ interface LocationRepository {
         clientLocationId: Int,
     ): Pair<Int, LocationDTO>?
 
+    fun isCourierNearPickup(
+        courierId: Int,
+        requestId: Int,
+    ): Boolean
+
+    fun isCourierNearDropOff(
+        courierId: Int,
+        requestId: Int,
+    ): Boolean
+
     fun itemExistsAtRestaurant(
         item: String,
         restaurantName: String,

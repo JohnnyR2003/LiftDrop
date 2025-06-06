@@ -42,7 +42,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pt.isel.liftdrop.domain.IOState
-import pt.isel.liftdrop.domain.Register
+import pt.isel.liftdrop.domain.register.Email
+import pt.isel.liftdrop.domain.register.Password
+import pt.isel.liftdrop.domain.register.Register
 import pt.isel.liftdrop.login.ui.LoginScreenState
 import pt.isel.liftdrop.login.ui.ensureInputBounds
 import pt.isel.liftdrop.ui.TopBar
@@ -133,6 +135,9 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
+                enabled = Email.isValid(email.value.trim()) &&
+                        Password.isValid(password.value.trim())
+                && firstName.value.isNotBlank() && lastName.value.isNotBlank(),
                 onClick = {
                     onRegisterRequest(firstName.value.trim(), lastName.value.trim(), email.value.trim(), password.value.trim())
                 },

@@ -389,6 +389,8 @@ class JdbiCourierRepository(
     override fun getClosestCouriersAvailable(
         pickupLat: Double,
         pickupLng: Double,
+        requestId: Int,
+        maxDistance: Double, // Default to 4000 meters
     ): List<CourierWithLocation> =
         handle
             .createQuery(
@@ -404,15 +406,23 @@ class JdbiCourierRepository(
             FROM liftdrop.courier c
             JOIN liftdrop.location l ON c.current_location = l.location_id
             WHERE c.is_available = TRUE
+            AND NOT EXISTS (
+                SELECT 1
+                FROM liftdrop.request_declines rd
+                WHERE rd.courier_id = c.courier_id
+                AND rd.request_id = :requestId
+            )
             AND ST_Distance(
                     ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
                     ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
-                ) < 5000  -- This filters couriers with a distance less than 5000 meters
+                ) < :maxDistance
             ORDER BY distance_meters ASC
             LIMIT 5;
             """,
             ).bind("pickupLat", pickupLat)
             .bind("pickupLon", pickupLng)
+            .bind("requestId", requestId)
+            .bind("maxDistance", maxDistance)
             .map { rs, _ ->
                 CourierWithLocation(
                     courierId = rs.getInt("courier_id"),
@@ -456,21 +466,17 @@ class JdbiCourierRepository(
             .mapTo<String>()
             .singleOrNull()
 
-    override fun logoutCourier(
-        sessionToken: String,
-        courierId: Int,
-    ): Boolean {
-        val sessionsUpdated =
+    override fun logoutCourier(sessionToken: String): Boolean {
+        val courierId =
             handle
-                .createUpdate(
+                .createQuery(
                     """
-                    DELETE FROM liftdrop.sessions
-                    WHERE session_token = :sessionToken
+                    SELECT user_id FROM liftdrop.sessions
+                    WHERE session_token = :sessionToken AND role = 'COURIER'
                     """.trimIndent(),
                 ).bind("sessionToken", sessionToken)
-                .execute()
-
-        // Update the courier's availability status
+                .mapTo<Int>()
+                .firstOrNull()
 
         val updatedCourier =
             handle
@@ -482,6 +488,18 @@ class JdbiCourierRepository(
                     """.trimIndent(),
                 ).bind("courierId", courierId)
                 .execute()
+
+        val sessionsUpdated =
+            handle
+                .createUpdate(
+                    """
+                    DELETE FROM liftdrop.sessions
+                    WHERE session_token = :sessionToken
+                    """.trimIndent(),
+                ).bind("sessionToken", sessionToken)
+                .execute()
+
+        // Update the courier's availability status
 
         return sessionsUpdated > 0 && updatedCourier > 0
     }

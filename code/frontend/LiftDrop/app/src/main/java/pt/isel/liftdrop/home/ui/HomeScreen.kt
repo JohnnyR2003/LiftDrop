@@ -29,6 +29,7 @@ import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
 import android.annotation.SuppressLint
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.ui.draw.alpha
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import pt.isel.liftdrop.home.model.CourierRequestDetails
@@ -58,7 +59,7 @@ fun HomeScreen(
     onMenuClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onStartClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {} // Adicionado callback para logout
+    onLogoutClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {},
@@ -103,29 +104,66 @@ fun HomeScreen(
                 }
             }
 
-            // Menu + Notifications + Logout
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 87.dp, end = 7.dp),
+                    .padding(top = 120.dp, end = 7.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                listOf(
-                    Pair(Icons.Default.Menu, onMenuClick),
-                    Pair(Icons.Default.Notifications, onNotificationClick),
-                    Pair(Icons.Default.ExitToApp, onLogoutClick)
-                ).forEach { (icon, action) ->
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(Color.White, shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        IconButton(onClick = action) {
-                            Icon(icon, contentDescription = null, tint = Color(0xFF384259))
+
+                when(state){
+                    is HomeScreenState.Idle -> {
+                        listOf(
+                            Pair(Icons.Default.Menu, onMenuClick),
+                            Pair(Icons.Default.Notifications, onNotificationClick),
+                            Pair(Icons.Default.ExitToApp, onLogoutClick)
+                        ).forEach {
+                            (icon, action) ->
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(Color.White, shape = CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                IconButton(
+                                    onClick = action,
+                                ) {
+                                    Icon(
+                                        icon,
+                                        contentDescription = null,
+                                        tint = Color(0xFF384259) // Cor mais clara quando desativado
+                                    )
+                                }
+                            }
                         }
                     }
+                    is HomeScreenState.Listening -> {
+                        // Show only menu and notifications icons
+                        listOf(
+                            Pair(Icons.Default.Menu, onMenuClick),
+                            Pair(Icons.Default.Notifications, onNotificationClick)
+                        ).forEach {
+                            (icon, action) ->
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(Color.White, shape = CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                IconButton(
+                                    onClick = action,
+                                ) {
+                                    Icon(
+                                        icon,
+                                        contentDescription = null,
+                                        tint = Color(0xFF384259) // Cor mais clara quando desativado
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    else -> {}
                 }
             }
             when(state) {

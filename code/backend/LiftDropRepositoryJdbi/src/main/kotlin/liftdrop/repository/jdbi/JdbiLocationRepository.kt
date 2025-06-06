@@ -111,6 +111,56 @@ class JdbiLocationRepository(
             }.firstOrNull()
     }
 
+    override fun isCourierNearPickup(
+        courierId: Int,
+        requestId: Int,
+    ): Boolean =
+        handle
+            .createQuery(
+                """
+                SELECT EXISTS (
+                    SELECT 1 FROM liftdrop.courier c
+                    JOIN liftdrop.request r ON c.courier_id = r.courier_id
+                    JOIN liftdrop.request_details rd ON r.request_id = rd.request_id
+                    JOIN liftdrop.location cl ON c.current_location = cl.location_id
+                    JOIN liftdrop.location rl ON rd.pickup_location = rl.location_id
+                    WHERE c.courier_id = :courierId AND r.request_id = :requestId
+                    AND ST_DistanceSphere(
+                        ST_MakePoint(cl.longitude, cl.latitude),
+                        ST_MakePoint(rl.longitude, rl.latitude)
+                    ) <= 100 -- within 100 meters
+                )
+                """,
+            ).bind("courierId", courierId)
+            .bind("requestId", requestId)
+            .mapTo<Boolean>()
+            .first()
+
+    override fun isCourierNearDropOff(
+        courierId: Int,
+        requestId: Int,
+    ): Boolean =
+        handle
+            .createQuery(
+                """
+                SELECT EXISTS (
+                    SELECT 1 FROM liftdrop.courier c
+                    JOIN liftdrop.request r ON c.courier_id = r.courier_id
+                    JOIN liftdrop.request_details rd ON r.request_id = rd.request_id
+                    JOIN liftdrop.location cl ON c.current_location = cl.location_id
+                    JOIN liftdrop.location rl ON rd.dropoff_location = rl.location_id
+                    WHERE c.courier_id = :courierId AND r.request_id = :requestId
+                    AND ST_DistanceSphere(
+                        ST_MakePoint(cl.longitude, cl.latitude),
+                        ST_MakePoint(rl.longitude, rl.latitude)
+                    ) <= 100 -- within 100 meters
+                )
+                """,
+            ).bind("courierId", courierId)
+            .bind("requestId", requestId)
+            .mapTo<Boolean>()
+            .first()
+
     override fun itemExistsAtRestaurant(
         item: String,
         restaurantName: String,

@@ -33,7 +33,11 @@ sealed class StateUpdateError {
 }
 
 sealed class CourierDeliveryError {
+    data object CourierNotNearPickup : CourierDeliveryError()
+
     data object PackageAlreadyPickedUp : CourierDeliveryError()
+
+    data object CourierNotNearDropOff : CourierDeliveryError()
 
     data object PackageAlreadyDelivered : CourierDeliveryError()
 }

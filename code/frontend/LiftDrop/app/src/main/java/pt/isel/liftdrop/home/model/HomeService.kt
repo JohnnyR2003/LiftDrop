@@ -28,7 +28,7 @@ interface HomeService {
 
     suspend fun deliverOrder(requestId: String, courierId: String, token: String): Boolean
 
-    suspend fun updateCourierLocation(courierId: String, lat: Double?, lon: Double?): Boolean
+    suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Boolean
 
     suspend fun getDailyEarnings(courierId: String, token: String): Double
 
@@ -122,9 +122,9 @@ class RealHomeService(
             courierId = courierId.toInt()
         )
 
-        return httpService.post<Boolean>(
-            endpoint = "/courier/pickedUpOrder",
-            body = body,
+        return httpService.post<PickupOrderInputModel, Boolean>(
+            url = "/courier/pickedUpOrder",
+            data = body,
             token = token
         )
     }
@@ -139,37 +139,37 @@ class RealHomeService(
             courierId = courierId.toInt()
         )
 
-        return httpService.post<Boolean>(
-            endpoint = "/courier/deliveredOrder",
-            body = body,
+        return httpService.post<DeliverOrderInputModel, Boolean>(
+            url = "/courier/deliveredOrder",
+            data = body,
             token = token
         )
     }
 
     override suspend fun getDailyEarnings(courierId: String, token: String): Double {
         return httpService.get<Double>(
-            endpoint = "/courier/fetchDailyEarnings/$courierId",
+            url = "/courier/fetchDailyEarnings/$courierId",
             token = token
         )
     }
 
-    override suspend fun updateCourierLocation(courierId: String, lat: Double?, lon: Double?): Boolean {
-        val body = ("{\"courierId\": ${courierId.toInt()}, \"newLocation\": {" +
-                "\"latitude\": $lat" +
-                ", \"longitude\": $lon" +
-                "}").toRequestBody(ApplicationJsonType)
+    override suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Boolean {
+        val body = UpdateCourierLocationInputModel(
+            courierId = courierId.toInt(),
+            latitude = lat ,
+            longitude = lon
+        )
 
-        return httpService.post<Boolean>(
-            endpoint = "/courier/updateLocation",
-            body = body,
-            token = null
+        return httpService.post<UpdateCourierLocationInputModel, Boolean>(
+            url = "/courier/updateLocation",
+            data = body,
+            token = token
         )
     }
 
     override suspend fun getCourierIdByToken(token: String): Int {
-        return httpService.post(
-            endpoint = "/user/IdByToken",
-            body = null,
+        return httpService.get(
+            url = "/user/IdByToken",
             token = token
         )
     }

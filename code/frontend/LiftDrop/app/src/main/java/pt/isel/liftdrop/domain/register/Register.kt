@@ -1,4 +1,4 @@
-package pt.isel.liftdrop.domain
+package pt.isel.liftdrop.domain.register
 
 import pt.isel.liftdrop.R
 

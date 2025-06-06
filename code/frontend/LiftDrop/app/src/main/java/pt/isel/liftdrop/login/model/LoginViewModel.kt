@@ -33,6 +33,7 @@ class LoginViewModel(
             val result = runCatching { service.login(username, password) }
             Log.v("Login", "fetched done....")
             if (result.isFailure) {
+                Log.v("Login", "fetched failed with ${result.exceptionOrNull()}")
                 _stateFlow.value = LoginScreenState.Error(
                     result.exceptionOrNull() ?: Exception("Unknown error")
                 )

@@ -51,6 +51,8 @@ interface CourierRepository {
     fun getClosestCouriersAvailable(
         pickupLat: Double,
         pickupLng: Double,
+        requestId: Int,
+        maxDistance: Double = 4000.0, // 4km
     ): List<CourierWithLocation>
 
     fun fetchDailyEarnings(courierId: Int): Double?
@@ -60,10 +62,7 @@ interface CourierRepository {
         sessionToken: String,
     ): String?
 
-    fun logoutCourier(
-        sessionToken: String,
-        courierId: Int,
-    ): Boolean
+    fun logoutCourier(sessionToken: String): Boolean
 
     fun clear()
 }

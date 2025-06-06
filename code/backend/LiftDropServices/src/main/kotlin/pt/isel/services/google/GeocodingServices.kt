@@ -12,6 +12,7 @@ import io.ktor.client.statement.*
 import io.ktor.serialization.kotlinx.json.*
 import jakarta.inject.Named
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -24,6 +25,7 @@ import okhttp3.Request
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.pipeline.pt.isel.liftdrop.DeliveryRequestMessage
+import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.AssignmentCoordinator
 import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.courier.CourierError
@@ -55,63 +57,90 @@ class GeocodingServices(
         pickupLat: Double,
         pickupLon: Double,
         requestId: Int,
+        initialMaxDistance: Double = 1000.0,
+        maxDistanceIncrement: Double = 1000.0,
+        maxAllowedDistance: Double = 3000.0, // Maximum distance cap
     ): Boolean {
-        while (true) {
-            val rankedCouriers = fetchRankedCouriersByTravelTime(pickupLat, pickupLon)
-            if (rankedCouriers is Either.Right) {
-                val couriers = rankedCouriers.value
+        val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
+        GlobalLogger.log("Fetching ranked couriers for request ID: $requestId with maxDistance: $currentMaxDistance")
+        val rankedCouriers = fetchRankedCouriersByTravelTime(pickupLat, pickupLon, requestId, currentMaxDistance)
+        GlobalLogger.log("Ranked couriers: $rankedCouriers")
 
-                for (courier in couriers) {
-                    println("Sent assignment request to courier: ${courier.courierId}")
-                    val deferredResponse = AssignmentCoordinator.register(requestId)
+        if (rankedCouriers is Either.Right) {
+            val couriers = rankedCouriers.value
 
-                    transactionManager.run { it ->
-                        val requestDetails = it.requestRepository.getRequestForCourierById(requestId)
+            for (courier in couriers) {
+                println("Sent assignment request to courier: ${courier.courierId}")
+                val deferredResponse = AssignmentCoordinator.register(requestId)
 
-                        // Send the assignment request via WebSocket
-                        courierWebSocketHandler.sendDeliveryRequestToCourier(
-                            courier.courierId,
-                            DeliveryRequestMessage(
-                                requestId = requestId,
-                                courierId = courier.courierId,
-                                pickupLatitude = requestDetails.pickupLocation.latitude,
-                                pickupLongitude = requestDetails.pickupLocation.longitude,
-                                pickupAddress = requestDetails.pickupAddress,
-                                dropoffLatitude = requestDetails.dropoffLocation.latitude,
-                                dropoffLongitude = requestDetails.dropoffLocation.longitude,
-                                dropoffAddress = requestDetails.dropoffAddress,
-                                price = requestDetails.price,
-                            ),
-                        )
-                    }
+                transactionManager.run { it ->
+                    val requestDetails = it.requestRepository.getRequestForCourierById(requestId)
 
-                    // Wait for the courier’s response or timeout (e.g., 15s)
-                    val accepted =
-                        try {
-                            withTimeout(20_000) {
-                                deferredResponse.await()
-                            }
-                        } catch (e: TimeoutCancellationException) {
-                            false
+                    // Send the assignment request via WebSocket
+                    courierWebSocketHandler.sendDeliveryRequestToCourier(
+                        courier.courierId,
+                        DeliveryRequestMessage(
+                            requestId = requestId,
+                            courierId = courier.courierId,
+                            pickupLatitude = requestDetails.pickupLocation.latitude,
+                            pickupLongitude = requestDetails.pickupLocation.longitude,
+                            pickupAddress = requestDetails.pickupAddress,
+                            dropoffLatitude = requestDetails.dropoffLocation.latitude,
+                            dropoffLongitude = requestDetails.dropoffLocation.longitude,
+                            dropoffAddress = requestDetails.dropoffAddress,
+                            price = requestDetails.price,
+                        ),
+                    )
+                }
+
+                // Wait for the courier’s response or timeout (e.g., 15s)
+                val accepted =
+                    try {
+                        withTimeout(20_000) {
+                            deferredResponse.await()
                         }
-
-                    if (accepted) {
-                        return true
+                    } catch (e: TimeoutCancellationException) {
+                        false
                     }
+
+                if (accepted) {
+                    return true
                 }
             }
-            return false
+
+            // Recursive call with incremented maxDistance, capped at maxAllowedDistance
+            return handleCourierAssignment(
+                pickupLat,
+                pickupLon,
+                requestId,
+                minOf(currentMaxDistance + maxDistanceIncrement, maxAllowedDistance),
+                maxDistanceIncrement,
+                maxAllowedDistance,
+            )
+        } else {
+            GlobalLogger.log("No couriers found. Retrying in 5 seconds...")
+            delay(10_000) // Wait for 5 seconds before retrying
+            return handleCourierAssignment(
+                pickupLat,
+                pickupLon,
+                requestId,
+                minOf(currentMaxDistance + maxDistanceIncrement, maxAllowedDistance),
+                maxDistanceIncrement,
+                maxAllowedDistance,
+            )
         }
     }
 
     private suspend fun fetchRankedCouriersByTravelTime(
         pickupLat: Double,
         pickupLon: Double,
+        requestId: Int,
+        maxDistance: Double,
     ): Either<CourierError, List<CourierWithLocation>> {
         val nearbyCouriers =
             transactionManager.run {
                 val courierRepository = it.courierRepository
-                courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon)
+                courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon, requestId, maxDistance)
             }
 
         if (nearbyCouriers.isEmpty()) {

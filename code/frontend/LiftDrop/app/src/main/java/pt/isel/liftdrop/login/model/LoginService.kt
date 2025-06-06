@@ -1,6 +1,7 @@
 package pt.isel.liftdrop.login.model
 
 import androidx.compose.ui.platform.LocalContext
+import androidx.datastore.dataStore
 import com.google.android.gms.common.api.Api
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
@@ -17,6 +18,7 @@ import pt.isel.liftdrop.login.model.output.GetCourierIdOutputModel
 import pt.isel.liftdrop.login.model.input.LoginInputModel
 import pt.isel.liftdrop.login.model.input.LogoutInputModel
 import pt.isel.liftdrop.login.model.output.LoginOutputModel
+import pt.isel.liftdrop.login.model.output.LogoutOutputModel
 import pt.isel.liftdrop.login.model.output.RegisterOutputModel
 import pt.isel.liftdrop.login.model.output.UserOutputModel
 import pt.isel.liftdrop.services.http.HttpService
@@ -29,7 +31,7 @@ interface LoginService {
 
     suspend fun login(username: String, password: String): UserInfo
 
-    suspend fun logout(token: String, courierId: String)
+    suspend fun logout(token: String, courierId: String): Boolean
 
     suspend fun getCourierIdByToken(token: String): GetCourierIdOutputModel
 
@@ -46,9 +48,10 @@ class RealLoginService(
             name = username
         )
 
-        val response = httpService.post<RegisterOutputModel>(
-            endpoint = "/courier/register",
-            body = body
+        val response = httpService.post<RegisterCourierInputModel, RegisterOutputModel>(
+            url = "/courier/register",
+            data = body,
+            token = "",
         )
         return response.id
     }
@@ -59,9 +62,10 @@ class RealLoginService(
             password = password
         )
 
-        val res = httpService.post<LoginOutputModel>(
-            endpoint = "/courier/login",
-            body = body
+        val res = httpService.post<LoginInputModel ,LoginOutputModel>(
+            url = "/courier/login",
+            data = body,
+            token = ""
         )
 
         return UserInfo(
@@ -72,19 +76,17 @@ class RealLoginService(
         )
     }
 
-    override suspend fun logout(token: String, courierId: String) {
-        val body = LogoutInputModel(courierId)
-
-        return httpService.delete<Unit>(
-            endpoint = "/courier/logout",
-            body = body,
+    override suspend fun logout(token: String, courierId: String): Boolean {
+        val res = httpService.delete<LogoutOutputModel>(
+            url = "/courier/logout",
             token = token
         )
+        return res.isLoggedOut
     }
 
     override suspend fun getCourierIdByToken(token: String): GetCourierIdOutputModel {
-        return httpService.post<GetCourierIdOutputModel>(
-            endpoint = "/user/IdByToken",
+        return httpService.get<GetCourierIdOutputModel>(
+            url = "/user/IdByToken",
             token = token
         )
     }
