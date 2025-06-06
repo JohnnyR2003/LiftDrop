@@ -30,6 +30,8 @@ sealed class Problem(
     // Courier Errors
     data object CourierAlreadyExists : Problem(URI("$PROBLEM_URI_PATH/courier-already-exists"))
 
+    data object CourierNotNearPickup : Problem(URI("$PROBLEM_URI_PATH/courier-not-near-pickup"))
+
     data object CourierNotFound : Problem(URI("$PROBLEM_URI_PATH/courier-not-found"))
 
     data object PasswordIsIncorrect : Problem(URI("$PROBLEM_URI_PATH/password-is-incorrect"))

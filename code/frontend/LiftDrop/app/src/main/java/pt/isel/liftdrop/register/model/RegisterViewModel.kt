@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import pt.isel.liftdrop.domain.*
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.PreferencesRepository
+import pt.isel.liftdrop.services.http.Result
 
 class RegisterViewModel(
     private val service: LoginService,
@@ -32,17 +33,17 @@ class RegisterViewModel(
             throw IllegalStateException("The view model is not in the idle state or the fail state.")
         _createUserIdFlowInfo.value = loading()
         viewModelScope.launch {
-            val result = runCatching { service.register(
+            val result = service.register(
                 email = email,
                 password = password,
                 username = username
-            ) }
-            if (result.isFailure) {
-                Log.v("Register", "Error during registration: ${result.exceptionOrNull()}")
+            )
+            if (result is Result.Error) {
+                Log.v("Register", "Error during registration: $result")
                 _createUserIdFlowInfo.value =
-                    fail(result.exceptionOrNull() ?: Exception("Unknown error"))
-            } else {
-                _createUserIdFlowInfo.value = loaded(result)
+                    fail(Exception("Error during registration: ${result.problem.title} - ${result.problem.detail}"))
+            } else if(result is Result.Success) {
+                _createUserIdFlowInfo.value = loaded(kotlin.Result.success(result.data.id))
             }
         }
     }

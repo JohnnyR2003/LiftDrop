@@ -4,15 +4,12 @@ package pt.isel.liftdrop.login.model
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import pt.isel.liftdrop.TAG
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.login.ui.LoginScreenState
+import pt.isel.liftdrop.services.http.Result
 
 class LoginViewModel(
     private val service: LoginService,
@@ -30,22 +27,27 @@ class LoginViewModel(
         _stateFlow.value = LoginScreenState.Login()
         viewModelScope.launch {
             Log.v("Login", "fetching for login....")
-            val result = runCatching { service.login(username, password) }
+            val result = service.login(username, password)
             Log.v("Login", "fetched done....")
-            if (result.isFailure) {
-                Log.v("Login", "fetched failed with ${result.exceptionOrNull()}")
-                _stateFlow.value = LoginScreenState.Error(
-                    result.exceptionOrNull() ?: Exception("Unknown error")
-                )
-            } else {
+            if (result is Result.Error) {
+                Log.v("Login", "fetched failed with ${result.problem}")
+                _stateFlow.value = LoginScreenState.Error(result.problem)
+            } else if( result is Result.Success) {
                 // Log.v("Login", "fetched done and is ${result.getOrNull()}")
-                preferences.setUserInfo(result.getOrThrow())
+                preferences.setUserInfo(
+                    UserInfo(
+                        id = result.data.id,
+                        username = result.data.username,
+                        email = result.data.email,
+                        bearer = result.data.bearer
+                    )
+                )
                 _stateFlow.value = LoginScreenState.Login(
                     userInfo = UserInfo(
-                        courierId = result.getOrThrow().courierId,
-                        username = result.getOrThrow().username,
-                        email = result.getOrThrow().email,
-                        bearer = result.getOrThrow().bearer
+                        id = result.data.id,
+                        username = result.data.username,
+                        email = result.data.email,
+                        bearer = result.data.bearer
                     ),
                     isLoggedIn = true
 

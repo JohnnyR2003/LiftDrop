@@ -18,6 +18,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -45,6 +46,7 @@ import pt.isel.liftdrop.domain.login.Login.passwordLabel
 import pt.isel.liftdrop.domain.login.Login.submitButtonText
 import pt.isel.liftdrop.domain.register.Email
 import pt.isel.liftdrop.domain.register.Password
+import pt.isel.liftdrop.shared.ui.ErrorCard
 
 
 @Composable
@@ -52,7 +54,8 @@ fun LoginScreen(
     isLoggingIn: Boolean = false,
     screenState: LoginScreenState,
     onSignInRequest: ((String, String) -> Unit)? = null,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onDismissError : () -> Unit
 ) {
     val email = rememberSaveable { mutableStateOf("") }
     val password = rememberSaveable { mutableStateOf("") }
@@ -134,10 +137,9 @@ fun LoginScreen(
                 }
 
                 if (screenState is LoginScreenState.Error) {
-                    Text(
-                        stringResource(loginFailedMessage),
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    ErrorCard(screenState.problem) {
+                        onDismissError
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

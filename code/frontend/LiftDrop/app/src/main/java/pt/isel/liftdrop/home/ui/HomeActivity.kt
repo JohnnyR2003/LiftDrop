@@ -17,7 +17,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.*
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -71,11 +70,11 @@ class HomeActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 val userInfo = repo.preferencesRepository.getUserInfo()
-                if (userInfo != null && userInfo.courierId != 0 && !viewModel.serviceStarted.value) {
-                    viewModel.fetchDailyEarnings(userInfo.courierId.toString(), userInfo.bearer)
+                if (userInfo != null && userInfo.id != 0 && !viewModel.serviceStarted.value) {
+                    viewModel.fetchDailyEarnings(userInfo.id.toString(), userInfo.bearer)
                     if (hasLocationPermissions()) {
-                        startLocationService(this@HomeActivity, userInfo.bearer, userInfo.courierId.toString())
-                        Log.i(TAG, "Starting location service with token: ${userInfo.bearer} and courierId: ${userInfo.courierId}")
+                        startLocationService(this@HomeActivity, userInfo.bearer, userInfo.id.toString())
+                        Log.i(TAG, "Starting location service with token: ${userInfo.bearer} and courierId: ${userInfo.id}")
                         viewModel._serviceStarted.value = true
                     } else {
                         requestLocationPermissions()
@@ -115,6 +114,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     fun startLocationService(context: Context, authToken: String, courierId: String) {
+        Log.i(TAG, "Starting location service with token: $authToken and courierId: $courierId")
         val intent = Intent(context, LocationForegroundService::class.java).apply {
             putExtra("authToken", authToken)
             putExtra("courierId", courierId)

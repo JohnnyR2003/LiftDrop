@@ -3,7 +3,6 @@ package pt.isel.liftdrop.login
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -34,17 +33,17 @@ class PreferencesDataStore(
     override suspend fun getUserInfo(): UserInfo? {
         val preferences = store.data.first()
         val username = preferences[nameKey]
-        val id = preferences[idKey]
+        val courierId = preferences[idKey]
         val token = preferences[tokenKey]
         val email = preferences[emailKey]
         Log.v(
             "PreferencesDataStore",
-            "username: $username, id: $id, token: $token, email: $email"
+            "username: $username, id: $courierId, token: $token, email: $email"
         )
-        return if (username != null && id != null && token != null && email != null
+        return if (username != null && courierId != null && token != null && email != null
         ) {
             UserInfo(
-                courierId = id,
+                id = courierId,
                 username = username,
                 email = email,
                 bearer = token,
@@ -57,7 +56,7 @@ class PreferencesDataStore(
     override suspend fun setUserInfo(userInfo: UserInfo) {
         store.edit { preferences ->
             preferences[nameKey] = userInfo.username
-            preferences[idKey] = userInfo.courierId
+            preferences[idKey] = userInfo.id
             preferences[tokenKey] = userInfo.bearer
             preferences[emailKey] = userInfo.email
         }

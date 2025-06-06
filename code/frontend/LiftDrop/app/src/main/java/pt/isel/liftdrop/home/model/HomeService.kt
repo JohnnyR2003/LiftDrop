@@ -1,19 +1,13 @@
 package pt.isel.liftdrop.home.model
 
-import android.util.Log
-import com.google.gson.Gson
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
+import pt.isel.liftdrop.services.http.Result
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import pt.isel.liftdrop.ApplicationJsonType
 import pt.isel.liftdrop.HOST
 import pt.isel.liftdrop.services.http.HttpService
-import java.io.IOException
 
 interface HomeService {
     suspend fun startListening(token: String, onMessage: (String) -> Unit, onFailure: (Throwable) -> Unit)
@@ -24,15 +18,15 @@ interface HomeService {
 
     suspend fun declineRequest(requestId: String): Boolean
 
-    suspend fun pickupOrder(requestId: String, courierId: String, token: String): Boolean
+    suspend fun pickupOrder(requestId: String, courierId: String, token: String): Result<Boolean>
 
-    suspend fun deliverOrder(requestId: String, courierId: String, token: String): Boolean
+    suspend fun deliverOrder(requestId: String, courierId: String, token: String): Result<Boolean>
 
-    suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Boolean
+    suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean>
 
-    suspend fun getDailyEarnings(courierId: String, token: String): Double
+    suspend fun getDailyEarnings(courierId: String, token: String): Result<Double>
 
-    suspend fun getCourierIdByToken(token: String): Int
+    suspend fun getCourierIdByToken(token: String): Result<Int>
 }
 
 class RealHomeService(
@@ -116,7 +110,7 @@ class RealHomeService(
         return webSocket?.send(messageJson) == true
     }
 
-    override suspend fun pickupOrder(requestId: String, courierId: String, token: String): Boolean {
+    override suspend fun pickupOrder(requestId: String, courierId: String, token: String): Result<Boolean> {
         val body = PickupOrderInputModel(
             requestId = requestId.toInt(),
             courierId = courierId.toInt()
@@ -133,7 +127,7 @@ class RealHomeService(
         requestId: String,
         courierId: String,
         token: String
-    ): Boolean {
+    ): Result<Boolean> {
         val body = DeliverOrderInputModel(
             requestId = requestId.toInt(),
             courierId = courierId.toInt()
@@ -146,14 +140,14 @@ class RealHomeService(
         )
     }
 
-    override suspend fun getDailyEarnings(courierId: String, token: String): Double {
+    override suspend fun getDailyEarnings(courierId: String, token: String): Result<Double> {
         return httpService.get<Double>(
             url = "/courier/fetchDailyEarnings/$courierId",
             token = token
         )
     }
 
-    override suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Boolean {
+    override suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean> {
         val body = UpdateCourierLocationInputModel(
             courierId = courierId.toInt(),
             latitude = lat ,
@@ -167,7 +161,7 @@ class RealHomeService(
         )
     }
 
-    override suspend fun getCourierIdByToken(token: String): Int {
+    override suspend fun getCourierIdByToken(token: String): Result<Int> {
         return httpService.get(
             url = "/user/IdByToken",
             token = token

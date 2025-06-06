@@ -37,6 +37,7 @@ import pt.isel.liftdrop.home.model.RealHomeService
 import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.services.RealLocationTrackingService
 import pt.isel.liftdrop.services.http.HttpService
+import pt.isel.liftdrop.services.http.Problem
 
 /*
 data class HomeScreenState(
@@ -104,6 +105,46 @@ fun HomeScreen(
                 }
             }
 
+            @Composable
+            fun ErrorCard(problem: Problem, onDismiss: () -> Unit) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(0.8f),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = problem.title ?: "Error",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                color = Color.Red
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = problem.detail ?: "An unknown error occurred.",
+                                fontSize = 16.sp,
+                                color = Color.Black
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = onDismiss) {
+                                Text(text = "OK")
+                            }
+                        }
+                    }
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -111,7 +152,6 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 when(state){
                     is HomeScreenState.Idle -> {
                         listOf(
@@ -371,12 +411,9 @@ fun HomeScreen(
                 is HomeScreenState.Logout -> { onLogoutClick() }
                 is HomeScreenState.Error -> {
                     // Show error message
-                    Text(
-                        text = "Error: ${state.message}",
-                        color = Color.Red,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(16.dp)
+                    ErrorCard(
+                        problem = state.problem,
+                        onDismiss = { viewModel.dismissError() }
                     )
                 }
 

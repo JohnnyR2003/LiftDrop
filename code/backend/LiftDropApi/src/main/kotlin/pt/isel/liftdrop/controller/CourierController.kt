@@ -85,7 +85,7 @@ class CourierController(
                             id = courierLoginResult.value.courierId,
                             username = courierLoginResult.value.username,
                             email = courierLoginResult.value.email,
-                            token = courierLoginResult.value.token,
+                            bearer = courierLoginResult.value.token,
                         ),
                     )
             }
@@ -241,6 +241,9 @@ class CourierController(
                 when (request.value) {
                     is CourierDeliveryError.PackageAlreadyPickedUp -> {
                         Problem.PackageAlreadyPickedUp.response(HttpStatus.BAD_REQUEST)
+                    }
+                    is CourierDeliveryError.CourierNotNearPickup -> {
+                        Problem.CourierNotNearPickup.response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
                         Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)

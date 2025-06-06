@@ -1,6 +1,7 @@
 package pt.isel.liftdrop.home.ui
 
 import pt.isel.liftdrop.home.model.CourierRequestDetails
+import pt.isel.liftdrop.services.http.Problem
 
 sealed class HomeScreenState {
     data class Listening(
@@ -31,7 +32,7 @@ sealed class HomeScreenState {
     data class Idle(
         val dailyEarnings: Double= 0.0,
     ) : HomeScreenState()
-    data class Error(val message: Throwable) : HomeScreenState()
+    data class Error(val problem: Problem) : HomeScreenState()
     data class Logout(val isDone: Boolean = false) : HomeScreenState()
 
 }
