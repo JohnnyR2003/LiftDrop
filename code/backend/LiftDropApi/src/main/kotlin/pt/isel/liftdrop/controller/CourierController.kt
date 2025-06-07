@@ -161,7 +161,10 @@ class CourierController(
                     )
 
                 when (updateLocationResult) {
-                    is Success -> ResponseEntity.ok(updateLocationResult)
+                    is Success -> {
+                        GlobalLogger.log("Courier location updated successfully")
+                        ResponseEntity.ok(updateLocationResult)
+                    }
                     is Failure ->
                         when (updateLocationResult.value) {
                             is LocationUpdateError.CourierNotFound ->
