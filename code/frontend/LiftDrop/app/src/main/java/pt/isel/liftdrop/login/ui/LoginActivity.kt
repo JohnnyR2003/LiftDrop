@@ -82,9 +82,6 @@ class LoginActivity : ComponentActivity() {
                 onNavigateToRegister = {
                     RegisterActivity.navigate(this@LoginActivity)
                 },
-                onDismissError = {
-                    viewModel.resetToIdle()
-                }
             )
         }
     }

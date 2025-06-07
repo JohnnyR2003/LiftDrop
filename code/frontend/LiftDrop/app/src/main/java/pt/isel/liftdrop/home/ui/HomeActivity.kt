@@ -94,7 +94,7 @@ class HomeActivity : ComponentActivity() {
                         if (user != null) {
                             if (state is HomeScreenState.Listening) {
                                 viewModel.stopListening()
-                            } else {
+                            } else if(state is HomeScreenState.Idle) {
                                 viewModel.startListening()
                             }
                         }

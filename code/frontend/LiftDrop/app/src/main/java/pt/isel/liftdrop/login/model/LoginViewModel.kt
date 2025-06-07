@@ -31,8 +31,9 @@ class LoginViewModel(
             Log.v("Login", "fetched done....")
             if (result is Result.Error) {
                 Log.v("Login", "fetched failed with ${result.problem}")
+
                 _stateFlow.value = LoginScreenState.Error(result.problem)
-            } else if( result is Result.Success) {
+            } else if(result is Result.Success) {
                 // Log.v("Login", "fetched done and is ${result.getOrNull()}")
                 preferences.setUserInfo(
                     UserInfo(

@@ -55,7 +55,6 @@ fun LoginScreen(
     screenState: LoginScreenState,
     onSignInRequest: ((String, String) -> Unit)? = null,
     onNavigateToRegister: () -> Unit,
-    onDismissError : () -> Unit
 ) {
     val email = rememberSaveable { mutableStateOf("") }
     val password = rememberSaveable { mutableStateOf("") }
@@ -137,9 +136,10 @@ fun LoginScreen(
                 }
 
                 if (screenState is LoginScreenState.Error) {
-                    ErrorCard(screenState.problem) {
-                        onDismissError
-                    }
+                    Text(
+                        stringResource(loginFailedMessage),
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

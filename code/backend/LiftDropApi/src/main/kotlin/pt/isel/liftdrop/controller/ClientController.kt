@@ -57,23 +57,28 @@ class ClientController(
                 GlobalLogger.log("Failed to create order: ${requestCreationResult.value}")
                 when (requestCreationResult.value) {
                     is RequestCreationError.RestaurantNotFound -> {
-                        Problem.RestaurantNotFound
+                        Problem
+                            .restaurantNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
                     is RequestCreationError.ItemNotFound -> {
-                        Problem.ItemNotFound
+                        Problem
+                            .itemNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
                     is RequestCreationError.ClientNotFound -> {
-                        Problem.UserNotFound
+                        Problem
+                            .userNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
                     is RequestCreationError.ClientAddressNotFound -> {
-                        Problem.ClientAddressNotFound
+                        Problem
+                            .clientAddressNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
                     else ->
-                        Problem.InternalServerError
+                        Problem
+                            .internalServerError()
                             .response(HttpStatus.INTERNAL_SERVER_ERROR)
                 }
             }
@@ -113,19 +118,23 @@ class ClientController(
             is Failure -> {
                 when (clientCreationResult.value) {
                     is ClientCreationError.UserAlreadyExists -> {
-                        Problem.UserAlreadyExists
+                        Problem
+                            .userAlreadyExists()
                             .response(HttpStatus.CONFLICT)
                     }
                     is ClientCreationError.InvalidAddress -> {
-                        Problem.InvalidAddress
+                        Problem
+                            .invalidAddress()
                             .response(HttpStatus.BAD_REQUEST)
                     }
                     is ClientCreationError.InvalidLocation -> {
-                        Problem.InvalidLocation
+                        Problem
+                            .invalidLocation()
                             .response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        Problem.InternalServerError
+                        Problem
+                            .internalServerError()
                             .response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
@@ -161,31 +170,38 @@ class ClientController(
             is Failure -> {
                 when (clientLoginResult.value) {
                     is ClientLoginError.ClientNotFound -> {
-                        Problem.UserNotFound
+                        Problem
+                            .userNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
                     is ClientLoginError.InvalidEmailOrPassword -> {
-                        Problem.InvalidRequestContent
+                        Problem
+                            .invalidRequestContent("Invalid email or password")
                             .response(HttpStatus.BAD_REQUEST)
                     }
                     is ClientLoginError.BlankEmailOrPassword -> {
-                        Problem.InvalidRequestContent
+                        Problem
+                            .invalidRequestContent("Email and password cannot be blank")
                             .response(HttpStatus.BAD_REQUEST)
                     }
                     is ClientLoginError.WrongPassword -> {
-                        Problem.PasswordIsIncorrect
+                        Problem
+                            .passwordIsIncorrect()
                             .response(HttpStatus.UNAUTHORIZED)
                     }
                     is ClientLoginError.ClientLoginEmailAlreadyExists -> {
-                        Problem.UserAlreadyExists
+                        Problem
+                            .userAlreadyExists()
                             .response(HttpStatus.CONFLICT)
                     }
                     is ClientLoginError.InvalidAddress -> {
-                        Problem.InvalidAddress
+                        Problem
+                            .invalidAddress()
                             .response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        Problem.InternalServerError
+                        Problem
+                            .internalServerError()
                             .response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
@@ -211,11 +227,13 @@ class ClientController(
             is Failure -> {
                 when (clientLogoutResult.value) {
                     is ClientLogoutError.SessionNotFound -> {
-                        Problem.SessionNotFound
+                        Problem
+                            .sessionNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
                     else -> {
-                        Problem.InternalServerError
+                        Problem
+                            .internalServerError()
                             .response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
@@ -250,16 +268,19 @@ class ClientController(
             is Failure -> {
                 when (result.value) {
                     is DropOffCreationError.ClientNotFound -> {
-                        Problem.UserNotFound
+                        Problem
+                            .userNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
 
                     is DropOffCreationError.InvalidAddress -> {
-                        Problem.InvalidAddress
+                        Problem
+                            .invalidAddress()
                             .response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        Problem.InternalServerError
+                        Problem
+                            .internalServerError()
                             .response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }

@@ -23,7 +23,7 @@ class CustomExceptionHandler : ResponseEntityExceptionHandler() {
         request: WebRequest,
     ): ResponseEntity<Any>? {
         GlobalLogger.log("Http.CustomExceptionHandler ArgumentNotValid")
-        return Problem.response(HttpStatus.BAD_REQUEST, Problem.InvalidRequestContent)
+        return Problem.invalidRequestContent("Argument received is not valid").response(HttpStatus.BAD_REQUEST)
     }
 
     override fun handleTypeMismatch(
@@ -33,7 +33,7 @@ class CustomExceptionHandler : ResponseEntityExceptionHandler() {
         request: WebRequest,
     ): ResponseEntity<Any>? {
         GlobalLogger.log("Http.CustomExceptionHandler TypeMismatch")
-        return Problem.response(HttpStatus.BAD_REQUEST, Problem.InvalidRequestContent)
+        return Problem.invalidRequestContent("There is a type mismatch").response(HttpStatus.BAD_REQUEST)
     }
 
     override fun handleHttpMessageNotReadable(
@@ -43,7 +43,7 @@ class CustomExceptionHandler : ResponseEntityExceptionHandler() {
         request: WebRequest,
     ): ResponseEntity<Any>? {
         GlobalLogger.log("Http.CustomExceptionHandler NotReadable")
-        return Problem.response(HttpStatus.BAD_REQUEST, Problem.InvalidRequestContent)
+        return Problem.invalidRequestContent("Http message is not readable").response(HttpStatus.BAD_REQUEST)
     }
 
     @ExceptionHandler(

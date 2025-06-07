@@ -46,10 +46,10 @@ class CourierController(
             is Failure -> {
                 when (courierCreationResult.value) {
                     is CourierCreationError.CourierEmailAlreadyExists -> {
-                        Problem.CourierAlreadyExists.response(HttpStatus.CONFLICT)
+                        Problem.courierAlreadyExists().response(HttpStatus.CONFLICT)
                     }
                     else -> {
-                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -92,19 +92,19 @@ class CourierController(
             is Failure -> {
                 when (courierLoginResult.value) {
                     is CourierLoginError.BlankEmailOrPassword -> {
-                        Problem.InvalidRequestContent.response(HttpStatus.BAD_REQUEST)
+                        Problem.invalidRequestContent("Email and Password must not be blank").response(HttpStatus.BAD_REQUEST)
                     }
                     is CourierLoginError.CourierNotFound -> {
-                        Problem.CourierNotFound.response(HttpStatus.NOT_FOUND)
+                        Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
                     }
                     is CourierLoginError.InvalidEmailOrPassword -> {
-                        Problem.PasswordIsIncorrect.response(HttpStatus.UNAUTHORIZED)
+                        Problem.passwordIsIncorrect().response(HttpStatus.UNAUTHORIZED)
                     }
                     is CourierLoginError.WrongPassword -> {
-                        Problem.PasswordIsIncorrect.response(HttpStatus.UNAUTHORIZED)
+                        Problem.passwordIsIncorrect().response(HttpStatus.UNAUTHORIZED)
                     }
                     else -> {
-                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -134,9 +134,9 @@ class CourierController(
             is Either.Left -> {
                 when (courierLogoutResult.value) {
                     is CourierLogoutError.SessionNotFound ->
-                        Problem.SessionNotFound.response(HttpStatus.NOT_FOUND)
+                        Problem.sessionNotFound().response(HttpStatus.NOT_FOUND)
                     else ->
-                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                 }
             }
         }
@@ -165,18 +165,18 @@ class CourierController(
                     is Failure ->
                         when (updateLocationResult.value) {
                             is LocationUpdateError.CourierNotFound ->
-                                Problem.CourierNotFound.response(HttpStatus.NOT_FOUND)
+                                Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
                             else ->
-                                Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                                Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                         }
                 }
             }
             is Failure -> {
                 when (address.value) {
                     is LocationUpdateError.InvalidCoordinates ->
-                        Problem.InvalidCoordinates.response(HttpStatus.BAD_REQUEST)
+                        Problem.invalidCoordinates().response(HttpStatus.BAD_REQUEST)
                     else ->
-                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                 }
             }
         }
@@ -201,10 +201,10 @@ class CourierController(
             is Failure -> {
                 when (request.value) {
                     is StateUpdateError.CourierNotFound -> {
-                        Problem.CourierNotFound.response(HttpStatus.NOT_FOUND)
+                        Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
                     }
                     else -> {
-                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -240,13 +240,13 @@ class CourierController(
             is Failure -> {
                 when (request.value) {
                     is CourierDeliveryError.PackageAlreadyPickedUp -> {
-                        Problem.PackageAlreadyPickedUp.response(HttpStatus.BAD_REQUEST)
+                        Problem.packageAlreadyPickedUp().response(HttpStatus.CONFLICT)
                     }
                     is CourierDeliveryError.CourierNotNearPickup -> {
-                        Problem.CourierNotNearPickup.response(HttpStatus.BAD_REQUEST)
+                        Problem.courierNotNearPickup().response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -275,10 +275,13 @@ class CourierController(
             is Failure -> {
                 when (request.value) {
                     is CourierDeliveryError.PackageAlreadyDelivered -> {
-                        Problem.PackageAlreadyDelivered.response(HttpStatus.BAD_REQUEST)
+                        Problem.packageAlreadyDelivered().response(HttpStatus.BAD_REQUEST)
+                    }
+                    is CourierDeliveryError.CourierNotNearDropOff -> {
+                        Problem.courierNotNearDropOff().response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
-                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }
@@ -290,16 +293,16 @@ class CourierController(
         @PathVariable courierId: Int,
     ): ResponseEntity<Any> =
         when (val request = courierService.fetchDailyEarnings(courierId)) {
-            is Success -> {
+            is Either.Right -> {
                 ResponseEntity.ok(request.value)
             }
-            is Failure -> {
+            is Either.Left -> {
                 when (request.value) {
                     is CourierEarningsError.CourierNotFound -> {
-                        Problem.CourierNotFound.response(HttpStatus.NOT_FOUND)
+                        Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
                     }
                     else -> {
-                        Problem.InternalServerError.response(HttpStatus.INTERNAL_SERVER_ERROR)
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                     }
                 }
             }

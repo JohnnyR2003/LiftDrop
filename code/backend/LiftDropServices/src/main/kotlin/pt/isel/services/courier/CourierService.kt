@@ -9,6 +9,7 @@ import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.LocationDTO
 import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.*
@@ -96,6 +97,7 @@ class CourierService(
             if (!request) {
                 return@run failure(CourierError.RequestNotAccepted)
             } else {
+                GlobalLogger.log("Courier $courierId accepted request $requestId")
                 success(true)
             }
         }
