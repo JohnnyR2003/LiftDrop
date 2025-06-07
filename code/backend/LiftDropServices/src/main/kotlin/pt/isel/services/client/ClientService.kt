@@ -12,6 +12,7 @@ import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.LocationDTO
 import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.google.GeocodingServices
 import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
@@ -152,6 +153,12 @@ class ClientService(
                 description = description,
                 pickupLocationId = pickupLocationId,
                 dropoffLocationId = dropOffLocationId,
+            )
+
+            GlobalLogger.log(
+                "Request created with ID: $requestId, " +
+                    "pickup location ID: $pickupLocationId, " +
+                    "drop-off location ID: $dropOffLocationId",
             )
 
             CoroutineScope(Dispatchers.Default).launch {
