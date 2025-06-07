@@ -168,6 +168,7 @@ class GeocodingServices(
         destinationLat: Double,
         destinationLon: Double,
     ): List<CourierWithLocation> {
+        GlobalLogger.log("Ranking couriers by travel time to destination: ($destinationLat, $destinationLon)")
         val origins =
             couriers.joinToString("|") {
                 "${it.latitude},${it.longitude}"
