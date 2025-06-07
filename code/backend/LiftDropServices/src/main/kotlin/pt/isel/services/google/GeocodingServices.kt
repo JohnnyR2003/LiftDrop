@@ -143,6 +143,7 @@ class GeocodingServices(
                 courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon, requestId, maxDistance)
             }
 
+        GlobalLogger.log("Nearby couriers by direct distance: $nearbyCouriers")
         if (nearbyCouriers.isEmpty()) {
             return failure(CourierError.NoAvailableCouriers)
         }
@@ -153,6 +154,11 @@ class GeocodingServices(
                 pickupLat,
                 pickupLon,
             )
+
+        GlobalLogger.log("Ranked couriers by travel time: $ranked")
+        if (ranked.isEmpty()) {
+            return failure(CourierError.NoAvailableCouriers)
+        }
 
         return success(ranked)
     }
