@@ -118,11 +118,35 @@ class HomeViewModel(
         }
     }
 
-    fun resetToIdle() {
-        check(_stateFlow.value !is HomeScreenState.Idle) {
+    fun resetToListeningState() {
+        check(_stateFlow.value !is HomeScreenState.Listening) {
             "The view model is already in the idle state."
         }
-        _stateFlow.value = HomeScreenState.Idle()
+        _stateFlow.update { current ->
+            when (current) {
+//                is HomeScreenState.Idle -> HomeScreenState.Listening(
+//                    dailyEarnings = current.dailyEarnings,
+//                    incomingRequest = false,
+//                    requestDetails = null
+//                )
+                is HomeScreenState.Delivered -> HomeScreenState.Listening(
+                    dailyEarnings = current.deliveryEarnings,
+                    incomingRequest = false,
+                    requestDetails = null
+                )
+                else -> {
+                    _previousState.value = current
+                    HomeScreenState.Error(
+                        Problem(
+                            type = "ResetToListeningError",
+                            title = "Reset to Listening Error",
+                            detail = "Cannot reset to listening state from $current.",
+                            status = 403
+                        )
+                    )
+                }
+            }
+        }
     }
 
 
@@ -213,7 +237,7 @@ class HomeViewModel(
                     )
 
                     is HomeScreenState.Delivered -> HomeScreenState.Idle(
-                        dailyEarnings = current.dailyEarnings,
+                        dailyEarnings = current.deliveryEarnings,
                     )
                     else -> {
                         _previousState.value = current
@@ -263,7 +287,7 @@ class HomeViewModel(
                                     current.requestDetails!!.dropoffLatitude,
                                     current.requestDetails.dropoffLongitude
                                 ),
-                                dailyEarnings = current.dailyEarnings,
+                                deliveryEarnings = current.dailyEarnings,
                                 pickedUp = false,
                                 requestId = current.requestDetails.requestId,
                                 courierId = current.requestDetails.courierId,
@@ -337,7 +361,7 @@ class HomeViewModel(
                         is HomeScreenState.PickingUp -> {
                             launchNavigationAppChooser(context, current.dropoffCoordinates!!.first, current.dropoffCoordinates.second)
                             HomeScreenState.Delivering(
-                                dailyEarnings = current.dailyEarnings,
+                                deliveryEarnings = current.deliveryEarnings,
                                 delivered = false,
                                 requestId = current.requestId,
                                 courierId = current.courierId
@@ -372,14 +396,9 @@ class HomeViewModel(
                 Log.v("HomeViewModel", "Order delivered successfully")
                 _stateFlow.update { current ->
                     when (current) {
-                        is HomeScreenState.Delivering -> HomeScreenState.Listening(
-                            incomingRequest = false,
-                            requestDetails = null,
-                            dailyEarnings = current.dailyEarnings
+                        is HomeScreenState.Delivering -> HomeScreenState.Delivered(
+                            deliveryEarnings = current.deliveryEarnings
                         )
-                        /*TODO: implement Delivered screen    HomeScreenState.Delivered(
-                        dailyEarnings = current.dailyEarnings,
-                    )*/
                         else -> {
                             _previousState.value = current
                             HomeScreenState.Error(

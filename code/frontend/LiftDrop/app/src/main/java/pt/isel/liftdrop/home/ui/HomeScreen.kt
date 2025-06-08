@@ -1,5 +1,6 @@
 package pt.isel.liftdrop.home.ui
 
+import DeliveryEarningsCard
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -20,24 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.*
 import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
-import android.annotation.SuppressLint
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.ui.draw.alpha
-import com.google.gson.GsonBuilder
-import okhttp3.OkHttpClient
-import pt.isel.liftdrop.home.model.CourierRequestDetails
-import pt.isel.liftdrop.home.model.RealHomeService
-import pt.isel.liftdrop.login.model.RealLoginService
-import pt.isel.liftdrop.services.RealLocationTrackingService
-import pt.isel.liftdrop.services.http.HttpService
 import pt.isel.liftdrop.services.http.Problem
+import pt.isel.liftdrop.shared.ui.BottomSlideToConfirm
+import pt.isel.liftdrop.shared.ui.SlideToConfirmButton
 
 /*
 data class HomeScreenState(
@@ -159,7 +152,7 @@ fun HomeScreen(
                             Pair(Icons.Default.Notifications, onNotificationClick),
                             Pair(Icons.Default.ExitToApp, onLogoutClick)
                         ).forEach {
-                            (icon, action) ->
+                                (icon, action) ->
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
@@ -184,7 +177,7 @@ fun HomeScreen(
                             Pair(Icons.Default.Menu, onMenuClick),
                             Pair(Icons.Default.Notifications, onNotificationClick)
                         ).forEach {
-                            (icon, action) ->
+                                (icon, action) ->
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
@@ -333,81 +326,28 @@ fun HomeScreen(
 
                 is HomeScreenState.PickingUp -> {
                     val context = LocalContext.current
-                    // Instead of the start button show a rectangular rounded button saying pick up
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 87.dp)
-                            .align(Alignment.BottomCenter),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Button(
-                            onClick = {
-                                viewModel.pickupOrder(
-                                    state.requestId,
-                                    state.courierId,
-                                    context
-                                )
-                            },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(
-                                    0xFF384259
-                                )
-                            ),
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .height(48.dp)
-                                .fillMaxWidth(0.8f)
-                        ) {
-                            Text(
-                                text = "Pick Up",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                maxLines = 1
-                            )
+                    BottomSlideToConfirm(
+                        text = "Slide to Pick Up",
+                        onConfirmed = {
+                            viewModel.pickupOrder(state.requestId, state.courierId, context)
                         }
-                    }
+                    )
                 }
 
                 is HomeScreenState.Delivering -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 87.dp)
-                            .align(Alignment.BottomCenter),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Button(
-                            onClick = {
-                                viewModel.deliverOrder(
-                                    state.requestId,
-                                    state.courierId,
-                                )
-                            },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(
-                                    0xFF384259
-                                )
-                            ),
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .height(48.dp)
-                                .fillMaxWidth(0.8f)
-                        ) {
-                            Text(
-                                text = "Deliver",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                maxLines = 1
-                            )
+                    BottomSlideToConfirm(
+                        text = "Slide to Deliver",
+                        onConfirmed = {
+                            viewModel.deliverOrder(state.requestId, state.courierId)
                         }
-                    }
+                    )
                 }
-                is HomeScreenState.Delivered -> {/*to be done*/}
+                is HomeScreenState.Delivered -> {
+                    DeliveryEarningsCard(
+                        earnings = state.deliveryEarnings.toString(),
+                        onOk = { viewModel.resetToListeningState() }
+                    )
+                }
                 is HomeScreenState.Logout -> { onLogoutClick() }
                 is HomeScreenState.Error -> {
                     // Show error message
