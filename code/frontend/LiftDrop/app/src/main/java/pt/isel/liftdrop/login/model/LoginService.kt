@@ -9,6 +9,7 @@ import pt.isel.liftdrop.login.model.output.LogoutOutputModel
 import pt.isel.liftdrop.login.model.output.RegisterOutputModel
 import pt.isel.liftdrop.services.http.Result
 import pt.isel.liftdrop.services.http.HttpService
+import pt.isel.liftdrop.shared.model.Uris
 
 interface LoginService {
 
@@ -34,7 +35,7 @@ class RealLoginService(
         )
 
         return httpService.post<RegisterCourierInputModel, RegisterOutputModel>(
-            url = "/courier/register",
+            url = Uris.Courier.REGISTER,
             data = body,
             token = "",
         )
@@ -47,7 +48,7 @@ class RealLoginService(
         )
 
         return httpService.post<LoginInputModel , UserInfo>(
-            url = "/courier/login",
+            url = Uris.Courier.LOGIN,
             data = body,
             token = ""
         )
@@ -55,14 +56,14 @@ class RealLoginService(
 
     override suspend fun logout(token: String, courierId: String): Result<LogoutOutputModel> {
         return httpService.delete<LogoutOutputModel>(
-            url = "/courier/logout",
+            url = Uris.Courier.LOGOUT,
             token = token
         )
     }
 
     override suspend fun getCourierIdByToken(token: String): Result<GetCourierIdOutputModel> {
         return httpService.get<GetCourierIdOutputModel>(
-            url = "/user/IdByToken",
+            url = Uris.User.ID_BY_TOKEN,
             token = token
         )
     }

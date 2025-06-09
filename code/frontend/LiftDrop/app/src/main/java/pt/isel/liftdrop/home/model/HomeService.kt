@@ -8,6 +8,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import pt.isel.liftdrop.HOST
 import pt.isel.liftdrop.services.http.HttpService
+import pt.isel.liftdrop.shared.model.Uris
 
 interface HomeService {
     suspend fun startListening(token: String, onMessage: (String) -> Unit, onFailure: (Throwable) -> Unit)
@@ -117,7 +118,7 @@ class RealHomeService(
         )
 
         return httpService.post<PickupOrderInputModel, Boolean>(
-            url = "/courier/pickedUpOrder",
+            url = Uris.Courier.PICKED_UP_ORDER,
             data = body,
             token = token
         )
@@ -134,7 +135,7 @@ class RealHomeService(
         )
 
         return httpService.post<DeliverOrderInputModel, Boolean>(
-            url = "/courier/deliveredOrder",
+            url = Uris.Courier.DELIVERED_ORDER,
             data = body,
             token = token
         )
@@ -142,7 +143,7 @@ class RealHomeService(
 
     override suspend fun getDailyEarnings(courierId: String, token: String): Result<Double> {
         return httpService.get<Double>(
-            url = "/courier/fetchDailyEarnings/$courierId",
+            url = Uris.Courier.FETCH_DAILY_EARNINGS.replace("{courierId}", courierId),
             token = token
         )
     }
@@ -155,7 +156,7 @@ class RealHomeService(
         )
 
         return httpService.post<UpdateCourierLocationInputModel, Boolean>(
-            url = "/courier/updateLocation",
+            url = Uris.Courier.UPDATE_LOCATION,
             data = body,
             token = token
         )
@@ -163,7 +164,7 @@ class RealHomeService(
 
     override suspend fun getCourierIdByToken(token: String): Result<Int> {
         return httpService.get(
-            url = "/user/IdByToken",
+            url = Uris.User.ID_BY_TOKEN,
             token = token
         )
     }
