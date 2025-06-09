@@ -39,6 +39,14 @@ data class Problem(
                 detail = detail,
             )
 
+        fun requestNotFound(): Problem =
+            Problem(
+                type = "$PROBLEM_URI_PATH/request-not-found",
+                title = "Request Not Found",
+                status = HttpStatus.NOT_FOUND.value(),
+                detail = "The requested resource could not be found.",
+            )
+
         fun invalidRequestContent(detail: String): Problem =
             Problem(
                 type = "$PROBLEM_URI_PATH/invalid-request-content",

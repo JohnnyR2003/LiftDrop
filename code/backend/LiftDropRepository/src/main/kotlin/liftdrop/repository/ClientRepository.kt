@@ -21,9 +21,12 @@ interface ClientRepository {
         sessionToken: String,
     ): String?
 
-    fun logoutClient(
-        sessionToken: String,
-    ): Boolean
+    fun logoutClient(sessionToken: String): Boolean
+
+    fun getRequestStatus(
+        clientId: Int,
+        requestId: Int,
+    ): Pair<Int, String>?
 
     fun clear()
 }

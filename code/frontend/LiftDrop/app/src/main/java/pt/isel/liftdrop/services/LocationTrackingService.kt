@@ -38,7 +38,7 @@ class RealLocationTrackingService(
     private val context: Context
 ): LocationTrackingService {
 
-    val apiEndpoint = "$HOST/courier/updateLocation"
+    val apiEndpoint = "$HOST/api/courier/updateLocation"
 
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     private var locationCallback: LocationCallback? = null

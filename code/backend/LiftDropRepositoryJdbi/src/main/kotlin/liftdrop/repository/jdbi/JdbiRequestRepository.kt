@@ -17,10 +17,10 @@ class JdbiRequestRepository(
             handle
                 .createQuery(
                     """
-            SELECT EXISTS (
-                SELECT 1 FROM liftdrop.client WHERE client_id = :client_id
-            )
-            """,
+        SELECT EXISTS (
+            SELECT 1 FROM liftdrop.client WHERE client_id = :client_id
+        )
+        """,
                 ).bind("client_id", clientId)
                 .mapTo<Boolean>()
                 .one()
@@ -30,9 +30,9 @@ class JdbiRequestRepository(
         return handle
             .createUpdate(
                 """
-            INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta)
-            VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, CAST(:eta AS BIGINT))
-            """,
+        INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta)
+        VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, EXTRACT(EPOCH FROM NOW()) + :eta)
+        """,
             ).bind("client_id", clientId)
             .bind("request_status", "PENDING")
             .bind("eta", eta)

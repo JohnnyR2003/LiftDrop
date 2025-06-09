@@ -110,6 +110,7 @@ class ClientService(
                 true -> {
                     return@run success(sessionToken)
                 }
+
                 false -> {
                     return@run failure(ClientLoginError.WrongPassword)
                 }
@@ -202,6 +203,24 @@ class ClientService(
             return@run success(locationId)
         }
 
+    fun getRequestStatus(
+        clientId: Int,
+        requestId: Int,
+    ): Either<ClientGetRequestStatusError, Pair<Double, String>> =
+        transactionManager.run {
+            val clientRepository = it.clientRepository
+            val status =
+                clientRepository.getRequestStatus(clientId, requestId)
+                    ?: return@run failure(ClientGetRequestStatusError.RequestNotFound)
+
+            // Convert eta from seconds to minutes and seconds
+            val etaMinutes = status.first / 60
+            val etaSeconds = status.first % 60
+            val formattedEta = String.format("%02d:%02d", etaMinutes, etaSeconds)
+            GlobalLogger.log("Request status for client $clientId, request $requestId: ETA = $formattedEta, Status = ${status.second}")
+            return@run success(Pair(formattedEta.toDouble(), status.second))
+        }
+
     fun giveRating(
         clientId: Int,
         requestId: Int,
@@ -216,17 +235,17 @@ class ClientService(
                 return@run failure(ClientLoginError.ClientNotFound)
             }
         }
-}
 
-fun Address.toFormattedString(): String {
-    val components =
-        listOfNotNull(
-            streetNumber?.takeIf { it.isNotBlank() },
-            street.takeIf { it.isNotBlank() },
-            floor?.takeIf { it.isNotBlank() },
-            city.takeIf { it.isNotBlank() },
-            zipCode.takeIf { it.isNotBlank() },
-            country.takeIf { it.isNotBlank() },
-        )
-    return components.joinToString(separator = ", ")
+    fun Address.toFormattedString(): String {
+        val components =
+            listOfNotNull(
+                streetNumber?.takeIf { it.isNotBlank() },
+                street.takeIf { it.isNotBlank() },
+                floor?.takeIf { it.isNotBlank() },
+                city.takeIf { it.isNotBlank() },
+                zipCode.takeIf { it.isNotBlank() },
+                country.takeIf { it.isNotBlank() },
+            )
+        return components.joinToString(separator = ", ")
+    }
 }

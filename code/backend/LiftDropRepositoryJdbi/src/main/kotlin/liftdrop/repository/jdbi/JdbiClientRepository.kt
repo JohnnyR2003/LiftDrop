@@ -139,6 +139,28 @@ class JdbiClientRepository(
         return rowsUpdated > 0
     }
 
+    override fun getRequestStatus(
+        clientId: Int,
+        requestId: Int,
+    ): Pair<Int, String>? =
+        handle
+            .createQuery(
+                """
+                SELECT 
+                    GREATEST(r.eta - EXTRACT(EPOCH FROM NOW()), 0) AS current_eta, 
+                    r.request_status AS status
+                FROM liftdrop.request r
+                JOIN liftdrop.client c ON r.client_id = c.client_id
+                WHERE c.client_id = :clientId AND r.request_id = :requestId
+                """.trimIndent(),
+            ).bind("clientId", clientId)
+            .bind("requestId", requestId)
+            .map { rs, _ ->
+                val currentEta = rs.getInt("current_eta")
+                val status = rs.getString("status")
+                Pair(currentEta, status)
+            }.singleOrNull()
+
     override fun clear() {
         handle.createUpdate("TRUNCATE TABLE liftdrop.client CASCADE;").execute()
     }

@@ -242,13 +242,13 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            "It's lunch time!",
+                            "It's rush hour!",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = Color(0xFF384259)
                         )
                         Text(
-                            "Check the map for the busiest restaurants",
+                            "Start listening for orders to earn more!",
                             fontSize = 14.sp,
                             color = Color(0xFF384259),
                             modifier = Modifier.padding(bottom = 20.dp)

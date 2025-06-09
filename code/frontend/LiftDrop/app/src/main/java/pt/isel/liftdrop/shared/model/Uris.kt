@@ -6,7 +6,6 @@ object Uris {
     object User {
         const val BASE = "$PREFIX/user"
         const val ID_BY_TOKEN = "$BASE/IdByToken"
-        const val 
     }
 
     object Courier {

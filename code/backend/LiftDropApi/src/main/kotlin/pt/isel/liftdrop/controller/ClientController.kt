@@ -18,12 +18,7 @@ import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.Uris
 import pt.isel.liftdrop.model.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
-import pt.isel.services.client.ClientCreationError
-import pt.isel.services.client.ClientLoginError
-import pt.isel.services.client.ClientLogoutError
-import pt.isel.services.client.ClientService
-import pt.isel.services.client.DropOffCreationError
-import pt.isel.services.client.RequestCreationError
+import pt.isel.services.client.*
 
 /**
  * Controller for client operations.
@@ -53,6 +48,7 @@ class ClientController(
                 GlobalLogger.log("Order created successfully with ID: $result")
                 ResponseEntity.ok(result)
             }
+
             is Failure -> {
                 // Handle order creation error
                 GlobalLogger.log("Failed to create order: ${requestCreationResult.value}")
@@ -62,21 +58,25 @@ class ClientController(
                             .restaurantNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
+
                     is RequestCreationError.ItemNotFound -> {
                         Problem
                             .itemNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
+
                     is RequestCreationError.ClientNotFound -> {
                         Problem
                             .userNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
+
                     is RequestCreationError.ClientAddressNotFound -> {
                         Problem
                             .clientAddressNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
+
                     else ->
                         Problem
                             .internalServerError()
@@ -116,6 +116,7 @@ class ClientController(
                     ),
                 )
             }
+
             is Failure -> {
                 when (clientCreationResult.value) {
                     is ClientCreationError.UserAlreadyExists -> {
@@ -123,16 +124,19 @@ class ClientController(
                             .userAlreadyExists()
                             .response(HttpStatus.CONFLICT)
                     }
+
                     is ClientCreationError.InvalidAddress -> {
                         Problem
                             .invalidAddress()
                             .response(HttpStatus.BAD_REQUEST)
                     }
+
                     is ClientCreationError.InvalidLocation -> {
                         Problem
                             .invalidLocation()
                             .response(HttpStatus.BAD_REQUEST)
                     }
+
                     else -> {
                         Problem
                             .internalServerError()
@@ -168,6 +172,7 @@ class ClientController(
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
                     .body(ClientLoginOutputModel(token = token))
             }
+
             is Failure -> {
                 when (clientLoginResult.value) {
                     is ClientLoginError.ClientNotFound -> {
@@ -175,31 +180,37 @@ class ClientController(
                             .userNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
+
                     is ClientLoginError.InvalidEmailOrPassword -> {
                         Problem
                             .invalidRequestContent("Invalid email or password")
                             .response(HttpStatus.BAD_REQUEST)
                     }
+
                     is ClientLoginError.BlankEmailOrPassword -> {
                         Problem
                             .invalidRequestContent("Email and password cannot be blank")
                             .response(HttpStatus.BAD_REQUEST)
                     }
+
                     is ClientLoginError.WrongPassword -> {
                         Problem
                             .passwordIsIncorrect()
                             .response(HttpStatus.UNAUTHORIZED)
                     }
+
                     is ClientLoginError.ClientLoginEmailAlreadyExists -> {
                         Problem
                             .userAlreadyExists()
                             .response(HttpStatus.CONFLICT)
                     }
+
                     is ClientLoginError.InvalidAddress -> {
                         Problem
                             .invalidAddress()
                             .response(HttpStatus.BAD_REQUEST)
                     }
+
                     else -> {
                         Problem
                             .internalServerError()
@@ -225,6 +236,7 @@ class ClientController(
                     .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
                     .body("Logout successful")
             }
+
             is Failure -> {
                 when (clientLogoutResult.value) {
                     is ClientLogoutError.SessionNotFound -> {
@@ -232,6 +244,7 @@ class ClientController(
                             .sessionNotFound()
                             .response(HttpStatus.NOT_FOUND)
                     }
+
                     else -> {
                         Problem
                             .internalServerError()
@@ -279,6 +292,7 @@ class ClientController(
                             .invalidAddress()
                             .response(HttpStatus.BAD_REQUEST)
                     }
+
                     else -> {
                         Problem
                             .internalServerError()
@@ -288,6 +302,39 @@ class ClientController(
             }
         }
     }
+
+    @GetMapping(Uris.Client.GET_REQUEST_STATUS)
+    fun getRequestStatus(
+        client: AuthenticatedClient,
+        @RequestBody requestId: Int,
+    ): ResponseEntity<Any> =
+        when (
+            val result =
+                clientService.getRequestStatus(
+                    client.client.user.id,
+                    requestId,
+                )
+        ) {
+            is Success -> {
+                ResponseEntity.ok(result.value)
+            }
+
+            is Failure -> {
+                when (result.value) {
+                    is ClientGetRequestStatusError.RequestNotFound -> {
+                        Problem
+                            .requestNotFound()
+                            .response(HttpStatus.NOT_FOUND)
+                    }
+
+                    else -> {
+                        Problem
+                            .internalServerError()
+                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
+                    }
+                }
+            }
+        }
 
     @PostMapping(Uris.Client.GIVE_CLASSIFICATION)
     fun giveClassification(
@@ -307,6 +354,7 @@ class ClientController(
                 println("Classification given successfully")
                 ResponseEntity.ok("Classification given successfully")
             }
+
             is Failure -> {
                 println("Failed to give classification")
                 ResponseEntity
