@@ -235,17 +235,17 @@ class ClientService(
                 return@run failure(ClientLoginError.ClientNotFound)
             }
         }
+}
 
-    fun Address.toFormattedString(): String {
-        val components =
-            listOfNotNull(
-                streetNumber?.takeIf { it.isNotBlank() },
-                street.takeIf { it.isNotBlank() },
-                floor?.takeIf { it.isNotBlank() },
-                city.takeIf { it.isNotBlank() },
-                zipCode.takeIf { it.isNotBlank() },
-                country.takeIf { it.isNotBlank() },
-            )
-        return components.joinToString(separator = ", ")
-    }
+fun Address.toFormattedString(): String {
+    val components =
+        listOfNotNull(
+            streetNumber?.takeIf { it.isNotBlank() },
+            street.takeIf { it.isNotBlank() },
+            floor?.takeIf { it.isNotBlank() },
+            city.takeIf { it.isNotBlank() },
+            zipCode.takeIf { it.isNotBlank() },
+            country.takeIf { it.isNotBlank() },
+        )
+    return components.joinToString(separator = ", ")
 }
