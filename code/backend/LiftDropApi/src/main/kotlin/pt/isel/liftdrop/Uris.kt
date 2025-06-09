@@ -15,7 +15,7 @@ object Uris {
         const val LOGIN = "/login"
         const val LOGOUT = "/logout"
         const val CREATE_DROP_OFF_LOCATION = "/createDropOffLocation"
-        const val GET_REQUEST_STATUS = "/getRequestStatus"
+        const val GET_REQUEST_STATUS = "/getRequestStatus/{requestId}"
         const val GIVE_CLASSIFICATION = "/giveClassification"
         const val HELLO = "/hello"
     }

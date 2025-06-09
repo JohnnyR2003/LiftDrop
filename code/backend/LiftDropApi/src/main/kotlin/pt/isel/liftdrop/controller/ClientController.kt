@@ -6,12 +6,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.Client
@@ -306,7 +301,7 @@ class ClientController(
     @GetMapping(Uris.Client.GET_REQUEST_STATUS)
     fun getRequestStatus(
         client: AuthenticatedClient,
-        @RequestBody requestId: Int,
+        @PathVariable requestId: Int,
     ): ResponseEntity<Any> =
         when (
             val result =
