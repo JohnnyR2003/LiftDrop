@@ -26,10 +26,10 @@ class HomeViewModel(
 ) : ViewModel() {
 
     private val _stateFlow: MutableStateFlow<HomeScreenState> =
-        MutableStateFlow(HomeScreenState.Idle())
+        MutableStateFlow(HomeScreenState.Idle("0.00"))
 
     private val _previousState: MutableStateFlow<HomeScreenState> =
-        MutableStateFlow(HomeScreenState.Idle())
+        MutableStateFlow(HomeScreenState.Idle("0.00"))
 
     val stateFlow: StateFlow<HomeScreenState> = _stateFlow.asStateFlow()
     val previousState: StateFlow<HomeScreenState> = _previousState.asStateFlow()
@@ -69,7 +69,7 @@ class HomeViewModel(
     fun updateState(newState: HomeScreenState): HomeScreenState {
         _previousState.value = _stateFlow.value // Salva o estado atual como o anterior
         _stateFlow.value = newState // Atualiza o estado atual
-        return newState
+        return newState // Retorna o novo estado
     }
 
     fun dismissError() {
@@ -77,19 +77,7 @@ class HomeViewModel(
     }
 
     fun logout() {
-        if (_stateFlow.value !is HomeScreenState.Idle || _stateFlow.value is HomeScreenState.Listening) {
-            updateState(
-                HomeScreenState.Error(
-                    Problem(
-                        type = "LogoutError",
-                        title = "Logout Error",
-                        detail = "You cannot log out while fulfilling a delivery.",
-                        status = 403
-                    )
-                )
-            )
-        }
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val userInfo = preferences.getUserInfo()
             if (userInfo != null) {
                 preferences.clearUserInfo(userInfo)
@@ -124,24 +112,20 @@ class HomeViewModel(
         }
         _stateFlow.update { current ->
             when (current) {
-//                is HomeScreenState.Idle -> HomeScreenState.Listening(
-//                    dailyEarnings = current.dailyEarnings,
-//                    incomingRequest = false,
-//                    requestDetails = null
-//                )
                 is HomeScreenState.Delivered -> HomeScreenState.Listening(
-                    dailyEarnings = current.deliveryEarnings,
+                    dailyEarnings = dailyEarnings.toString(),
                     incomingRequest = false,
                     requestDetails = null
                 )
                 else -> {
-                    _previousState.value = current
-                    HomeScreenState.Error(
-                        Problem(
-                            type = "ResetToListeningError",
-                            title = "Reset to Listening Error",
-                            detail = "Cannot reset to listening state from $current.",
-                            status = 403
+                    updateState(
+                        HomeScreenState.Error(
+                            Problem(
+                                type = "ResetToListeningError",
+                                title = "Reset to Listening Error",
+                                detail = "Cannot reset to listening state from $current.",
+                                status = 403
+                            )
                         )
                     )
                 }
@@ -151,7 +135,7 @@ class HomeViewModel(
 
 
     fun fetchDailyEarnings(courierId: String, token: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val result = homeService.getDailyEarnings(courierId, token)
             if (result is Result.Error) {
                 updateState(HomeScreenState.Error(result.problem))
@@ -181,13 +165,14 @@ class HomeViewModel(
                                 )
                             }
                             else -> {
-                                _previousState.value = current
-                                HomeScreenState.Error(
-                                    Problem(
-                                        type = "ListeningError",
-                                        title = "Listening Error",
-                                        detail = "Cannot receive requests in the $current state.",
-                                        status = 403
+                                updateState(
+                                    HomeScreenState.Error(
+                                        Problem(
+                                            type = "ListeningError",
+                                            title = "Listening Error",
+                                            detail = "Cannot receive requests in the $current state.",
+                                            status = 403
+                                        )
                                     )
                                 )
                             }
@@ -213,12 +198,14 @@ class HomeViewModel(
                         requestDetails = null
                     )
                     else -> {
-                        HomeScreenState.Error(
-                            Problem(
-                                type = "ListeningError",
-                                title = "Listening Error",
-                                detail = "Cannot start listening in the $current state.",
-                                status = 403
+                        updateState(
+                            HomeScreenState.Error(
+                                Problem(
+                                    type = "ListeningError",
+                                    title = "Listening Error",
+                                    detail = "Cannot start listening in the $current state.",
+                                    status = 403
+                                )
                             )
                         )
                     }
@@ -228,7 +215,7 @@ class HomeViewModel(
     }
 
     fun stopListening() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             homeService.stopListening()
             _stateFlow.update { current ->
                 when (current) {
@@ -240,13 +227,14 @@ class HomeViewModel(
                         dailyEarnings = current.deliveryEarnings,
                     )
                     else -> {
-                        _previousState.value = current
-                        HomeScreenState.Error(
-                            Problem(
-                                type = "StopListeningError",
-                                title = "Stop Listening Error",
-                                detail = "You're not currently listening for requests.",
-                                status = 403
+                        updateState(
+                            HomeScreenState.Error(
+                                Problem(
+                                    type = "StopListeningError",
+                                    title = "Stop Listening Error",
+                                    detail = "You're not currently listening for requests.",
+                                    status = 403
+                                )
                             )
                         )
                     }
@@ -280,27 +268,27 @@ class HomeViewModel(
                 _stateFlow.update { current ->
                     when (current) {
                         is HomeScreenState.Listening -> {
-                            _previousState.value = current
                             launchNavigationAppChooser(context, pickupLat, pickupLon)
                             HomeScreenState.PickingUp(
                                 dropoffCoordinates = Pair(
                                     current.requestDetails!!.dropoffLatitude,
                                     current.requestDetails.dropoffLongitude
                                 ),
-                                deliveryEarnings = current.dailyEarnings,
+                                deliveryEarnings = current.requestDetails.price,
                                 pickedUp = false,
                                 requestId = current.requestDetails.requestId,
                                 courierId = current.requestDetails.courierId,
                             )
                         }
                         else ->{
-                            _previousState.value = current
-                            HomeScreenState.Error(
-                                Problem(
-                                    type = "AcceptRequestError",
-                                    title = "Accept Request Error",
-                                    detail = "Cannot accept request in the $current state.",
-                                    status = 403
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "AcceptRequestError",
+                                        title = "Accept Request Error",
+                                        detail = "Cannot accept request in the $current state.",
+                                        status = 403
+                                    )
                                 )
                             )
                         }
@@ -328,18 +316,24 @@ class HomeViewModel(
                 Log.v("HomeViewModel", "Request declined successfully")
                 _stateFlow.update { current ->
                     when (current) {
-                        is HomeScreenState.Listening -> updateState(current.copy(
-                            incomingRequest = false,
-                            requestDetails = null
-                        ))
-                        else -> updateState(HomeScreenState.Error(
-                            Problem(
-                                type = "DeclineRequestError",
-                                title = "Decline Request Error",
-                                detail = "Cannot decline request in the $current state.",
-                                status = 403
+                        is HomeScreenState.Listening -> {
+                            current.copy(
+                                incomingRequest = false,
+                                requestDetails = null
                             )
-                        ))
+                        }
+                        else -> {
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "DeclineRequestError",
+                                        title = "Decline Request Error",
+                                        detail = "Cannot decline request in the $current state.",
+                                        status = 403
+                                    )
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -348,7 +342,7 @@ class HomeViewModel(
 
     fun pickupOrder(requestId: String, courierId: String, context: Context){
         Log.d("HomeViewModel", "pickupOrder() called with requestId: $requestId, courierId: $courierId")
-        viewModelScope.launch(Dispatchers.IO){
+        viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
             val result = homeService.pickupOrder(requestId, courierId, token)
@@ -368,13 +362,14 @@ class HomeViewModel(
                             )
                         }
                         else -> {
-                            _previousState.value = current
-                            HomeScreenState.Error(
-                                Problem(
-                                    type = "PickupOrderError",
-                                    title = "Pickup Order Error",
-                                    detail = "Cannot pick up order in the current state.",
-                                    status = 403
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "PickupOrderError",
+                                        title = "Pickup Order Error",
+                                        detail = "Cannot pick up order in the current state.",
+                                        status = 403
+                                    )
                                 )
                             )
                         }
@@ -385,7 +380,7 @@ class HomeViewModel(
     }
 
     fun deliverOrder(requestId: String, courierId: String){
-        viewModelScope.launch(Dispatchers.IO){
+        viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
             val result = homeService.deliverOrder(requestId, courierId, token)
@@ -400,13 +395,14 @@ class HomeViewModel(
                             deliveryEarnings = current.deliveryEarnings
                         )
                         else -> {
-                            _previousState.value = current
-                            HomeScreenState.Error(
-                                Problem(
-                                    type = "DeliverOrderError",
-                                    title = "Deliver Order Error",
-                                    detail = "Cannot deliver order in the $current state.",
-                                    status = 403
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "DeliverOrderError",
+                                        title = "Deliver Order Error",
+                                        detail = "Cannot deliver order in the $current state.",
+                                        status = 403
+                                    )
                                 )
                             )
                         }

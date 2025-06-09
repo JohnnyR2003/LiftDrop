@@ -1,0 +1,35 @@
+package pt.isel.liftdrop
+
+object Uris {
+    const val PREFIX = "/api"
+
+    object User {
+        const val BASE = "$PREFIX/user"
+        const val ID_BY_TOKEN = "$BASE/IdByToken"
+    }
+
+    object Client {
+        const val BASE = "$PREFIX/client"
+        const val MAKE_ORDER = "$BASE/makeOrder"
+        const val REGISTER = "$BASE/register"
+        const val LOGIN = "$BASE/login"
+        const val LOGOUT = "$BASE/logout"
+        const val CREATE_DROP_OFF_LOCATION = "$BASE/createDropOffLocation"
+        const val GIVE_CLASSIFICATION = "$BASE/giveClassification"
+        const val HELLO = "$BASE/hello"
+    }
+
+    object Courier {
+        const val BASE = "$PREFIX/courier"
+        const val REGISTER = "$BASE/register"
+        const val LOGIN = "$BASE/login"
+        const val LOGOUT = "$BASE/logout"
+        const val UPDATE_LOCATION = "$BASE/updateLocation"
+        const val WAITING_ORDERS = "$BASE/waitingOrders"
+        const val CANCEL_ORDER = "$BASE/cancelOrder"
+        const val PICKED_UP_ORDER = "$BASE/pickedUpOrder"
+        const val DELIVERED_ORDER = "$BASE/deliveredOrder"
+        const val FETCH_DAILY_EARNINGS = "$BASE/fetchDailyEarnings/{courierId}"
+        const val COMPLETE_ORDER = "$BASE/completeOrder"
+    }
+}

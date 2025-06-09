@@ -60,7 +60,7 @@ data class Problem(
                 type = "$PROBLEM_URI_PATH/courier-not-near-pickup",
                 title = "Courier Not Near Pickup",
                 status = HttpStatus.BAD_REQUEST.value(),
-                detail = "The courier is not near the pickup location.",
+                detail = "You're not near the pickup location.",
             )
 
         fun courierNotNearDropOff(): Problem =
@@ -68,7 +68,7 @@ data class Problem(
                 type = "$PROBLEM_URI_PATH/courier-not-near-drop-off",
                 title = "Courier Not Near Drop Off",
                 status = HttpStatus.BAD_REQUEST.value(),
-                detail = "The courier is not near the drop-off location.",
+                detail = "You're not near the drop-off location.",
             )
 
         fun courierNotFound(): Problem =

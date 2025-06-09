@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.Uris
 import pt.isel.liftdrop.model.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.client.ClientCreationError
@@ -29,12 +30,12 @@ import pt.isel.services.client.RequestCreationError
  *
  * @param clientService the service to handle client operations
  */
-@RequestMapping("/api/client")
+@RequestMapping(Uris.Client.BASE)
 @RestController
 class ClientController(
     private val clientService: ClientService,
 ) {
-    @PostMapping("/makeOrder")
+    @PostMapping(Uris.Client.MAKE_ORDER)
     fun makeRequest(
         user: AuthenticatedClient,
         @RequestBody order: RequestInputModel,
@@ -84,7 +85,7 @@ class ClientController(
             }
         }
 
-    @PostMapping("/register")
+    @PostMapping(Uris.Client.REGISTER)
     fun registerClient(
         @RequestBody registerInput: RegisterClientInputModel,
     ): ResponseEntity<Any> {
@@ -142,7 +143,7 @@ class ClientController(
         }
     }
 
-    @PostMapping("/login")
+    @PostMapping(Uris.Client.LOGIN)
     fun login(
         @RequestBody input: LoginInputModel,
     ): ResponseEntity<Any> {
@@ -209,7 +210,7 @@ class ClientController(
         }
     }
 
-    @DeleteMapping("/logout")
+    @DeleteMapping(Uris.Client.LOGOUT)
     fun logout(client: AuthenticatedClient): ResponseEntity<Any> =
         when (val clientLogoutResult = clientService.logoutClient(client.token)) {
             is Success -> {
@@ -240,7 +241,7 @@ class ClientController(
             }
         }
 
-    @PostMapping("/createDropOffLocation")
+    @PostMapping(Uris.Client.CREATE_DROP_OFF_LOCATION)
     fun addDropOffLocation(
         client: AuthenticatedClient,
         @RequestBody address: AddressInputModel,
@@ -288,6 +289,7 @@ class ClientController(
         }
     }
 
+    @PostMapping(Uris.Client.GIVE_CLASSIFICATION)
     fun giveClassification(
         client: AuthenticatedClient,
         classification: ClassificationInputModel,
@@ -314,6 +316,6 @@ class ClientController(
         }
     }
 
-    @GetMapping("/hello")
+    @GetMapping(Uris.Client.HELLO)
     fun getHello(): ResponseEntity<String> = ResponseEntity.ok("Hello from ClientController!")
 }

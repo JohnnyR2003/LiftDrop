@@ -63,9 +63,9 @@ class HomeActivity : ComponentActivity() {
         }
 
         setContent {
-            val state = viewModel.stateFlow.collectAsState(initial = HomeScreenState.Idle()).value
-
             val dailyEarnings = viewModel.dailyEarnings.collectAsState(initial = "0.00").value
+
+            val state = viewModel.stateFlow.collectAsState(initial = HomeScreenState.Idle(dailyEarnings = dailyEarnings )).value
 
 
             LaunchedEffect(Unit) {

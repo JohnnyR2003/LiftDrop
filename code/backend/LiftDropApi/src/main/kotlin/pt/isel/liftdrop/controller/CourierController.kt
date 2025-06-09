@@ -15,18 +15,19 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import pt.isel.liftdrop.Uris
 import pt.isel.liftdrop.model.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.courier.*
 import pt.isel.services.google.GeocodingServices
 
 @RestController
-@RequestMapping("/courier")
+@RequestMapping(Uris.Courier.BASE)
 class CourierController(
     val courierService: CourierService,
     val geocodingServices: GeocodingServices,
 ) {
-    @PostMapping("/register")
+    @PostMapping(Uris.Courier.REGISTER)
     fun registerCourier(
         @RequestBody registerInput: RegisterCourierInputModel,
     ): ResponseEntity<Any> {
@@ -56,7 +57,7 @@ class CourierController(
         }
     }
 
-    @PostMapping("/login")
+    @PostMapping(Uris.Courier.LOGIN)
     fun login(
         @RequestBody input: LoginInputModel,
     ): ResponseEntity<Any> {
@@ -111,7 +112,7 @@ class CourierController(
         }
     }
 
-    @DeleteMapping("/logout")
+    @DeleteMapping(Uris.Courier.LOGOUT)
     fun logout(
         @RequestHeader("Authorization") token: String,
     ): ResponseEntity<Any> {
@@ -142,7 +143,7 @@ class CourierController(
         }
     }
 
-    @PostMapping("/updateLocation")
+    @PostMapping(Uris.Courier.UPDATE_LOCATION)
     fun updateCourierLocation(
         @RequestBody input: LocationUpdateInputModel,
     ): ResponseEntity<Any> {
@@ -188,7 +189,7 @@ class CourierController(
     /**
      * Sets the courier status to waiting for orders.
      */
-    @PostMapping("/waitingOrders")
+    @PostMapping(Uris.Courier.WAITING_ORDERS)
     fun startListening(input: StartListeningInputModel): ResponseEntity<Any> {
         val request =
             courierService.toggleAvailability(
@@ -217,7 +218,7 @@ class CourierController(
     /**
      * Cancels an ongoing order and updates the courier's status accordingly.
      */
-    @PostMapping("/cancelOrder")
+    @PostMapping(Uris.Courier.CANCEL_ORDER)
     fun cancelOrder() {
         TODO()
     }
@@ -225,7 +226,7 @@ class CourierController(
     /**
      * Marks an order as picked up, indicating that the courier has collected it from the sender.
      */
-    @PostMapping("/pickedUpOrder")
+    @PostMapping(Uris.Courier.PICKED_UP_ORDER)
     fun pickUpOrder(
         @RequestBody input: PickupOrderInputModel,
     ): ResponseEntity<Any> {
@@ -259,7 +260,7 @@ class CourierController(
     /**
      * Marks an order as delivered, indicating that the courier has successfully handed it to the recipient.
      */
-    @PostMapping("/deliveredOrder")
+    @PostMapping(Uris.Courier.DELIVERED_ORDER)
     fun deliverOrder(
         @RequestBody input: DeliverOrderInputModel,
     ): ResponseEntity<Any> {
@@ -291,7 +292,7 @@ class CourierController(
         }
     }
 
-    @GetMapping("/fetchDailyEarnings/{courierId}")
+    @GetMapping(Uris.Courier.FETCH_DAILY_EARNINGS)
     fun fetchDailyEarnings(
         @PathVariable courierId: Int,
     ): ResponseEntity<Any> =
@@ -314,7 +315,7 @@ class CourierController(
     /**
      * Completes an order, performing any necessary final operations (e.g., updating records or notifying the system).
      */
-    @PostMapping("/completeOrder")
+    @PostMapping(Uris.Courier.COMPLETE_ORDER)
     fun completeOrder() {
         TODO()
     }
