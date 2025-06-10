@@ -13,6 +13,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import pt.isel.liftdrop.home.ui.HomeScreen
 import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.PreferencesRepository
@@ -493,13 +494,22 @@ class HomeViewModel(
                 _stateFlow.update { current ->
                     when (current) {
                         is HomeScreenState.Cancelling  -> {
-                            return@update resetToIdleState()
+                            HomeScreenState.Cancelling(
+                                courierId = courierId,
+                                requestId = requestId,
+                                isCancelled = true
+                            )
                         }
 
                         is HomeScreenState.Idle -> {
                             Log.v("HomeViewModel", "Already in idle state, no action needed")
-                            current
+                            HomeScreenState.Cancelling(
+                                courierId = courierId,
+                                requestId = requestId,
+                                isCancelled = true
+                            )
                         }
+
                         is HomeScreenState.Error -> {
                             Log.v("HomeViewModel", "Error state encountered: ${current.problem.detail}")
                             HomeScreenState.Error(
@@ -525,7 +535,7 @@ class HomeViewModel(
             }
         }
     }
-    private fun resetToIdleState(): HomeScreenState {
+    fun resetToIdleState(): HomeScreenState {
         stopListening()
         return HomeScreenState.Idle(
             dailyEarnings = _dailyEarnings.value

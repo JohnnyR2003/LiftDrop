@@ -147,14 +147,13 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                when(state){
+                when (state) {
                     is HomeScreenState.Idle -> {
                         listOf(
                             Pair(Icons.Default.Menu, onMenuClick),
                             Pair(Icons.Default.Notifications, onNotificationClick),
                             Pair(Icons.Default.ExitToApp, onLogoutClick)
-                        ).forEach {
-                                (icon, action) ->
+                        ).forEach { (icon, action) ->
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
@@ -173,13 +172,13 @@ fun HomeScreen(
                             }
                         }
                     }
+
                     is HomeScreenState.Listening -> {
                         // Show only menu and notifications icons
                         listOf(
                             Pair(Icons.Default.Menu, onMenuClick),
                             Pair(Icons.Default.Notifications, onNotificationClick)
-                        ).forEach {
-                                (icon, action) ->
+                        ).forEach { (icon, action) ->
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
@@ -198,13 +197,13 @@ fun HomeScreen(
                             }
                         }
                     }
+
                     is HomeScreenState.PickingUp, is HomeScreenState.Delivering -> {
                         listOf(
                             Pair(Icons.Default.Menu, onMenuClick),
                             Pair(Icons.Default.Notifications, onNotificationClick),
                             Pair(Icons.Default.Close, onCancelDeliveryClick)
-                        ).forEach {
-                                (icon, action) ->
+                        ).forEach { (icon, action) ->
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
@@ -222,11 +221,12 @@ fun HomeScreen(
                                 }
                             }
                         }
-                }
+                    }
+
                     else -> {}
                 }
             }
-            when(state) {
+            when (state) {
                 is HomeScreenState.Idle -> {
                     Box(
                         modifier = Modifier
@@ -282,6 +282,7 @@ fun HomeScreen(
                         )
                     }
                 }
+
                 is HomeScreenState.Listening -> {
                     if (state.incomingRequest) {
                         val requestDetails = state.requestDetails
@@ -369,13 +370,18 @@ fun HomeScreen(
                         }
                     )
                 }
+
                 is HomeScreenState.Delivered -> {
                     DeliveryEarningsCard(
                         earnings = state.deliveryEarnings.toString(),
                         onOk = { viewModel.resetToListeningState() }
                     )
                 }
-                is HomeScreenState.Logout -> { onLogoutClick() }
+
+                is HomeScreenState.Logout -> {
+                    onLogoutClick()
+                }
+
                 is HomeScreenState.Error -> {
                     // Show error message
                     ErrorCard(
@@ -383,42 +389,82 @@ fun HomeScreen(
                         onDismiss = { viewModel.dismissError() }
                     )
                 }
+
                 is HomeScreenState.Cancelling -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.5f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.padding(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                    if (state.isCancelled) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.padding(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
                             ) {
-                                Text(
-                                    "Cancel Ongoing Delivery?",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    color = Color(0xFF384259)
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Row {
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Delivery cancelled successfully!",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Color(0xFF384259)
+                                    )
+                                    Spacer(modifier = Modifier.height(24.dp))
                                     Button(
-                                        onClick = { viewModel.cancelDelivery(state.courierId, state.requestId) }, // Implemente esta função
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                                        onClick = { viewModel.resetToIdleState() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047))
                                     ) {
-                                        Text("Cancel", color = Color.White)
+                                        Text("OK", color = Color.White)
                                     }
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Button(
-                                        onClick = { viewModel.dismissError() },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-                                    ) {
-                                        Text("Back", color = Color.White)
+                                }
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.padding(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Cancel Ongoing Delivery?",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Color(0xFF384259)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Row {
+                                        Button(
+                                            onClick = {
+                                                viewModel.cancelDelivery(
+                                                    state.courierId,
+                                                    state.requestId
+                                                )
+                                            }, // Implemente esta função
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                                        ) {
+                                            Text("Cancel", color = Color.White)
+                                        }
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Button(
+                                            onClick = { viewModel.dismissError() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                                        ) {
+                                            Text("Back", color = Color.White)
+                                        }
                                     }
                                 }
                             }
