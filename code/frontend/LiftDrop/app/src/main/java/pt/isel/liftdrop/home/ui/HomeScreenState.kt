@@ -34,5 +34,9 @@ sealed class HomeScreenState {
     ) : HomeScreenState()
     data class Error(val problem: Problem) : HomeScreenState()
     data class Logout(val isDone: Boolean = false) : HomeScreenState()
-
+    data class Cancelling(
+        val courierId: String,
+        val requestId: String,
+        val isCancelled: Boolean = false,
+    ) : HomeScreenState()
 }

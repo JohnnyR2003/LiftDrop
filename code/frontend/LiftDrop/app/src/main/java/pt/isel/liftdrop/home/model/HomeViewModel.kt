@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -51,9 +52,10 @@ class HomeViewModel(
         viewModelScope.launch {
             val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
             val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-            val fgLocationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                permissions[Manifest.permission.FOREGROUND_SERVICE_LOCATION] ?: false
-            } else true
+            val fgLocationGranted =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    permissions[Manifest.permission.FOREGROUND_SERVICE_LOCATION] ?: false
+                } else true
 
             if ((fineGranted || coarseGranted) && fgLocationGranted) {
                 val userInfo = preferences.getUserInfo()
@@ -92,16 +94,17 @@ class HomeViewModel(
                     preferences.clearUserInfo(userInfo)
                     updateState(HomeScreenState.Logout(true))
                 }
-            }
-            else {
-                updateState(HomeScreenState.Error(
-                    Problem(
-                        type = "LogoutError",
-                        title = "Logout Error",
-                        detail = "You are not logged in.",
-                        status = 403
+            } else {
+                updateState(
+                    HomeScreenState.Error(
+                        Problem(
+                            type = "LogoutError",
+                            title = "Logout Error",
+                            detail = "You are not logged in.",
+                            status = 403
+                        )
                     )
-                ))
+                )
             }
         }
     }
@@ -117,6 +120,7 @@ class HomeViewModel(
                     incomingRequest = false,
                     requestDetails = null
                 )
+
                 else -> {
                     updateState(
                         HomeScreenState.Error(
@@ -164,6 +168,7 @@ class HomeViewModel(
                                     dailyEarnings = current.dailyEarnings
                                 )
                             }
+
                             else -> {
                                 updateState(
                                     HomeScreenState.Error(
@@ -180,14 +185,16 @@ class HomeViewModel(
                     }
                 },
                 onFailure = {
-                    updateState(HomeScreenState.Error(
-                        Problem(
-                            type = "ListeningError",
-                            title = "Listening Error",
-                            detail = it.message ?: "Failed to start listening.",
-                            status = 500
+                    updateState(
+                        HomeScreenState.Error(
+                            Problem(
+                                type = "ListeningError",
+                                title = "Listening Error",
+                                detail = it.message ?: "Failed to start listening.",
+                                status = 500
+                            )
                         )
-                    ))
+                    )
                 }
             )
             _stateFlow.update { current ->
@@ -197,6 +204,7 @@ class HomeViewModel(
                         incomingRequest = false,
                         requestDetails = null
                     )
+
                     else -> {
                         updateState(
                             HomeScreenState.Error(
@@ -226,6 +234,7 @@ class HomeViewModel(
                     is HomeScreenState.Delivered -> HomeScreenState.Idle(
                         dailyEarnings = current.deliveryEarnings,
                     )
+
                     else -> {
                         updateState(
                             HomeScreenState.Error(
@@ -255,14 +264,16 @@ class HomeViewModel(
                 ?: throw IllegalStateException("User not logged in, please log in first.")
             val result = homeService.acceptRequest(requestId, token)
             if (!result) {
-                updateState(HomeScreenState.Error(
-                    Problem(
-                        type = "RequestError",
-                        title = "Request Error",
-                        detail = "Failed to accept request.",
-                        status = 500
+                updateState(
+                    HomeScreenState.Error(
+                        Problem(
+                            type = "RequestError",
+                            title = "Request Error",
+                            detail = "Failed to accept request.",
+                            status = 500
+                        )
                     )
-                ))
+                )
             } else {
                 Log.v("HomeViewModel", "Request accepted successfully")
                 _stateFlow.update { current ->
@@ -280,7 +291,8 @@ class HomeViewModel(
                                 courierId = current.requestDetails.courierId,
                             )
                         }
-                        else ->{
+
+                        else -> {
                             updateState(
                                 HomeScreenState.Error(
                                     Problem(
@@ -294,7 +306,10 @@ class HomeViewModel(
                         }
                     }
                 }
-                Log.v("HomeViewModel", "Request accepted successfully, navigating to pickup location, current state: ${_stateFlow.value}")
+                Log.v(
+                    "HomeViewModel",
+                    "Request accepted successfully, navigating to pickup location, current state: ${_stateFlow.value}"
+                )
             }
         }
     }
@@ -304,14 +319,16 @@ class HomeViewModel(
         viewModelScope.launch {
             val result = homeService.declineRequest(requestId)
             if (!result) {
-                updateState(HomeScreenState.Error(
-                    Problem(
-                        type = "RequestError",
-                        title = "Request Error",
-                        detail = "Failed to decline request.",
-                        status = 500
+                updateState(
+                    HomeScreenState.Error(
+                        Problem(
+                            type = "RequestError",
+                            title = "Request Error",
+                            detail = "Failed to decline request.",
+                            status = 500
+                        )
                     )
-                ))
+                )
             } else {
                 Log.v("HomeViewModel", "Request declined successfully")
                 _stateFlow.update { current ->
@@ -322,6 +339,7 @@ class HomeViewModel(
                                 requestDetails = null
                             )
                         }
+
                         else -> {
                             updateState(
                                 HomeScreenState.Error(
@@ -340,8 +358,11 @@ class HomeViewModel(
         }
     }
 
-    fun pickupOrder(requestId: String, courierId: String, context: Context){
-        Log.d("HomeViewModel", "pickupOrder() called with requestId: $requestId, courierId: $courierId")
+    fun pickupOrder(requestId: String, courierId: String, context: Context) {
+        Log.d(
+            "HomeViewModel",
+            "pickupOrder() called with requestId: $requestId, courierId: $courierId"
+        )
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
@@ -353,7 +374,11 @@ class HomeViewModel(
                 _stateFlow.update { current ->
                     when (current) {
                         is HomeScreenState.PickingUp -> {
-                            launchNavigationAppChooser(context, current.dropoffCoordinates!!.first, current.dropoffCoordinates.second)
+                            launchNavigationAppChooser(
+                                context,
+                                current.dropoffCoordinates!!.first,
+                                current.dropoffCoordinates.second
+                            )
                             HomeScreenState.Delivering(
                                 deliveryEarnings = current.deliveryEarnings,
                                 delivered = false,
@@ -361,6 +386,7 @@ class HomeViewModel(
                                 courierId = current.courierId
                             )
                         }
+
                         else -> {
                             updateState(
                                 HomeScreenState.Error(
@@ -379,7 +405,7 @@ class HomeViewModel(
         }
     }
 
-    fun deliverOrder(requestId: String, courierId: String){
+    fun deliverOrder(requestId: String, courierId: String) {
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
@@ -394,6 +420,7 @@ class HomeViewModel(
                         is HomeScreenState.Delivering -> HomeScreenState.Delivered(
                             deliveryEarnings = current.deliveryEarnings
                         )
+
                         else -> {
                             updateState(
                                 HomeScreenState.Error(
@@ -411,7 +438,72 @@ class HomeViewModel(
             }
         }
     }
+
+    fun tryCancelDelivery() {
+        viewModelScope.launch {
+            _stateFlow.update {
+                when (it) {
+                    is HomeScreenState.PickingUp -> updateState(HomeScreenState.Cancelling(
+                        courierId = it.courierId,
+                        requestId = it.requestId
+                    ))
+
+                    is HomeScreenState.Delivering -> updateState(HomeScreenState.Cancelling(
+                        courierId = it.courierId,
+                        requestId = it.requestId
+                    ))
+
+                    else -> {
+                        updateState(
+                            HomeScreenState.Error(
+                                Problem(
+                                    type = "CancelDeliveryError",
+                                    title = "Cancel Delivery Error",
+                                    detail = "Cannot cancel delivery in the $it state.",
+                                    status = 403
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun cancelDelivery(courierId: String, requestId: String) {
+        viewModelScope.launch {
+            val token = preferences.getUserInfo()?.bearer
+                ?: throw IllegalStateException("User not logged in, please log in first.")
+            val result = homeService.cancelDelivery(courierId, requestId, token)
+            if (result is Result.Error) {
+                updateState(HomeScreenState.Error(result.problem))
+            } else {
+                Log.v("HomeViewModel", "Delivery cancelled successfully")
+                _stateFlow.update { current ->
+                    when (current) {
+                        is HomeScreenState.Cancelling  -> HomeScreenState.Idle(
+                            dailyEarnings = _dailyEarnings.value,
+                        )
+
+                        else -> {
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "CancelDeliveryError",
+                                        title = "Cancel Delivery Error",
+                                        detail = "Cannot cancel delivery in the $current state.",
+                                        status = 403
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
 
 private fun parseRequestDetails(message: String): CourierRequestDetails {
     val mapper = jacksonObjectMapper()

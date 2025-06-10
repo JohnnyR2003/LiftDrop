@@ -108,6 +108,7 @@ class HomeActivity : ComponentActivity() {
                         finish()
                     }
                 },
+                onCancelDeliveryClick = { viewModel.tryCancelDelivery() },
                 dailyEarnings = dailyEarnings,
             )
         }

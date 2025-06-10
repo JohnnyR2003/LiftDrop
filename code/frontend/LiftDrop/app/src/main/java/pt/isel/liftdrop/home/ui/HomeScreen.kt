@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
@@ -53,7 +54,8 @@ fun HomeScreen(
     onMenuClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onStartClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {},
+    onCancelDeliveryClick: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {},
@@ -196,6 +198,31 @@ fun HomeScreen(
                             }
                         }
                     }
+                    is HomeScreenState.PickingUp, is HomeScreenState.Delivering -> {
+                        listOf(
+                            Pair(Icons.Default.Menu, onMenuClick),
+                            Pair(Icons.Default.Notifications, onNotificationClick),
+                            Pair(Icons.Default.Close, onCancelDeliveryClick)
+                        ).forEach {
+                                (icon, action) ->
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(Color.White, shape = CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                IconButton(
+                                    onClick = action,
+                                ) {
+                                    Icon(
+                                        icon,
+                                        contentDescription = null,
+                                        tint = Color(0xFF384259) // Cor mais clara quando desativado
+                                    )
+                                }
+                            }
+                        }
+                }
                     else -> {}
                 }
             }
@@ -356,7 +383,48 @@ fun HomeScreen(
                         onDismiss = { viewModel.dismissError() }
                     )
                 }
-
+                is HomeScreenState.Cancelling -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.padding(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    "Cancel Ongoing Delivery?",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    color = Color(0xFF384259)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row {
+                                    Button(
+                                        onClick = { viewModel.cancelDelivery(state.courierId, state.requestId) }, // Implemente esta função
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                                    ) {
+                                        Text("Cancel", color = Color.White)
+                                    }
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Button(
+                                        onClick = { viewModel.dismissError() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                                    ) {
+                                        Text("Back", color = Color.White)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
