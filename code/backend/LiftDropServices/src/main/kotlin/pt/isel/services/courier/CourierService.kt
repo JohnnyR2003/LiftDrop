@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.LocationDTO
 import pt.isel.liftdrop.UserRole
-import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
 import java.util.*
@@ -97,7 +96,6 @@ class CourierService(
             if (!request) {
                 return@run failure(CourierError.RequestNotAccepted)
             } else {
-                GlobalLogger.log("Courier $courierId accepted request $requestId")
                 success(true)
             }
         }
@@ -219,12 +217,24 @@ class CourierService(
         }
     }
 
-    fun toggleAvailability(courierId: Int): Either<StateUpdateError, Boolean> {
+    fun startListening(courierId: Int): Either<StateUpdateError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
-            val updated = courierRepository.toggleAvailability(courierId)
+            val updated = courierRepository.startListening(courierId)
             if (!updated) {
-                return@run failure(StateUpdateError.CourierNotFound)
+                return@run failure(StateUpdateError.CourierWasAlreadyListening)
+            } else {
+                success(true)
+            }
+        }
+    }
+
+    fun stopListening(courierId: Int): Either<StateUpdateError, Boolean> {
+        return transactionManager.run {
+            val courierRepository = it.courierRepository
+            val updated = courierRepository.stopListening(courierId)
+            if (!updated) {
+                return@run failure(StateUpdateError.CourierWasNotListening)
             } else {
                 success(true)
             }

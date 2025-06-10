@@ -27,31 +27,18 @@ class JdbiRequestRepository(
 
         if (!clientExists) return null
 
-        val requestId =
-            handle
-                .createUpdate(
-                    """
+        return handle
+            .createUpdate(
+                """
         INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta)
         VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, EXTRACT(EPOCH FROM NOW()) + :eta)
         """,
-                ).bind("client_id", clientId)
-                .bind("request_status", "PENDING")
-                .bind("eta", eta)
-                .executeAndReturnGeneratedKeys()
-                .mapTo<Int>()
-                .one()
-
-        handle
-            .createUpdate(
-                """
-        INSERT INTO liftdrop.delivery (courier_id, request_id, started_at, completed_at, ETA, delivery_status)
-        VALUES (NULL, :requestId, EXTRACT(EPOCH FROM NOW()), NULL, EXTRACT(EPOCH FROM NOW()) + :eta, 'PENDING')
-        """,
-            ).bind("requestId", requestId)
+            ).bind("client_id", clientId)
+            .bind("request_status", "PENDING")
             .bind("eta", eta)
-            .execute()
-
-        return requestId
+            .executeAndReturnGeneratedKeys()
+            .mapTo<Int>()
+            .one()
     }
 
     override fun createRequestDetails(

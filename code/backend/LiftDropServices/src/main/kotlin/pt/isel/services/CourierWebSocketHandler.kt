@@ -9,6 +9,7 @@ import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import pt.isel.pipeline.pt.isel.liftdrop.DeliveryRequestMessage
+import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.courier.CourierService
 import pt.isel.services.user.UserService
 import java.util.concurrent.ConcurrentHashMap
@@ -30,7 +31,7 @@ class CourierWebSocketHandler(
             if (courierId is Either.Right) {
                 val id = courierId.value
                 sessions[id] = session
-                courierService.toggleAvailability(id)
+                courierService.startListening(id)
             } else {
                 session.close(CloseStatus.NOT_ACCEPTABLE)
             }
@@ -52,7 +53,7 @@ class CourierWebSocketHandler(
     private fun toggleCourierAvailability(session: WebSocketSession) {
         val courierId = getCourierIdBySession(session)
         if (courierId != null) {
-            courierService.toggleAvailability(courierId)
+            courierService.startListening(courierId)
         }
     }
 
@@ -76,16 +77,24 @@ class CourierWebSocketHandler(
         courierId: Int,
         requestId: Int,
     ) {
+        val accept = courierService.acceptRequest(courierId, requestId)
+        if (accept is Either.Left) {
+            GlobalLogger.log("Courier $courierId failed to accept request $requestId: ${accept.value}")
+            return
+        }
         AssignmentCoordinator.complete(requestId, true)
-        courierService.acceptRequest(courierId, requestId)
     }
 
-    private fun handleCourierDecline(
+    fun handleCourierDecline(
         courierId: Int,
         requestId: Int,
     ) {
+        val decline = courierService.declineRequest(courierId, requestId)
+        if (decline is Either.Left) {
+            GlobalLogger.log("Courier $courierId failed to decline request $requestId: ${decline.value}")
+            return
+        }
         AssignmentCoordinator.complete(requestId, false)
-        courierService.declineRequest(courierId, requestId)
     }
 
     private fun getCourierIdBySession(session: WebSocketSession): Int? = sessions.entries.firstOrNull { it.value == session }?.key
@@ -101,7 +110,7 @@ class CourierWebSocketHandler(
         val token = authHeader?.removePrefix("Bearer ")?.trim()
         if (!token.isNullOrBlank()) {
             val id = userService.getCourierIdByToken(token)
-            if (id is Either.Right) courierService.toggleAvailability(id.value)
+            if (id is Either.Right) courierService.stopListening(id.value)
         }
     }
 

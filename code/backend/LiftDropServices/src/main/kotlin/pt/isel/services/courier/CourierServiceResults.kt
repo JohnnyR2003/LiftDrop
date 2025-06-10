@@ -29,7 +29,9 @@ sealed class LocationUpdateError {
 }
 
 sealed class StateUpdateError {
-    data object CourierNotFound : StateUpdateError()
+    data object CourierWasAlreadyListening : StateUpdateError()
+
+    data object CourierWasNotListening : StateUpdateError()
 }
 
 sealed class CourierDeliveryError {

@@ -105,6 +105,11 @@ class GeocodingServices(
 
                 if (accepted) {
                     return true
+                } else {
+                    courierWebSocketHandler.handleCourierDecline(
+                        courier.courierId,
+                        requestId,
+                    )
                 }
             }
 

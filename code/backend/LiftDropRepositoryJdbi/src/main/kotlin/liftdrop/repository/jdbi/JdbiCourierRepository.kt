@@ -7,6 +7,7 @@ import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.CourierWithLocation
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
+import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 
 class JdbiCourierRepository(
     private val handle: Handle,
@@ -87,6 +88,7 @@ class JdbiCourierRepository(
                 .singleOrNull()
 
         if (request == null) {
+            GlobalLogger.log("Request with ID $requestId not found.")
             return false // Request not found
         }
 
@@ -98,8 +100,7 @@ class JdbiCourierRepository(
         SET courier_id = :courierId,
             request_status = 'HEADING_TO_PICKUP'
         WHERE request_id = :requestId
-          AND request_status = 'PENDING' OR request_status = 'PENDING_REASSIGNMENT'
-          AND courier_id IS NULL
+          AND request_status = 'PENDING' 
         """,
                 ).bind("courierId", courierId)
                 .bind("requestId", requestId)
@@ -112,26 +113,28 @@ class JdbiCourierRepository(
                         """
             UPDATE liftdrop.courier
             SET is_available = FALSE
-            WHERE courier_id = :courierId
+            WHERE courier_id = :courierId AND is_available = TRUE
             """,
                     ).bind("courierId", courierId)
                     .execute()
 
-            val updateDelivery =
+            val createdDelivery =
                 handle
                     .createUpdate(
                         """
-            UPDATE liftdrop.delivery
-            SET courier_id = :courierId,
-                delivery_status = 'IN_PROGRESS'
-            WHERE request_id = :requestId
-            """,
+                INSERT INTO liftdrop.delivery (courier_id, request_id, started_at, completed_at, ETA, delivery_status)
+                VALUES (:courierId, :requestId, EXTRACT(EPOCH FROM NOW()), NULL, NULL, 'PENDING')
+                """,
                     ).bind("courierId", courierId)
                     .bind("requestId", requestId)
-                    .execute()
+                    .executeAndReturnGeneratedKeys()
+                    .mapTo<Int>()
+                    .one()
 
-            return (updateCourierStatus > 0 && updateDelivery > 0)
+            @Suppress("ktlint:standard:comment-wrapping")
+            return (updateCourierStatus > 0 && createdDelivery > 0)
         }
+        GlobalLogger.log("No rows updated for request ID $requestId with courier ID $courierId.")
         return false
     }
 
@@ -228,41 +231,52 @@ class JdbiCourierRepository(
             handle
                 .createUpdate(
                     """
-                UPDATE liftdrop.delivery
-                SET delivery_status = 'CANCELLED'
-                WHERE request_id = :requestId AND courier_id = :courierId
-                """,
+            UPDATE liftdrop.delivery
+            SET delivery_status = 'CANCELLED'
+            WHERE request_id = :requestId AND courier_id = :courierId
+            """,
                 ).bind("courierId", courierId)
                 .bind("requestId", requestId)
+                .execute()
+
+        val updatedRequest =
+            handle
+                .createUpdate(
+                    """
+            UPDATE liftdrop.request
+            SET request_status = 'PENDING_REASSIGNMENT',
+                courier_id = NULL
+            WHERE request_id = :requestId AND courier_id = :courierId
+            """,
+                ).bind("requestId", requestId)
+                .bind("courierId", courierId)
                 .execute()
 
         val updatedRequestDeclined =
             handle
                 .createUpdate(
                     """
-                INSERT INTO liftdrop.request_declines (request_id, courier_id, declined_at)
-                VALUES (:requestId, :courierId, EXTRACT(EPOCH FROM NOW()))
-                """,
+            INSERT INTO liftdrop.request_declines (request_id, courier_id, declined_at)
+            VALUES (:requestId, :courierId, EXTRACT(EPOCH FROM NOW()))
+            """,
                 ).bind("requestId", requestId)
                 .bind("courierId", courierId)
                 .executeAndReturnGeneratedKeys()
                 .mapTo<Int>()
                 .one()
 
-        val updatedRequest =
+        val updatedCourierStatus =
             handle
                 .createUpdate(
                     """
-                UPDATE liftdrop.request
-                SET request_status = 'PENDING_REASSIGNMENT',
-                    courier_id = NULL
-                WHERE request_id = :requestId AND courier_id = :courierId
-                """,
-                ).bind("requestId", requestId)
-                .bind("courierId", courierId)
+            UPDATE liftdrop.courier
+            SET is_available = TRUE 
+            WHERE courier_id = :courierId AND is_available = FALSE
+            """,
+                ).bind("courierId", courierId)
                 .execute()
 
-        return updatedRequest > 0 && updatedRequestDeclined > 0 && updatedDelivery > 0
+        return updatedRequest > 0 && updatedRequestDeclined > 0 && updatedDelivery > 0 && updatedCourierStatus > 0
     }
 
     /**
@@ -387,14 +401,29 @@ class JdbiCourierRepository(
         return updatedCourier > 0
     }
 
-    override fun toggleAvailability(courierId: Int): Boolean {
+    override fun startListening(courierId: Int): Boolean {
         val updatedCourier =
             handle
                 .createUpdate(
                     """
                 UPDATE liftdrop.courier
-                SET is_available = NOT is_available
-                WHERE courier_id = :courier_id
+                SET is_available = true 
+                WHERE courier_id = :courier_id AND is_available = false
+                """,
+                ).bind("courier_id", courierId)
+                .execute()
+
+        return updatedCourier > 0
+    }
+
+    override fun stopListening(courierId: Int): Boolean {
+        val updatedCourier =
+            handle
+                .createUpdate(
+                    """
+                UPDATE liftdrop.courier
+                SET is_available = false 
+                WHERE courier_id = :courier_id AND is_available = true
                 """,
                 ).bind("courier_id", courierId)
                 .execute()
@@ -432,7 +461,7 @@ class JdbiCourierRepository(
                     ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
                     ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
                 ) < :maxDistance
-            ORDER BY distance_meters ASC
+            ORDER BY distance_meters
             LIMIT 5;
             """,
             ).bind("pickupLat", pickupLat)

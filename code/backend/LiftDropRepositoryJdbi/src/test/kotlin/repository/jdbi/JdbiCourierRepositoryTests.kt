@@ -226,7 +226,7 @@ class JdbiCourierRepositoryTests {
             assert(loggedInClientId?.first == courierId) { "Logged in client ID should match" }
 
             // When: toggling availability status
-            val isToggled = courierRepository.toggleAvailability(courierId)
+            val isToggled = courierRepository.startListening(courierId)
 
             // Then: the availability status should be toggled successfully
             assert(isToggled) { "Availability status should be toggled" }

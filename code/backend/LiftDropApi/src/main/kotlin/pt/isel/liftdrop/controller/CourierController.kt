@@ -192,7 +192,7 @@ class CourierController(
     @PostMapping(Uris.Courier.WAITING_ORDERS)
     fun startListening(input: StartListeningInputModel): ResponseEntity<Any> {
         val request =
-            courierService.toggleAvailability(
+            courierService.stopListening(
                 input.courierId,
             )
 
@@ -204,7 +204,7 @@ class CourierController(
             }
             is Failure -> {
                 when (request.value) {
-                    is StateUpdateError.CourierNotFound -> {
+                    is StateUpdateError.CourierWasAlreadyListening -> {
                         Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
                     }
                     else -> {

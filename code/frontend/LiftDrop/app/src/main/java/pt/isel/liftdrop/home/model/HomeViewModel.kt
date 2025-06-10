@@ -235,6 +235,10 @@ class HomeViewModel(
                         dailyEarnings = current.deliveryEarnings,
                     )
 
+                    is HomeScreenState.Cancelling -> HomeScreenState.Idle(
+                        dailyEarnings = _dailyEarnings.value,
+                    )
+
                     else -> {
                         updateState(
                             HomeScreenState.Error(
@@ -441,17 +445,23 @@ class HomeViewModel(
 
     fun tryCancelDelivery() {
         viewModelScope.launch {
-            _stateFlow.update {
-                when (it) {
-                    is HomeScreenState.PickingUp -> updateState(HomeScreenState.Cancelling(
-                        courierId = it.courierId,
-                        requestId = it.requestId
-                    ))
+            _stateFlow.update { current ->
+                when (current) {
+                    is HomeScreenState.PickingUp -> {
+                        _previousState.value = current
+                        HomeScreenState.Cancelling(
+                            courierId = current.courierId,
+                            requestId = current.requestId
+                        )
+                    }
 
-                    is HomeScreenState.Delivering -> updateState(HomeScreenState.Cancelling(
-                        courierId = it.courierId,
-                        requestId = it.requestId
-                    ))
+                    is HomeScreenState.Delivering -> {
+                        _previousState.value = current
+                        HomeScreenState.Cancelling(
+                            courierId = current.courierId,
+                            requestId = current.requestId
+                        )
+                    }
 
                     else -> {
                         updateState(
@@ -459,7 +469,7 @@ class HomeViewModel(
                                 Problem(
                                     type = "CancelDeliveryError",
                                     title = "Cancel Delivery Error",
-                                    detail = "Cannot cancel delivery in the $it state.",
+                                    detail = "Cannot try and cancel delivery in the ${current::class.simpleName} state.",
                                     status = 403
                                 )
                             )
@@ -477,15 +487,28 @@ class HomeViewModel(
             val result = homeService.cancelDelivery(courierId, requestId, token)
             if (result is Result.Error) {
                 updateState(HomeScreenState.Error(result.problem))
+                Log.v("HomeViewModel", "Failed to cancel delivery: ${result.problem.detail}")
             } else {
                 Log.v("HomeViewModel", "Delivery cancelled successfully")
                 _stateFlow.update { current ->
                     when (current) {
-                        is HomeScreenState.Cancelling  -> HomeScreenState.Idle(
-                            dailyEarnings = _dailyEarnings.value,
-                        )
+                        is HomeScreenState.Cancelling  -> {
+                            return@update resetToIdleState()
+                        }
+
+                        is HomeScreenState.Idle -> {
+                            Log.v("HomeViewModel", "Already in idle state, no action needed")
+                            current
+                        }
+                        is HomeScreenState.Error -> {
+                            Log.v("HomeViewModel", "Error state encountered: ${current.problem.detail}")
+                            HomeScreenState.Error(
+                                problem = current.problem
+                            )
+                        }
 
                         else -> {
+                            Log.v("HomeViewModel", "Cannot cancel delivery in the current state: $current")
                             updateState(
                                 HomeScreenState.Error(
                                     Problem(
@@ -501,6 +524,12 @@ class HomeViewModel(
                 }
             }
         }
+    }
+    private fun resetToIdleState(): HomeScreenState {
+        stopListening()
+        return HomeScreenState.Idle(
+            dailyEarnings = _dailyEarnings.value
+        )
     }
 }
 

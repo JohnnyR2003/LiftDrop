@@ -87,6 +87,14 @@ data class Problem(
                 detail = "The requested courier could not be found.",
             )
 
+        fun courierAlreadyListening(): Problem =
+            Problem(
+                type = "$PROBLEM_URI_PATH/courier-already-listening",
+                title = "Courier Already Listening",
+                status = HttpStatus.CONFLICT.value(),
+                detail = "The courier is already listening for requests.",
+            )
+
         fun passwordIsIncorrect(): Problem =
             Problem(
                 type = "$PROBLEM_URI_PATH/password-is-incorrect",

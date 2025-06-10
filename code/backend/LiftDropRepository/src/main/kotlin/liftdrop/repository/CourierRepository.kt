@@ -46,7 +46,9 @@ interface CourierRepository {
         newLocationId: Int,
     ): Boolean
 
-    fun toggleAvailability(courierId: Int): Boolean
+    fun startListening(courierId: Int): Boolean
+
+    fun stopListening(courierId: Int): Boolean
 
     fun getClosestCouriersAvailable(
         pickupLat: Double,
