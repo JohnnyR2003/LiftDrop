@@ -164,20 +164,18 @@ class JdbiLocationRepository(
     override fun itemExistsAtRestaurant(
         item: String,
         restaurantName: String,
-    ): Boolean {
+    ): Long? {
         val normalizedRestaurantName = "%${restaurantName.trim().replace(" ", "%")}%"
         return handle
             .createQuery(
                 """
-        SELECT EXISTS (
-            SELECT 1 FROM liftdrop.item
+            SELECT eta FROM liftdrop.item
             WHERE designation = :item AND establishment ILIKE :restaurantName
-        )
         """,
             ).bind("item", item)
             .bind("restaurantName", normalizedRestaurantName)
-            .mapTo<Boolean>()
-            .first()
+            .mapTo<Long>()
+            .firstOrNull()
     }
 
     override fun getClientDropOffLocation(clientId: Int): Int? =

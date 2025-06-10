@@ -216,14 +216,6 @@ class CourierController(
     }
 
     /**
-     * Cancels an ongoing order and updates the courier's status accordingly.
-     */
-    @PostMapping(Uris.Courier.CANCEL_ORDER)
-    fun cancelOrder() {
-        TODO()
-    }
-
-    /**
      * Marks an order as picked up, indicating that the courier has collected it from the sender.
      */
     @PostMapping(Uris.Courier.PICKED_UP_ORDER)
@@ -283,6 +275,34 @@ class CourierController(
                     }
                     is CourierDeliveryError.CourierNotNearDropOff -> {
                         Problem.courierNotNearDropOff().response(HttpStatus.BAD_REQUEST)
+                    }
+                    else -> {
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
+                    }
+                }
+            }
+        }
+    }
+
+    @PostMapping(Uris.Courier.CANCEL_DELIVERY)
+    fun cancelDelivery(
+        @RequestBody input: CancelDeliveryInputModel,
+    ): ResponseEntity<Any> {
+        val request =
+            courierService.cancelDelivery(
+                requestId = input.requestId,
+                courierId = input.courierId,
+            )
+
+        return when (request) {
+            is Success -> {
+                println("Order cancelled successfully")
+                ResponseEntity.ok(true)
+            }
+            is Failure -> {
+                when (request.value) {
+                    is CourierCancelDeliveryError.PackageAlreadyDelivered -> {
+                        Problem.packageAlreadyDelivered().response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
                         Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)

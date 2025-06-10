@@ -11,7 +11,7 @@ class JdbiRequestRepository(
 ) : RequestRepository {
     override fun createRequest(
         clientId: Int,
-        eta: Long?,
+        eta: Long,
     ): Int? {
         val clientExists =
             handle
@@ -27,18 +27,31 @@ class JdbiRequestRepository(
 
         if (!clientExists) return null
 
-        return handle
-            .createUpdate(
-                """
+        val requestId =
+            handle
+                .createUpdate(
+                    """
         INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta)
         VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, EXTRACT(EPOCH FROM NOW()) + :eta)
         """,
-            ).bind("client_id", clientId)
-            .bind("request_status", "PENDING")
+                ).bind("client_id", clientId)
+                .bind("request_status", "PENDING")
+                .bind("eta", eta)
+                .executeAndReturnGeneratedKeys()
+                .mapTo<Int>()
+                .one()
+
+        handle
+            .createUpdate(
+                """
+        INSERT INTO liftdrop.delivery (courier_id, request_id, started_at, completed_at, ETA, delivery_status)
+        VALUES (NULL, :requestId, EXTRACT(EPOCH FROM NOW()), NULL, EXTRACT(EPOCH FROM NOW()) + :eta, 'PENDING')
+        """,
+            ).bind("requestId", requestId)
             .bind("eta", eta)
-            .executeAndReturnGeneratedKeys()
-            .mapTo<Int>()
-            .one()
+            .execute()
+
+        return requestId
     }
 
     override fun createRequestDetails(
@@ -128,7 +141,7 @@ class JdbiRequestRepository(
             .mapTo<Request>()
             .list()
 
-    override fun getRequestById(id: Int): Request? =
+    override fun getRequestById(requestId: Int): Request? =
         handle
             .createQuery(
                 """
@@ -148,11 +161,11 @@ class JdbiRequestRepository(
         LEFT JOIN liftdrop.item est ON est.establishment_location = d.pickup_location
         WHERE r.request_id = :request_id
         """,
-            ).bind("request_id", id)
+            ).bind("request_id", requestId)
             .mapTo<Request>()
             .one()
 
-    override fun getRequestForCourierById(id: Int): RequestDetailsDTO =
+    override fun getRequestForCourierById(requestId: Int): RequestDetailsDTO =
         handle
             .createQuery(
                 """
@@ -182,7 +195,7 @@ class JdbiRequestRepository(
         WHERE d.request_id = :id
         LIMIT 1
         """,
-            ).bind("id", id)
+            ).bind("id", requestId)
             .mapTo<RequestDetailsDTO>()
             .findOne()
             .orElse(null)

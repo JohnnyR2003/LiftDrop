@@ -23,6 +23,8 @@ interface HomeService {
 
     suspend fun deliverOrder(requestId: String, courierId: String, token: String): Result<Boolean>
 
+    suspend fun cancelDelivery(courierId: String, requestId: String, token: String): Result<Boolean>
+
     suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean>
 
     suspend fun getDailyEarnings(courierId: String, token: String): Result<Double>
@@ -136,6 +138,23 @@ class RealHomeService(
 
         return httpService.post<DeliverOrderInputModel, Boolean>(
             url = Uris.Courier.DELIVERED_ORDER,
+            data = body,
+            token = token
+        )
+    }
+
+    override suspend fun cancelDelivery(
+        courierId: String,
+        requestId: String,
+        token: String
+    ): Result<Boolean> {
+        val body = CancelDeliveryInputModel(
+            courierId = courierId.toInt(),
+            requestId = requestId.toInt()
+        )
+
+        return httpService.post<CancelDeliveryInputModel, Boolean>(
+            url = Uris.Courier.CANCEL_DELIVERY,
             data = body,
             token = token
         )

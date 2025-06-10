@@ -6,7 +6,6 @@ import com.example.utils.success
 import liftdrop.repository.TransactionManager
 import org.springframework.stereotype.Service
 import pt.isel.liftdrop.Address
-import pt.isel.liftdrop.Courier
 import pt.isel.liftdrop.LocationDTO
 import pt.isel.liftdrop.UserRole
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
@@ -17,6 +16,7 @@ import java.util.*
 @Service
 class CourierService(
     private val transactionManager: TransactionManager,
+    // private val geocodingServices: GeocodingServices,
 ) {
     fun registerCourier(
         email: String,
@@ -160,14 +160,27 @@ class CourierService(
         }
     }
 
-    fun getCourierById(courierId: Int): Either<CourierError, Courier> {
+    fun cancelDelivery(
+        requestId: Int,
+        courierId: Int,
+    ): Either<CourierCancelDeliveryError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
-            val courier = courierRepository.getCourierByUserId(courierId)
-            if (courier == null) {
-                return@run failure(CourierError.CourierNotFound)
+            val requestRepository = it.requestRepository
+            val request = courierRepository.cancelDelivery(requestId, courierId)
+            if (!request) {
+                return@run failure(CourierCancelDeliveryError.PackageAlreadyDelivered)
             } else {
-                success(courier)
+//                GlobalLogger.log("Trying reassignment for request $requestId")
+//                val reqDetails = requestRepository.getRequestForCourierById(requestId)
+//                CoroutineScope(Dispatchers.Default).launch {
+//                    geocodingServices.handleCourierAssignment(
+//                        reqDetails.pickupLocation.latitude,
+//                        reqDetails.pickupLocation.longitude,
+//                        requestId,
+//                    )
+//                }
+                return@run success(true)
             }
         }
     }

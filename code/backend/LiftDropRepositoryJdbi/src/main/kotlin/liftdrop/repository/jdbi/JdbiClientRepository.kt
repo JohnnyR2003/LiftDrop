@@ -147,11 +147,12 @@ class JdbiClientRepository(
             .createQuery(
                 """
                 SELECT 
+                    r.eta AS original_eta,
+                    EXTRACT(EPOCH FROM NOW()) AS "current_time",
                     GREATEST(r.eta - EXTRACT(EPOCH FROM NOW()), 0) AS current_eta, 
                     r.request_status AS status
-                FROM liftdrop.request r
-                JOIN liftdrop.client c ON r.client_id = c.client_id
-                WHERE c.client_id = :clientId AND r.request_id = :requestId
+                FROM liftdrop.request r 
+                WHERE r.client_id = :clientId AND r.request_id = :requestId
                 """.trimIndent(),
             ).bind("clientId", clientId)
             .bind("requestId", requestId)

@@ -29,7 +29,7 @@ interface LocationRepository {
     fun itemExistsAtRestaurant(
         item: String,
         restaurantName: String,
-    ): Boolean
+    ): Long?
 
     fun deleteDeliveryPath(deliveryId: Int): Boolean // for cancelled deliveries or deliveries that were marked as successfully delivered
 

@@ -126,12 +126,6 @@ class ClientService(
             val requestRepository = it.requestRepository
             val locationRepository = it.locationRepository
 
-            val requestId =
-                requestRepository.createRequest(
-                    clientId = client.user.id,
-                    eta = 0,
-                ) ?: return@run failure(RequestCreationError.ClientNotFound)
-
             val dropOffLocationId =
                 locationRepository.getClientDropOffLocation(client.user.id)
                     ?: return@run failure(RequestCreationError.ClientAddressNotFound)
@@ -140,9 +134,15 @@ class ClientService(
                 locationRepository.getClosestRestaurantLocation(restaurantName, dropOffLocationId)
                     ?: return@run failure(RequestCreationError.RestaurantNotFound)
 
-            val itemExists =
+            val itemETA =
                 locationRepository.itemExistsAtRestaurant(description, restaurantName)
-            if (!itemExists) return@run failure(RequestCreationError.ItemNotFound)
+                    ?: return@run failure(RequestCreationError.ItemNotFound)
+            // Change itemExistsAtRestaurant so that it returns the Item ETA or null if not found
+            val requestId =
+                requestRepository.createRequest(
+                    clientId = client.user.id,
+                    eta = itemETA,
+                ) ?: return@run failure(RequestCreationError.ClientNotFound)
 
             // Is it really necessary to reverse geocode the restaurant location?
             // and create a new location?
@@ -206,19 +206,21 @@ class ClientService(
     fun getRequestStatus(
         clientId: Int,
         requestId: Int,
-    ): Either<ClientGetRequestStatusError, Pair<Double, String>> =
+    ): Either<ClientGetRequestStatusError, Pair<String, String>> =
         transactionManager.run {
             val clientRepository = it.clientRepository
             val status =
                 clientRepository.getRequestStatus(clientId, requestId)
                     ?: return@run failure(ClientGetRequestStatusError.RequestNotFound)
 
+            // Handle case where ETA is 0
+
             // Convert eta from seconds to minutes and seconds
             val etaMinutes = status.first / 60
             val etaSeconds = status.first % 60
             val formattedEta = String.format("%02d:%02d", etaMinutes, etaSeconds)
-            GlobalLogger.log("Request status for client $clientId, request $requestId: ETA = $formattedEta, Status = ${status.second}")
-            return@run success(Pair(formattedEta.toDouble(), status.second))
+
+            return@run success(Pair(formattedEta, status.second))
         }
 
     fun giveRating(

@@ -15,7 +15,7 @@ object Uris {
         const val LOGOUT = "$BASE/logout"
         const val UPDATE_LOCATION = "$BASE/updateLocation"
         const val WAITING_ORDERS = "$BASE/waitingOrders"
-        const val CANCEL_ORDER = "$BASE/cancelOrder"
+        const val CANCEL_DELIVERY = "$BASE/cancelDelivery"
         const val PICKED_UP_ORDER = "$BASE/pickedUpOrder"
         const val DELIVERED_ORDER = "$BASE/deliveredOrder"
         const val FETCH_DAILY_EARNINGS = "$BASE/fetchDailyEarnings/{courierId}"

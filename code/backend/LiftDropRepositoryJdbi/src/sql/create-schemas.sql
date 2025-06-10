@@ -55,7 +55,7 @@ CREATE TABLE liftdrop.request (
                                   client_id                       INT,
                                   courier_id                      INT,
                                   created_at                      BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
-                                  request_status                  TEXT CHECK (request_status IN ('PENDING', 'PENDING_CANCELLATION', 'ACCEPTED', 'DECLINED', 'HEADING_TO_PICKUP', 'PICKED_UP', 'COMPLETED')),
+                                  request_status                  TEXT CHECK (request_status IN ('PENDING','HEADING_TO_PICKUP', 'HEADING_TO_DROPOFF', 'DELIVERED', 'PENDING_REASSIGNMENT')),
                                   ETA                             BIGINT,
                                   FOREIGN KEY (client_id) REFERENCES liftdrop.client(client_id) ON DELETE CASCADE,
                                   FOREIGN KEY (courier_id) REFERENCES liftdrop.courier(courier_id) ON DELETE SET NULL
@@ -87,7 +87,7 @@ CREATE TABLE liftdrop.delivery (
                                    started_at                      BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
                                    completed_at                    BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
                                    ETA                             BIGINT,
-                                   delivery_status                 TEXT CHECK (delivery_status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED','PICKED_UP','PICKING_UP')),
+                                   delivery_status                 TEXT CHECK (delivery_status IN ('PENDING', 'IN_PROGRESS', 'CANCELLED', 'PICKED_UP', 'DROPPED_OFF')),
                                    FOREIGN KEY (courier_id) REFERENCES liftdrop.courier(courier_id) ON DELETE CASCADE,
                                    FOREIGN KEY (request_id) REFERENCES liftdrop.request(request_id) ON DELETE CASCADE
 );

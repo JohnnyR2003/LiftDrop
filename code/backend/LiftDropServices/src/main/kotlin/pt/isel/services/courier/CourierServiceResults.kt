@@ -42,6 +42,10 @@ sealed class CourierDeliveryError {
     data object PackageAlreadyDelivered : CourierDeliveryError()
 }
 
+sealed class CourierCancelDeliveryError {
+    data object PackageAlreadyDelivered : CourierCancelDeliveryError()
+}
+
 sealed class CourierError {
     data object CourierNotFound : CourierError()
 

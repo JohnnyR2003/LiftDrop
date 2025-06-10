@@ -6,7 +6,7 @@ import pt.isel.liftdrop.RequestDetailsDTO
 interface RequestRepository {
     fun createRequest(
         clientId: Int,
-        eta: Long?,
+        eta: Long,
     ): Int?
 
     fun createRequestDetails(
@@ -27,9 +27,9 @@ interface RequestRepository {
 
     fun getAllRequestsForClient(clientId: Int): List<Request>
 
-    fun getRequestById(id: Int): Request?
+    fun getRequestById(requestId: Int): Request?
 
-    fun getRequestForCourierById(id: Int): RequestDetailsDTO
+    fun getRequestForCourierById(requestId: Int): RequestDetailsDTO
 
     fun clear()
 }

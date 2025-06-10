@@ -239,12 +239,14 @@ class JdbiCourierRepositoryTests {
             // Given: repository for the couriers
             val courierRepository = JdbiCourierRepository(handle)
 
+            val requestId = 1 // Replace with an actual request ID from your database
+
             // Given: A pickup location
             val pickupLat = 38.75598
             val pickupLon = -9.11446
 
             // When: Fetching the closest couriers available to a certain pickup spot
-            val result = courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon)
+            val result = courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon, requestId)
             println("Closest couriers:")
             result.forEach {
                 println("Courier ${it.courierId} - Distance: ${"%.2f".format(it.distanceMeters)} meters")
