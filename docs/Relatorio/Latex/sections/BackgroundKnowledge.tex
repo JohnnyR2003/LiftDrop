@@ -1,0 +1,56 @@
+\section{Background}
+
+The rise of the gig economy has transformed the logistics and delivery landscape, with platforms like Uber Eats, DoorDash, and Instacart enabling flexible work for couriers and fast service for customers. However, this flexibility often comes at the cost of courier well-being, with issues such as unfair order distribution, unsafe working conditions, and lack of transparency in pay and performance metrics.
+
+Several studies and reports have highlighted the systemic problems in current delivery platforms:
+
+\begin{itemize}
+    \item \textbf{Order Assignment Bias:} Algorithms tend to favor high-performing couriers or those in high-demand areas, reinforcing inequality.
+    \item \textbf{Safety Concerns:} Couriers are often sent to unfamiliar or unsafe neighborhoods without adequate information or alerts.
+    \item \textbf{System Opacity:} Many platforms offer limited insight into how decisions are made or how to improve courier rankings.
+\end{itemize}
+
+Technologically, modern delivery apps rely heavily on real-time geolocation, traffic data, and cloud-based infrastructure for scalability. Technologies like Google Maps API (for geospatial data) and WebSockets (for real-time communication) enable efficient routing and continuous status updates. Still, few platforms integrate these technologies with a fairness- and safety-first mindset.
+
+LiftDrop aims to address these gaps by incorporating ethical algorithmic design and safety-first features into a scalable, testable delivery platform.
+
+% \begin{table}[H]
+%     \centering
+%     \begin{tabular}{>{\centering\arraybackslash}m{3cm}
+%                 >{\centering\arraybackslash}m{2.5cm}
+%                 >{\centering\arraybackslash}m{2.5cm}
+%                 >{\centering\arraybackslash}m{2.5cm}
+%                 >{\centering\arraybackslash}m{3.5cm}}
+%         \textbf{Application} & \shortstack{\textbf{Order} \\\textbf{Management}} & \shortstack{\textbf{Support} \\\textbf{in Real Time}} & \shortstack{\textbf{Security} \\\textbf{Mechanism}} & \shortstack{\textbf{Equititive} \\\textbf{Distribution of} \\\textbf{Orders}}\\
+%         Glovo & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{red}{\times}$}\\
+%         GoBuddy & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{red}{\times}$}\\
+%         Deliveo & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$}\\
+%         Vanbu & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{red}{\times}$} & \large{$\textcolor{red}{\times}$} & \large{$\textcolor{PineGreen}{\checkmark}$}\\
+%         CTT Now & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{red}{\times}$}\\
+%         \shortstack{\text{Takeaway.com} \\\text{Courier}} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{red}{\times}$}\\
+%         LiftDrop & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$} & \large{$\textcolor{PineGreen}{\checkmark}$}\\
+%     \end{tabular}
+%     \caption{Table that compares our application with others on the market.}
+%     \label{tab:my_label}
+% \end{table}
+
+
+\subsection{Comparison with Existing Platforms}
+
+Several delivery platforms offer features similar to LiftDrop, but none provide the same balance of fairness, security, and real-time operational support. For example, \textbf{Glovo}, \textbf{GoBuddy}, and \textbf{CTT Now} support order management, provide real-time updates, and implement basic security mechanisms. However, none of these platforms ensure equitable order distribution, as they often rely on opaque or performance-weighted assignment algorithms.
+
+\bigskip
+
+\textbf{Deliveo} is one of the few platforms that incorporates all four capabilities: order management, real-time support, security features, and fair distribution of tasks. However, its market presence and interface scalability are relatively limited when compared to larger competitors.
+
+\bigskip
+
+\textbf{Vanbu} supports basic order distribution but lacks real-time communication features and safety mechanisms, making it less adaptable to fast-paced delivery scenarios.
+
+\bigskip
+
+\textbf{Takeaway.com Courier} performs well in most operational aspects but, like many others, does not address fairness in order allocation—leading to potential workload imbalances for couriers.
+
+\bigskip
+
+In contrast, \textbf{LiftDrop} integrates all these essential features into a single platform. It offers robust order and status management, supports real-time communication via WebSockets, implements route-based safety alerts, and—critically—prioritizes fair order distribution among couriers. This combination positions LiftDrop as a more balanced and ethical alternative in the delivery platform ecosystem.

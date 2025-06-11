@@ -8,6 +8,12 @@
 \usepackage{tikz}
 \usetikzlibrary{er}
 \usepackage[justification=centering]{caption}
+\usepackage{pifont} % For checkmarks and crosses
+\usepackage{amsmath}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage{float} % in the preamble
 
 
 % Redefinição das margens das páginas
@@ -18,9 +24,13 @@
 \setlength{\headsep}{0cm}
 \setlength{\oddsidemargin}{0.25cm}
 \setlength{\evensidemargin}{0.25cm}
-\setlength{\parindent}{0pt}
+\setlength{\parindent}{1.5em}
 
 \begin{document}
+
+
+% Roman numeral page numbering (front matter)
+\pagenumbering{roman}
 
 \vspace{-15mm}
 \begin{figure}[h]
@@ -46,14 +56,40 @@
     \textbf{March of 2025}
 \end{center}
 
-\include{sections/Resume}
+% Blank Page
+\newpage
+\null
+\newpage
+
+\include{sections/Abstract}
+
+\include{sections/Acknowledgements}
+
+% Blank Page
+\newpage
+\null
+\newpage
+
+% Table of contents (still in Roman numerals)
+\tableofcontents
+\newpage
+
+% Switch to Arabic numerals and start at 1 on the Introduction page
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
 \include{sections/Introduction}
+
+\include{sections/BackgroundKnowledge}
 
 \include{sections/Scope}
 
 \include{sections/Interface Design}
 
+\include{sections/UserJourney}
+
 \include{sections/System Architecture}
+
+\include{sections/Technical Implementation Details}
 
 \end{document}

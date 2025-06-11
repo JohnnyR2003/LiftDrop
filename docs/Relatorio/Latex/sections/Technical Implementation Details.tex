@@ -1,0 +1,49 @@
+\section{Technical Implementation Details}
+
+This section outlines the core technologies and tools employed in the development of the LiftDrop platform, along with key decisions regarding communication, backend logic, and security.
+
+\subsection{Technology Stack}
+\begin{itemize}
+    \item \textbf{Mobile Application}: Developed using Android Jetpack Compose (Kotlin), the app enables couriers to manage order availability, accept or reject requests, and track deliveries in real time.
+    \item \textbf{Backend Server}: Built with Spring Web MVC, the server handles business logic, order assignment, and serves API endpoints for communication with the mobile application.
+    \item \textbf{Database}: PostgreSQL is utilized for the structured storage of essential data, including user profiles, orders, delivery statuses, and location history.
+    \item \textbf{Geospatial Services}: The Google Maps API is leveraged for calculating courier distances, estimating delivery times, and optimizing routes based on live traffic conditions.
+\end{itemize}
+
+\subsection{Communication Protocol}
+
+To facilitate real-time updates between the mobile application and the backend server, \textbf{WebSockets} are used. WebSockets offer several advantages over alternatives like polling and Server-Sent Events (SSE), including bidirectional communication, reduced latency, and minimized network overhead. These benefits ensure a more responsive and interactive experience for couriers, particularly when managing order updates and status changes.
+
+The courier's location is continuously updated using \textbf{Foreground Services} on Android. This approach ensures the app maintains an active connection, delivering real-time location data even when running in the background, and avoids being terminated by the operating system.
+
+\subsection{Order Assignment Logic}
+
+Orders are assigned based on the following factors:
+\begin{itemize}
+    \item \textbf{Proximity to the pickup point}
+    \item \textbf{Fair workload distribution} considering the courier’s recent delivery history
+    \item \textbf{Live traffic conditions}, using geospatial data to optimize routing
+\end{itemize}
+
+\subsection{Security and Authentication}
+
+To ensure secure user sessions and API requests:
+\begin{itemize}
+    \item \textbf{Session-Based Authentication with Cookies}: After a successful login, the server sets an HTTP-only cookie containing a session token. This token is inaccessible to JavaScript, which helps mitigate cross-site scripting (XSS) attacks.
+\end{itemize}
+
+\subsection{Development Tools}
+
+\begin{itemize}
+    \item \textbf{Postman}: Used to test and validate REST API endpoints during backend development.
+    \item \textbf{Git and GitHub}: Employed for version control, collaboration, and managing the development workflow.
+    \item \textbf{Android Studio}: The primary IDE for building, testing, and debugging the mobile courier application.
+    \item \textbf{Intellij}: The primary IDE for building, testing, and debugging the backend.
+\end{itemize}
+
+\subsection{Deployment Details}
+
+\begin{itemize}
+    \item \textbf{Backend Deployment}: The backend is hosted on Render, a cloud platform that streamlines deployment and scaling processes.
+    \item \textbf{Database Hosting}: PostgreSQL is managed and hosted on Render, providing a scalable, reliable environment for data storage.
+\end{itemize}

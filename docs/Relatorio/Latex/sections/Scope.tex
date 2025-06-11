@@ -1,56 +1,54 @@
 \section{Scope}
 
-\subsection{Scope Features}  
+This section defines the functional and technical boundaries of the LiftDrop platform. It outlines the key features available to users, clients, and couriers, along with the strategies employed for real-time data communication, order assignment, and safety. These boundaries establish what the system is designed to accomplish, while also clarifying what lies outside the project's current scope.
 
-\subsubsection{Client Features}  
-\begin{itemize}
-    \item Place an order by selecting a restaurant and desired items.
-    \item Track the order status and receive estimated time of arrival.
-\end{itemize}
+\subsection{Platform Features}
 
-\subsubsection{Courier Features}  
-\begin{itemize}
-    \item Accept or decline incoming orders.
-    \item Set availability by starting or stopping waiting status.
-    \item Update order status after acceptance.
-    \item Cancel an order if needed.
-    \item Confirm delivery upon completion.
-\end{itemize}
-
-\subsubsection{User Features}  
+\subsubsection{User Features}
 \begin{itemize}
     \item Register as either a client or a courier.
     \item Clients provide personal and contact information during registration.
-    \item Couriers specify their means of transportation upon registration.
+    \item Couriers specify their transportation method upon registration.
 \end{itemize}
-  
 
-\subsection{Real-Time Data Handling and Order Assignment}  
+\subsubsection{Client Features}
+\begin{itemize}
+    \item Place orders by selecting restaurants and desired items.
+    \item Track order status and view estimated time of arrival.
+\end{itemize}
 
-Developing a mobile application focused on delivery presents challenges, particularly in real-time data handling and order assignment. Since multiple couriers interact with the platform simultaneously, the system must manage updates effectively while ensuring a smooth user experience. After research and consideration, we identified three primary approaches to handling real-time updates and concurrency:
+\subsubsection{Courier Features}
+\begin{itemize}
+    \item Accept or decline delivery requests.
+    \item Set availability by entering or exiting “waiting” status.
+    \item Update the delivery status or cancel an accepted order.
+    \item Confirm order delivery upon completion.
+\end{itemize}
+
+\subsection{Real-Time Communication Strategy}
+
+Managing real-time data updates and courier interactions is central to the platform’s success. Three communication models were considered:
 
 \begin{itemize}
-    \item \textbf{Polling-based Request-Response Model} – The client periodically requests updates from the server. While simple to implement, this approach results in unnecessary network requests, increased server load, and delayed updates.
-    \item \textbf{WebSockets} – A bidirectional communication protocol that allows both the client and server to send messages dynamically. While WebSockets are ideal for interactive, two-way communication (e.g., chat applications), SSE offers a simpler and more reliable approach for our needs, focusing on server-driven updates.
-    \item \textbf{Event-Driven Server-Sent Events (SSE)} – The server pushes updates to clients as they occur, enabling real-time communication without the inefficiencies of constant polling. This is well-suited for unidirectional data flow (server-to-client updates).
+    \item \textbf{Polling (Request-Response):} Simple but inefficient, creating excessive network overhead.
+    \item \textbf{Server-Sent Events (SSE):} Efficient for unidirectional updates, but limited in interaction complexity.
+    \item \textbf{WebSockets:} Enables full-duplex communication and minimizes latency.
 \end{itemize}
 
-Given the requirements of this project, we chose \textbf{SSE} as the preferred method for real-time updates due to its simplicity, maintainability, and efficient handling of one-way event streams. To implement SSE on Android, we will use OkHttp since Android lacks native SSE support.
+\textbf{WebSockets} were selected for their ability to support real-time bidirectional updates, crucial for dynamic interactions like order assignment, courier status changes, and live notifications.
 
-\subsection{Order Assignment Strategy}  
+\subsection{Order Assignment Strategy}
 
-For order assignment, the platform will consider factors such as:
+Orders are assigned based on multiple criteria to ensure fairness and efficiency:
 
 \begin{itemize}
-    \item \textbf{Proximity-based allocation} – Assigning orders based on the courier’s distance from the pickup location.
-    \item \textbf{Fair distribution} – Ensuring a balanced order assignment among available couriers.
-    \item \textbf{Traffic-aware routing} – Taking real-time traffic conditions into account when assigning deliveries.
+    \item \textbf{Proximity:} Couriers closest to the pickup location are prioritized.
+    \item \textbf{Fairness:} Distribution considers past assignments to avoid overload.
+    \item \textbf{Traffic Conditions:} Live data helps optimize delivery time.
 \end{itemize}
 
-An external geospatial API will handle location-based calculations (distance, routing, and traffic), simplifying the implementation by reducing the need for complex in-house geospatial logic. We selected the \textbf{Google Maps API} as it offers the most suitable free plan for the required functionalities.
+For geospatial data and route optimization, the system integrates the \textbf{Google Maps API}, leveraging its routing, distance calculation, and traffic-aware services.
 
-\subsection{Safety Measures}  
+\subsection{Courier Safety Measures}
 
-To enhance safety, the platform will feature \textbf{neighborhood safety ratings} based on feedback from couriers who have completed deliveries in those areas. Only couriers can submit ratings, ensuring assessments reflect real delivery conditions.  
-
-Additionally, couriers will receive alerts for high-risk areas, and \textbf{nighttime safety measures} will highlight risk-prone locations for late-night deliveries.
+To support safe working conditions for couriers, the platform includes weather alerts. Those alerts are made with the use of SSE (Server Side Events) to pass that information to the courier.
