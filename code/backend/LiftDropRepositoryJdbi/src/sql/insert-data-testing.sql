@@ -1,27 +1,27 @@
 -- Insert users first (no dependencies)
 INSERT INTO liftdrop."user" (user_id, email, password, name, role)
-VALUES (1, 'john.doe@example.com', 'hashed_password_1', 'John Doe', 'CLIENT'),
-       (2, 'jane.smith@example.com', 'hashed_password_2', 'Jane Smith', 'CLIENT'),
-       (3, 'michael.jones@example.com', 'hashed_password_3', 'Michael Jones', 'CLIENT'),
-       (4, 'john.doe2@example.com', 'hashed_password_4', 'John Doe2', 'COURIER'),
-       (5, 'jane.smith2@example.com', 'hashed_password_5', 'Jane Smith2', 'COURIER'),
-       (6, 'michael.jones2@example.com', 'hashed_password_6', 'Michael Jones2', 'COURIER'),
-       (7, 'courier7@example.com', 'hashed_password_7', 'Courier Seven', 'COURIER'),
-       (8, 'courier8@example.com', 'hashed_password_8', 'Courier Eight', 'COURIER'),
-       (9, 'courier9@example.com', 'hashed_password_9', 'Courier Nine', 'COURIER'),
-       (10, 'courier10@example.com', 'hashed_password_10', 'Courier Ten', 'COURIER');
+VALUES ('john.doe@example.com', 'hashed_password_1', 'John Doe', 'CLIENT'),
+       ('jane.smith@example.com', 'hashed_password_2', 'Jane Smith', 'CLIENT'),
+       ('michael.jones@example.com', 'hashed_password_3', 'Michael Jones', 'CLIENT'),
+       ('john.doe2@example.com', 'hashed_password_4', 'John Doe2', 'COURIER'),
+       ('jane.smith2@example.com', 'hashed_password_5', 'Jane Smith2', 'COURIER'),
+       ('michael.jones2@example.com', 'hashed_password_6', 'Michael Jones2', 'COURIER'),
+       ('courier7@example.com', 'hashed_password_7', 'Courier Seven', 'COURIER'),
+       ('courier8@example.com', 'hashed_password_8', 'Courier Eight', 'COURIER'),
+       ('courier9@example.com', 'hashed_password_9', 'Courier Nine', 'COURIER'),
+       ('courier10@example.com', 'hashed_password_10', 'Courier Ten', 'COURIER');
 
 
 
 --Insert Addresses
-INSERT INTO liftdrop."address" (address_id, country, city, street, house_number, floor, zip_code)
-VALUES (1, 'PORTUGAL', 'Lisbon', 'Avenida de Roma', '15', 'RC', '1000-264'),
-       (2, 'PORTUGAL', 'Lisbon', 'Avenida Fontes Pereira de Melo', '16', 'RC', '1050-116'),
-       (3, 'PORTUGAL', 'Lisbon', 'Avenida da República', '12', '1', '1050-191'),
-       (4, 'PORTUGAL', 'Lisbon', 'Rua Albert Einstein', '1', '2', '1500-676'),
-       (5, 'PORTUGAL', 'Lisbon', 'Avenida Dom João II', '40', '3', '1990-094'),
-       (6, 'PORTUGAL', 'Lisbon', 'Avenida da Liberdade', '2', 'RC', '1250-113'),
-       (7, 'PORTUGAL', 'Odivelas', 'Av. Prof. Dr. Augusto Abreu Lopes', '2', 'RC', '2675-462');
+INSERT INTO liftdrop."address" (country, city, street, house_number, floor, zip_code)
+VALUES ('PORTUGAL', 'Lisbon', 'Avenida de Roma', '15', 'RC', '1000-264'),
+       ('PORTUGAL', 'Lisbon', 'Avenida Fontes Pereira de Melo', '16', 'RC', '1050-116'),
+       ('PORTUGAL', 'Lisbon', 'Avenida da República', '12', '1', '1050-191'),
+       ('PORTUGAL', 'Lisbon', 'Rua Albert Einstein', '1', '2', '1500-676'),
+       ('PORTUGAL', 'Lisbon', 'Avenida Dom João II', '40', '3', '1990-094'),
+       ('PORTUGAL', 'Lisbon', 'Avenida da Liberdade', '2', 'RC', '1250-113'),
+       ('PORTUGAL', 'Odivelas', 'Av. Prof. Dr. Augusto Abreu Lopes', '2', 'RC', '2675-462');
 
 
 -- Insert locations next (no dependencies)
@@ -52,12 +52,12 @@ VALUES (4, 1, 0.00, true),
 
 
 -- Insert requests (depends on Clients and Couriers)
-INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, request_status, ETA)
-VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800),
-       (2, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700),
-       (3, 3, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 3600),
-       (4, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800),
-       (5, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700);
+INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, request_status, ETA, pickup_code, dropoff_code)
+VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, "PICKUP123", "DROP123"),
+       (2, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700, "PICKUP456", "DROP456"),
+       (3, 3, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 3600, "PICKUP789", "DROP789"),
+       (4, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, "PICKUP101", "DROP101"),
+       (5, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700, "PICKUP102", "DROP102");
 
 
 -- Insert request details (depends on Request and Location)

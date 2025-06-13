@@ -12,6 +12,8 @@ class JdbiRequestRepository(
     override fun createRequest(
         clientId: Int,
         eta: Long,
+        pickupCode: String,
+        dropoffCode: String,
     ): Int? {
         val clientExists =
             handle
@@ -30,12 +32,15 @@ class JdbiRequestRepository(
         return handle
             .createUpdate(
                 """
-        INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta)
-        VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, EXTRACT(EPOCH FROM NOW()) + :eta)
+        INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta, pickup_code, dropoff_code)
+        
+        VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, EXTRACT(EPOCH FROM NOW()) + :eta, :pickup_code, :dropoff_code)
         """,
             ).bind("client_id", clientId)
             .bind("request_status", "PENDING")
             .bind("eta", eta)
+            .bind("pickup_code", pickupCode)
+            .bind("dropoff_code", dropoffCode)
             .executeAndReturnGeneratedKeys()
             .mapTo<Int>()
             .one()

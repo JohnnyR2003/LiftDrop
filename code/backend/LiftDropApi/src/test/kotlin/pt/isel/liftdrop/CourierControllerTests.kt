@@ -57,7 +57,7 @@ class CourierControllerTests {
 
     @Test
     fun `register with courier`() {
-        val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/courier").build()
+        val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
 
         val registerCourier =
             RegisterCourierInputModel(
@@ -79,7 +79,7 @@ class CourierControllerTests {
 
     @Test
     fun `login with courier`() {
-        val courier = WebTestClient.bindToServer().baseUrl("http://localhost:$port/courier").build()
+        val courier = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
 
         val registerCourier =
             RegisterCourierInputModel(
@@ -122,7 +122,7 @@ class CourierControllerTests {
         val uri = "ws://localhost:$port/ws/courier"
         val session = webSocketClient.execute(webSocketHandler, uri).get()
 
-        val courier = WebTestClient.bindToServer().baseUrl("http://localhost:$port/courier").build()
+        val courier = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
         val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api").build()
 
         val registerCourier =

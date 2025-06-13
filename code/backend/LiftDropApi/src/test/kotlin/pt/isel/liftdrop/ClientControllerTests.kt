@@ -64,21 +64,21 @@ class ClientControllerTests {
                     ),
             )
 
-        val response =
-            client
-                .post()
-                .uri("/client/register")
-                .bodyValue(registerClient)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .jsonPath("$.name")
-                .isEqualTo("a")
-                .jsonPath("$.email")
-                .isEqualTo("a@gmail.com")
-                .jsonPath("$.id")
-                .isEqualTo("1")
+        // Register a new client
+        client
+            .post()
+            .uri("/client/register")
+            .bodyValue(registerClient)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.name")
+            .isEqualTo("a")
+            .jsonPath("$.email")
+            .isEqualTo("a@gmail.com")
+            .jsonPath("$.id")
+            .isEqualTo("1")
     }
 
     @Test
@@ -166,15 +166,15 @@ class ClientControllerTests {
         val token = clientService.loginClient(registerClient.email, registerClient.password)
         assertIs<Success<String>>(token)
 
-        val response =
-            client
-                .post()
-                .uri("/client/createDropOffLocation")
-                .cookie("auth_token", token.value)
-                .bodyValue(dropOffLocation)
-                .exchange()
-                .expectStatus()
-                .isOk
+        // Create a drop-off location
+        client
+            .post()
+            .uri("/client/createDropOffLocation")
+            .cookie("auth_token", token.value)
+            .bodyValue(dropOffLocation)
+            .exchange()
+            .expectStatus()
+            .isOk
     }
 
     @Test
@@ -219,19 +219,19 @@ class ClientControllerTests {
             10L,
         )
 
-        val response =
-            client
-                .post()
-                .uri("/client/makeOrder")
-                .cookie("auth_token", token.value)
-                .bodyValue(
-                    RequestInputModel(
-                        restaurantName = "restaurantName",
-                        itemDesignation = "item",
-                    ),
-                ).exchange()
-                .expectStatus()
-                .isOk
+        // Make an order
+        client
+            .post()
+            .uri("/client/makeOrder")
+            .cookie("auth_token", token.value)
+            .bodyValue(
+                RequestInputModel(
+                    restaurantName = "restaurantName",
+                    itemDesignation = "item",
+                ),
+            ).exchange()
+            .expectStatus()
+            .isOk
     }
 
     private fun createClient(

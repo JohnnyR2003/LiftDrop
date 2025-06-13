@@ -142,6 +142,8 @@ class ClientService(
                 requestRepository.createRequest(
                     clientId = client.user.id,
                     eta = itemETA,
+                    pickupCode = generateRandomCode(6),
+                    dropoffCode = generateRandomCode(6),
                 ) ?: return@run failure(RequestCreationError.ClientNotFound)
 
             // Is it really necessary to reverse geocode the restaurant location?
@@ -250,4 +252,11 @@ fun Address.toFormattedString(): String {
             country.takeIf { it.isNotBlank() },
         )
     return components.joinToString(separator = ", ")
+}
+
+fun generateRandomCode(length: Int): String {
+    val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    return (1..length)
+        .map { allowedChars.random() }
+        .joinToString("")
 }

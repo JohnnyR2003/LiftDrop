@@ -16,7 +16,7 @@ class JdbiRequestRepositoryTests {
             val eta = 1L
 
             // When: creating a new request
-            val requestId = requestRepository.createRequest(clientId, eta)
+            val requestId = requestRepository.createRequest(clientId, eta, "123456", "654321")
 
             // Then: the request should be created successfully
             if (requestId != null) {
