@@ -36,21 +36,21 @@ interface LocationTrackingService {
 class RealLocationTrackingService(
     private val httpClient: OkHttpClient,
     private val context: Context
-): LocationTrackingService {
+) : LocationTrackingService {
 
     val apiEndpoint = "$HOST/api/courier/updateLocation"
-
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     private var locationCallback: LocationCallback? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
 
+    // Guarda a última localização enviada
+    private var lastSentLocation: Location? = null
+    private val MIN_DISTANCE_METERS = 50f
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    @SuppressLint("MissingPermission") // You must check permissions before calling this
+    @SuppressLint("MissingPermission")
     override suspend fun getCurrentLocation(): Location? {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-
-
         return suspendCancellableCoroutine { continuation ->
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
@@ -67,16 +67,19 @@ class RealLocationTrackingService(
     @SuppressLint("MissingPermission")
     override fun startUpdating(authToken: String, courierId: String) {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-
-        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10_000L)
-            .setMinUpdateIntervalMillis(15_000L)
+        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 20_000L)
+            .setMinUpdateIntervalMillis(20_000L)
             .build()
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val location = result.lastLocation ?: return
                 coroutineScope.launch {
-                    sendLocationToBackend(location.latitude, location.longitude, courierId, authToken)
+                    val shouldSend = lastSentLocation?.distanceTo(location)?.let { it > MIN_DISTANCE_METERS } != false
+                    if (shouldSend) {
+                        sendLocationToBackend(location.latitude, location.longitude, courierId, authToken)
+                        lastSentLocation = location
+                    }
                 }
             }
         }
