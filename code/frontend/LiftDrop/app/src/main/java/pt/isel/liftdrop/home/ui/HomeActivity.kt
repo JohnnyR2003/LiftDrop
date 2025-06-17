@@ -26,6 +26,7 @@ import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.login.ui.LoginActivity
 import pt.isel.liftdrop.services.LocationForegroundService
 import pt.isel.liftdrop.utils.viewModelInit
+import kotlin.text.compareTo
 
 class HomeActivity : ComponentActivity() {
 
@@ -40,6 +41,9 @@ class HomeActivity : ComponentActivity() {
     }
 
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
+
+    private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
+    private var notificationPermissionGranted = false
 
     companion object {
         fun navigate(origin: Activity) {
@@ -57,6 +61,12 @@ class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.v(TAG, "HomeActivity.onCreate() on process ${android.os.Process.myPid()}")
+
+        notificationPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            notificationPermissionGranted = isGranted
+        }
 
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -81,7 +91,7 @@ class HomeActivity : ComponentActivity() {
                         Log.i(TAG, "Starting location service with token: ${userInfo.bearer} and courierId: ${userInfo.id}")
                         viewModel._serviceStarted.value = true
                     } else {
-                        requestLocationPermissions()
+                        requestAllPermissions()
                     }
                 }
             }
@@ -147,7 +157,7 @@ class HomeActivity : ComponentActivity() {
                 fgLocation == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun requestLocationPermissions() {
+    private fun requestAllPermissions() {
         val permissions = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
@@ -156,5 +166,11 @@ class HomeActivity : ComponentActivity() {
             permissions.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
         }
         locationPermissionLauncher.launch(permissions.toTypedArray())
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            notificationPermissionGranted = true
+        }
     }
 }
