@@ -97,7 +97,7 @@ class JdbiCourierRepository(
         SET courier_id = :courierId,
             request_status = 'HEADING_TO_PICKUP'
         WHERE request_id = :requestId
-          AND request_status = 'PENDING' 
+          AND request_status = 'PENDING' OR request_status = 'PENDING_REASSIGNMENT'
         """,
                 ).bind("courierId", courierId)
                 .bind("requestId", requestId)

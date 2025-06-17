@@ -157,7 +157,7 @@ class JdbiRequestRepository(
             .mapTo<Request>()
             .one()
 
-    override fun getRequestForCourierById(requestId: Int): RequestDetailsDTO =
+    override fun getRequestForCourierById(requestId: Int): RequestDetailsDTO? =
         handle
             .createQuery(
                 """

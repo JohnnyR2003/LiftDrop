@@ -11,9 +11,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.serialization.kotlinx.json.*
 import jakarta.inject.Named
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -59,7 +57,7 @@ class GeocodingServices(
         requestId: Int,
         initialMaxDistance: Double = 1000.0,
         maxDistanceIncrement: Double = 1000.0,
-        maxAllowedDistance: Double = 3000.0, // Maximum distance cap
+        maxAllowedDistance: Double = 4000.0, // Maximum distance cap
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
         GlobalLogger.log("Fetching ranked couriers for request ID: $requestId with maxDistance: $currentMaxDistance")
@@ -76,6 +74,10 @@ class GeocodingServices(
                 transactionManager.run { it ->
                     val requestDetails = it.requestRepository.getRequestForCourierById(requestId)
 
+                    if (requestDetails == null) {
+                        GlobalLogger.log("Request details not found for request ID: $requestId")
+                        return@run false
+                    }
                     // Send the assignment request via WebSocket
                     courierWebSocketHandler.sendDeliveryRequestToCourier(
                         courier.courierId,
@@ -207,6 +209,28 @@ class GeocodingServices(
 
         return couriers.zip(travelTimes).sortedBy { it.second }.map { (courier, time) ->
             courier.copy(estimatedTravelTime = time)
+        }
+    }
+
+    fun handleRequestReassignment(requestId: Int): Boolean {
+        return transactionManager.run {
+            val requestRepository = it.requestRepository
+            val requestDetails = requestRepository.getRequestForCourierById(requestId)
+            if (requestDetails == null) {
+                GlobalLogger.log("Request details not found for request ID: $requestId")
+                return@run false
+            }
+            val pickupLat = requestDetails.pickupLocation.latitude
+            val pickupLon = requestDetails.pickupLocation.longitude
+
+            CoroutineScope(Dispatchers.Default).launch {
+                handleCourierAssignment(
+                    pickupLat,
+                    pickupLon,
+                    requestId,
+                )
+            }
+            return@run true
         }
     }
 

@@ -22,6 +22,12 @@ sealed class CourierLogoutError {
     data object SessionNotFound : CourierLogoutError()
 }
 
+sealed class CourierRequestError {
+    data object RequestNotFound : CourierRequestError()
+
+    data object RequestReassignmentFailed : CourierRequestError()
+}
+
 sealed class LocationUpdateError {
     data object InvalidCoordinates : LocationUpdateError()
 

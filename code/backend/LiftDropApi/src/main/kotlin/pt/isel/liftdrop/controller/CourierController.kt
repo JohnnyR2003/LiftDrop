@@ -356,8 +356,16 @@ class CourierController(
 
         return when (request) {
             is Success -> {
-                println("Order cancelled successfully")
-                ResponseEntity.ok(true)
+                // Handle successful order cancellation and try reassigning it
+                val reassignResult = geocodingServices.handleRequestReassignment(input.requestId)
+
+                if (!reassignResult) {
+                    GlobalLogger.log("Failed to reassign request ${input.requestId}: $reassignResult")
+                    Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
+                } else {
+                    GlobalLogger.log("Request ${input.requestId} reassigned successfully")
+                    ResponseEntity.ok(true)
+                }
             }
             is Failure -> {
                 when (request.value) {
