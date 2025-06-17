@@ -35,13 +35,15 @@ sealed class StateUpdateError {
 }
 
 sealed class CourierDeliveryError {
-    data object CourierNotNearPickup : CourierDeliveryError()
-
-    data object PackageAlreadyPickedUp : CourierDeliveryError()
-
     data object CourierNotNearDropOff : CourierDeliveryError()
 
-    data object PackageAlreadyDelivered : CourierDeliveryError()
+    data object PickupPINMismatch : CourierDeliveryError()
+}
+
+sealed class CourierPickupError {
+    data object CourierNotNearPickup : CourierPickupError()
+
+    data object PickupPINMismatch : CourierPickupError()
 }
 
 sealed class CourierCancelDeliveryError {

@@ -94,7 +94,6 @@ class CourierWebSocketHandler(
             GlobalLogger.log("Courier $courierId failed to decline request $requestId: ${decline.value}")
             return
         }
-        AssignmentCoordinator.complete(requestId, false)
     }
 
     private fun getCourierIdBySession(session: WebSocketSession): Int? = sessions.entries.firstOrNull { it.value == session }?.key

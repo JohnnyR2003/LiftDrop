@@ -29,9 +29,12 @@ import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
 import androidx.compose.material.icons.filled.ExitToApp
-import pt.isel.liftdrop.services.http.Problem
+import pt.isel.liftdrop.home.model.WeatherAlertState
 import pt.isel.liftdrop.shared.ui.BottomSlideToConfirm
-import pt.isel.liftdrop.shared.ui.SlideToConfirmButton
+import pt.isel.liftdrop.shared.ui.ErrorCard
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Badge
+import pt.isel.liftdrop.shared.ui.PinInsertionCard
 
 /*
 data class HomeScreenState(
@@ -70,6 +73,24 @@ fun HomeScreen(
             // Map
             LocationServices().LocationAwareMap()
 
+            val icons = when (state) {
+                is HomeScreenState.Idle -> listOf(
+                    Triple(Icons.Default.Menu, onMenuClick, false),
+                    Triple(Icons.Default.Notifications, onNotificationClick, weatherAlertState.alerts.isNotEmpty()),
+                    Triple(Icons.Default.ExitToApp, onLogoutClick, false)
+                )
+                is HomeScreenState.Listening -> listOf(
+                    Triple(Icons.Default.Menu, onMenuClick, false),
+                    Triple(Icons.Default.Notifications, onNotificationClick, weatherAlertState.alerts.isNotEmpty())
+                )
+                is HomeScreenState.HeadingToPickUp, is HomeScreenState.HeadingToDropOff -> listOf(
+                    Triple(Icons.Default.Menu, onMenuClick, false),
+                    Triple(Icons.Default.Notifications, onNotificationClick, weatherAlertState.alerts.isNotEmpty()),
+                    Triple(Icons.Default.Close, onCancelDeliveryClick, false)
+                )
+                else -> emptyList()
+            }
+
             // Earnings
             Box(
                 modifier = Modifier
@@ -100,46 +121,6 @@ fun HomeScreen(
                 }
             }
 
-            @Composable
-            fun ErrorCard(problem: Problem, onDismiss: () -> Unit) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(0.8f),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = problem.title ?: "Error",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = Color.Red
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = problem.detail ?: "An unknown error occurred.",
-                                fontSize = 16.sp,
-                                color = Color.Black
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(onClick = onDismiss) {
-                                Text(text = "OK")
-                            }
-                        }
-                    }
-                }
-            }
-
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -149,25 +130,29 @@ fun HomeScreen(
             ) {
                 when (state) {
                     is HomeScreenState.Idle -> {
-                        listOf(
-                            Pair(Icons.Default.Menu, onMenuClick),
-                            Pair(Icons.Default.Notifications, onNotificationClick),
-                            Pair(Icons.Default.ExitToApp, onLogoutClick)
-                        ).forEach { (icon, action) ->
+                        icons.forEach { (icon, action, showBadge) ->
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .background(Color.White, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                IconButton(
-                                    onClick = action,
-                                ) {
-                                    Icon(
-                                        icon,
-                                        contentDescription = null,
-                                        tint = Color(0xFF384259) // Cor mais clara quando desativado
-                                    )
+                                IconButton(onClick = action) {
+                                    if (showBadge) {
+                                        BadgedBox(badge = { Badge() }) {
+                                            Icon(
+                                                imageVector = icon,
+                                                contentDescription = null,
+                                                tint = Color(0xFF384259)
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = icon,
+                                            contentDescription = null,
+                                            tint = Color(0xFF384259)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -175,49 +160,58 @@ fun HomeScreen(
 
                     is HomeScreenState.Listening -> {
                         // Show only menu and notifications icons
-                        listOf(
-                            Pair(Icons.Default.Menu, onMenuClick),
-                            Pair(Icons.Default.Notifications, onNotificationClick)
-                        ).forEach { (icon, action) ->
+                        icons.forEach { (icon, action, showBadge) ->
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .background(Color.White, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                IconButton(
-                                    onClick = action,
-                                ) {
-                                    Icon(
-                                        icon,
-                                        contentDescription = null,
-                                        tint = Color(0xFF384259) // Cor mais clara quando desativado
-                                    )
+                                IconButton(onClick = action) {
+                                    if (showBadge) {
+                                        BadgedBox(badge = { Badge() }) {
+                                            Icon(
+                                                imageVector = icon,
+                                                contentDescription = null,
+                                                tint = Color(0xFF384259)
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = icon,
+                                            contentDescription = null,
+                                            tint = Color(0xFF384259)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
 
-                    is HomeScreenState.PickingUp, is HomeScreenState.Delivering -> {
-                        listOf(
-                            Pair(Icons.Default.Menu, onMenuClick),
-                            Pair(Icons.Default.Notifications, onNotificationClick),
-                            Pair(Icons.Default.Close, onCancelDeliveryClick)
-                        ).forEach { (icon, action) ->
+                    is HomeScreenState.HeadingToPickUp, is HomeScreenState.HeadingToDropOff -> {
+                        icons.forEach { (icon, action, showBadge) ->
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .background(Color.White, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                IconButton(
-                                    onClick = action,
-                                ) {
-                                    Icon(
-                                        icon,
-                                        contentDescription = null,
-                                        tint = Color(0xFF384259) // Cor mais clara quando desativado
-                                    )
+                                IconButton(onClick = action) {
+                                    if (showBadge) {
+                                        BadgedBox(badge = { Badge() }) {
+                                            Icon(
+                                                imageVector = icon,
+                                                contentDescription = null,
+                                                tint = Color(0xFF384259)
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = icon,
+                                            contentDescription = null,
+                                            tint = Color(0xFF384259)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -352,23 +346,81 @@ fun HomeScreen(
                     }
                 }
 
-                is HomeScreenState.PickingUp -> {
+                is HomeScreenState.HeadingToPickUp -> {
                     val context = LocalContext.current
-                    BottomSlideToConfirm(
-                        text = "Slide to Pick Up",
-                        onConfirmed = {
-                            viewModel.pickupOrder(state.requestId, state.courierId, context)
+                    if(!state.isPickUpSpotValid) {
+                        BottomSlideToConfirm(
+                            text = "Slide to Pick Up",
+                            onConfirmed = {
+                                viewModel.validatePickup(
+                                    state.requestId,
+                                    state.courierId,
+                                    context
+                                )
+                            }
+                        )
+                    }
+                    else{
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 32.dp)
+                                .align(Alignment.BottomCenter),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            PinInsertionCard(
+                                onPinEntered = { pin ->
+                                    viewModel.validatePickUpPin(
+                                        state.requestId,
+                                        state.courierId,
+                                        pin,
+                                        context
+                                    )
+                                }
+                            )
                         }
-                    )
+                    }
                 }
 
-                is HomeScreenState.Delivering -> {
-                    BottomSlideToConfirm(
-                        text = "Slide to Deliver",
-                        onConfirmed = {
-                            viewModel.deliverOrder(state.requestId, state.courierId)
+                is HomeScreenState.PickedUp -> {
+                    val context = LocalContext.current
+                        PickupSuccessCard(
+                            onOk = {
+                                viewModel.startNavigationToDropOff(context = context)
+                            }
+                        )
+                }
+
+                is HomeScreenState.HeadingToDropOff -> {
+                    if(!state.isDropOffSpotValid) {
+                        BottomSlideToConfirm(
+                            text = "Slide to Drop Off",
+                            onConfirmed = {
+                                viewModel.validateDropOff(
+                                    state.requestId,
+                                    state.courierId
+                                )
+                            }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 32.dp)
+                                .align(Alignment.BottomCenter),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            PinInsertionCard(
+                                onPinEntered = { pin ->
+                                    viewModel.validateDropOffPin(
+                                        state.requestId,
+                                        state.courierId,
+                                        pin,
+                                    )
+                                }
+                            )
                         }
-                    )
+                    }
                 }
 
                 is HomeScreenState.Delivered -> {
@@ -383,7 +435,6 @@ fun HomeScreen(
                 }
 
                 is HomeScreenState.Error -> {
-                    // Show error message
                     ErrorCard(
                         problem = state.problem,
                         onDismiss = { viewModel.dismissError() }

@@ -1,5 +1,5 @@
 -- Insert users first (no dependencies)
-INSERT INTO liftdrop."user" (user_id, email, password, name, role)
+INSERT INTO liftdrop."user" (email, password, name, role)
 VALUES ('john.doe@example.com', 'hashed_password_1', 'John Doe', 'CLIENT'),
        ('jane.smith@example.com', 'hashed_password_2', 'Jane Smith', 'CLIENT'),
        ('michael.jones@example.com', 'hashed_password_3', 'Michael Jones', 'CLIENT'),
@@ -53,11 +53,11 @@ VALUES (4, 1, 0.00, true),
 
 -- Insert requests (depends on Clients and Couriers)
 INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, request_status, ETA, pickup_code, dropoff_code)
-VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, "PICKUP123", "DROP123"),
-       (2, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700, "PICKUP456", "DROP456"),
-       (3, 3, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 3600, "PICKUP789", "DROP789"),
-       (4, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, "PICKUP101", "DROP101"),
-       (5, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700, "PICKUP102", "DROP102");
+VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, '123456', '654321'),
+       (2, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700, '789012', '210987'),
+       (3, 3, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 3600, '345678', '876543'),
+       (4, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, '901234', '432109'),
+       (5, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700, '567890', '098765');
 
 
 -- Insert request details (depends on Request and Location)

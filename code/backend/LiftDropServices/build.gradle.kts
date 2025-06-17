@@ -19,6 +19,11 @@ dependencies {
     // Spring Encoder
     implementation("org.springframework.boot:spring-boot-starter-security:3.4.4")
 
+    implementation("org.springframework.boot:spring-boot-starter-webflux:3.4.4")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

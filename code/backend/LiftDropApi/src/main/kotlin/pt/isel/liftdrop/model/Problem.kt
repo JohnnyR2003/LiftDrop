@@ -103,6 +103,22 @@ data class Problem(
                 detail = "The provided password is incorrect.",
             )
 
+        fun pickupCodeIsIncorrect(): Problem =
+            Problem(
+                type = "$PROBLEM_URI_PATH/pickup-code-is-incorrect",
+                title = "Pickup Code Is Incorrect",
+                status = HttpStatus.UNAUTHORIZED.value(),
+                detail = "The provided pickup code is incorrect.",
+            )
+
+        fun dropOffCodeIsIncorrect(): Problem =
+            Problem(
+                type = "$PROBLEM_URI_PATH/drop-off-code-is-incorrect",
+                title = "Drop Off Code Is Incorrect",
+                status = HttpStatus.UNAUTHORIZED.value(),
+                detail = "The provided drop-off code is incorrect.",
+            )
+
         fun packageAlreadyPickedUp(): Problem =
             Problem(
                 type = "$PROBLEM_URI_PATH/package-already-picked-up",

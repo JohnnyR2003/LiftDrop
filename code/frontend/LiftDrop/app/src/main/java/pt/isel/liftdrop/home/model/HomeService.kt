@@ -19,9 +19,13 @@ interface HomeService {
 
     suspend fun declineRequest(requestId: String): Boolean
 
-    suspend fun pickupOrder(requestId: String, courierId: String, token: String): Result<Boolean>
+    suspend fun validatePickup(requestId: String, courierId: String, token: String): Result<Boolean>
 
-    suspend fun deliverOrder(requestId: String, courierId: String, token: String): Result<Boolean>
+    suspend fun pickupOrder(requestId: String, courierId: String, pickUpPin: String, token: String): Result<Boolean>
+
+    suspend fun validateDropOff(requestId: String, courierId: String, token: String): Result<Boolean>
+
+    suspend fun deliverOrder(requestId: String, courierId: String, dropOffPin: String, token: String): Result<Boolean>
 
     suspend fun cancelDelivery(courierId: String, requestId: String, token: String): Result<Boolean>
 
@@ -113,10 +117,24 @@ class RealHomeService(
         return webSocket?.send(messageJson) == true
     }
 
-    override suspend fun pickupOrder(requestId: String, courierId: String, token: String): Result<Boolean> {
-        val body = PickupOrderInputModel(
+    override suspend fun validatePickup(requestId: String, courierId: String, token: String): Result<Boolean> {
+        val body = ValidatePickupInputModel(
             requestId = requestId.toInt(),
             courierId = courierId.toInt()
+        )
+
+        return httpService.post<ValidatePickupInputModel, Boolean>(
+            url = Uris.Courier.TRY_PICKUP,
+            data = body,
+            token = token
+        )
+    }
+
+    override suspend fun pickupOrder(requestId: String, courierId: String, pickUpPin: String, token: String): Result<Boolean> {
+        val body = PickupOrderInputModel(
+            requestId = requestId.toInt(),
+            courierId = courierId.toInt(),
+            pickupCode = pickUpPin
         )
 
         return httpService.post<PickupOrderInputModel, Boolean>(
@@ -126,14 +144,29 @@ class RealHomeService(
         )
     }
 
+    override suspend fun validateDropOff(requestId: String, courierId: String, token: String): Result<Boolean> {
+        val body = ValidateDropOffInputModel(
+            requestId = requestId.toInt(),
+            courierId = courierId.toInt()
+        )
+
+        return httpService.post<ValidateDropOffInputModel, Boolean>(
+            url = Uris.Courier.TRY_DELIVERY,
+            data = body,
+            token = token
+        )
+    }
+
     override suspend fun deliverOrder(
         requestId: String,
         courierId: String,
+        dropOffPin: String,
         token: String
     ): Result<Boolean> {
         val body = DeliverOrderInputModel(
             requestId = requestId.toInt(),
-            courierId = courierId.toInt()
+            courierId = courierId.toInt(),
+            dropoffCode = dropOffPin
         )
 
         return httpService.post<DeliverOrderInputModel, Boolean>(

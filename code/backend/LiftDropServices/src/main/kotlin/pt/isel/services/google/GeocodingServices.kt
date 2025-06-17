@@ -100,6 +100,7 @@ class GeocodingServices(
                             deferredResponse.await()
                         }
                     } catch (e: TimeoutCancellationException) {
+                        AssignmentCoordinator.complete(requestId, false) // clean up in case it wasn't completed
                         false
                     }
 

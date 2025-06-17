@@ -116,21 +116,49 @@ class CourierService(
         }
     }
 
-    fun pickupDelivery(
+    fun checkCourierPickup(
         requestId: Int,
         courierId: Int,
-    ): Either<CourierDeliveryError, Boolean> {
+    ): Either<CourierPickupError, Boolean> {
         return transactionManager.run {
-            val courierRepository = it.courierRepository
             val locationRepository = it.locationRepository
 
             val isCourierNearPickup = locationRepository.isCourierNearPickup(courierId, requestId)
             if (!isCourierNearPickup) {
-                return@run failure(CourierDeliveryError.CourierNotNearPickup)
+                return@run failure(CourierPickupError.CourierNotNearPickup)
+            } else {
+                success(true)
             }
-            val request = courierRepository.pickupDelivery(requestId, courierId)
+        }
+    }
+
+    fun pickupDelivery(
+        requestId: Int,
+        courierId: Int,
+        pickupPin: String,
+    ): Either<CourierPickupError, Boolean> {
+        return transactionManager.run {
+            val courierRepository = it.courierRepository
+
+            val request = courierRepository.pickupDelivery(requestId, courierId, pickupPin)
             if (!request) {
-                return@run failure(CourierDeliveryError.PackageAlreadyPickedUp)
+                return@run failure(CourierPickupError.PickupPINMismatch)
+            } else {
+                success(true)
+            }
+        }
+    }
+
+    fun checkCourierDropOff(
+        requestId: Int,
+        courierId: Int,
+    ): Either<CourierDeliveryError, Boolean> {
+        return transactionManager.run {
+            val locationRepository = it.locationRepository
+
+            val isCourierNearDropOff = locationRepository.isCourierNearDropOff(courierId, requestId)
+            if (!isCourierNearDropOff) {
+                return@run failure(CourierDeliveryError.CourierNotNearDropOff)
             } else {
                 success(true)
             }
@@ -140,18 +168,14 @@ class CourierService(
     fun deliver(
         requestId: Int,
         courierId: Int,
+        dropOffPin: String,
     ): Either<CourierDeliveryError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
-            val locationRepository = it.locationRepository
 
-            val isCourierNearDropOff = locationRepository.isCourierNearDropOff(courierId, requestId)
-            if (!isCourierNearDropOff) {
-                return@run failure(CourierDeliveryError.CourierNotNearDropOff)
-            }
-            val request = courierRepository.completeDelivery(requestId, courierId)
+            val request = courierRepository.completeDelivery(requestId, courierId, dropOffPin)
             if (!request) {
-                return@run failure(CourierDeliveryError.PackageAlreadyDelivered)
+                return@run failure(CourierDeliveryError.PickupPINMismatch)
             } else {
                 success(true)
             }

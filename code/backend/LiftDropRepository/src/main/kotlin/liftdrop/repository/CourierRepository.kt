@@ -27,6 +27,7 @@ interface CourierRepository {
     fun pickupDelivery(
         requestId: Int,
         courierId: Int,
+        pickupPin: String,
     ): Boolean
 
     fun cancelDelivery(
@@ -37,6 +38,7 @@ interface CourierRepository {
     fun completeDelivery( // if possible should support external pin for completion
         requestId: Int,
         courierId: Int,
+        completionPin: String, // optional pin for completion
     ): Boolean
 
     fun getCourierByUserId(userId: Int): Courier?

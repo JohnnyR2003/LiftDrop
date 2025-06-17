@@ -21,7 +21,7 @@ class UserController(
 
         return when (val result = userService.getCourierIdByToken(token)) {
             is Success -> ResponseEntity.ok(GetCourierIdOutputModel(result.value.toString()))
-            is Failure -> ResponseEntity.status(404).body("Courier not found")
+            is Failure -> ResponseEntity.status(404).body("You are not logged in, please log in first.")
         }
     }
 }

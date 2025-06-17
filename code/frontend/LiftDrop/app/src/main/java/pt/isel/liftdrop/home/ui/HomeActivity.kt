@@ -48,6 +48,11 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +71,6 @@ class HomeActivity : ComponentActivity() {
             val dailyEarnings = viewModel.dailyEarnings.collectAsState(initial = "0.00").value
 
             val state = viewModel.stateFlow.collectAsState(initial = HomeScreenState.Idle(dailyEarnings = dailyEarnings )).value
-
 
             LaunchedEffect(Unit) {
                 val userInfo = repo.preferencesRepository.getUserInfo()
@@ -110,6 +114,7 @@ class HomeActivity : ComponentActivity() {
                 },
                 onCancelDeliveryClick = { viewModel.tryCancelDelivery() },
                 dailyEarnings = dailyEarnings,
+                weatherAlertState = weatherAlertState
             )
         }
     }

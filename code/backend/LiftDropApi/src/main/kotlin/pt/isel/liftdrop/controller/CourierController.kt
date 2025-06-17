@@ -215,6 +215,35 @@ class CourierController(
         }
     }
 
+    @PostMapping(Uris.Courier.TRY_PICKUP)
+    fun isPickupSpotValid(
+        @RequestBody input: PickupSpotInputModel,
+    ): ResponseEntity<Any> {
+        val request =
+            courierService.checkCourierPickup(
+                requestId = input.requestId,
+                courierId = input.courierId,
+            )
+
+        return when (request) {
+            is Success -> {
+                // Handle successful pickup spot validation
+                println("Pickup spot is valid")
+                ResponseEntity.ok(true)
+            }
+            is Failure -> {
+                when (request.value) {
+                    is CourierPickupError.CourierNotNearPickup -> {
+                        Problem.courierNotNearPickup().response(HttpStatus.BAD_REQUEST)
+                    }
+                    else -> {
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Marks an order as picked up, indicating that the courier has collected it from the sender.
      */
@@ -227,6 +256,7 @@ class CourierController(
             courierService.pickupDelivery(
                 requestId = input.requestId,
                 courierId = input.courierId,
+                pickupPin = input.pickupCode,
             )
 
         return when (request) {
@@ -235,11 +265,40 @@ class CourierController(
             }
             is Failure -> {
                 when (request.value) {
-                    is CourierDeliveryError.PackageAlreadyPickedUp -> {
-                        Problem.packageAlreadyPickedUp().response(HttpStatus.CONFLICT)
+                    is CourierPickupError.PickupPINMismatch -> {
+                        Problem.pickupCodeIsIncorrect().response(HttpStatus.UNAUTHORIZED)
                     }
-                    is CourierDeliveryError.CourierNotNearPickup -> {
+                    is CourierPickupError.CourierNotNearPickup -> {
                         Problem.courierNotNearPickup().response(HttpStatus.BAD_REQUEST)
+                    }
+                    else -> {
+                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
+                    }
+                }
+            }
+        }
+    }
+
+    @PostMapping(Uris.Courier.TRY_DELIVERY)
+    fun isDropOffSpotValid(
+        @RequestBody input: DropOffSpotInputModel,
+    ): ResponseEntity<Any> {
+        val request =
+            courierService.checkCourierDropOff(
+                requestId = input.requestId,
+                courierId = input.courierId,
+            )
+
+        return when (request) {
+            is Success -> {
+                // Handle successful drop-off spot validation
+                println("Drop-off spot is valid")
+                ResponseEntity.ok(true)
+            }
+            is Failure -> {
+                when (request.value) {
+                    is CourierDeliveryError.CourierNotNearDropOff -> {
+                        Problem.courierNotNearDropOff().response(HttpStatus.BAD_REQUEST)
                     }
                     else -> {
                         Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -260,6 +319,7 @@ class CourierController(
             courierService.deliver(
                 requestId = input.requestId,
                 courierId = input.courierId,
+                dropOffPin = input.dropoffCode,
             )
 
         return when (request) {
@@ -270,8 +330,8 @@ class CourierController(
             }
             is Failure -> {
                 when (request.value) {
-                    is CourierDeliveryError.PackageAlreadyDelivered -> {
-                        Problem.packageAlreadyDelivered().response(HttpStatus.BAD_REQUEST)
+                    is CourierDeliveryError.PickupPINMismatch -> {
+                        Problem.dropOffCodeIsIncorrect().response(HttpStatus.UNAUTHORIZED)
                     }
                     is CourierDeliveryError.CourierNotNearDropOff -> {
                         Problem.courierNotNearDropOff().response(HttpStatus.BAD_REQUEST)

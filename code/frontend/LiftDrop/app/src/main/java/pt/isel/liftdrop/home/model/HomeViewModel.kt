@@ -8,18 +8,14 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import pt.isel.liftdrop.home.ui.HomeScreen
 import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.PreferencesRepository
 import pt.isel.liftdrop.services.http.Problem
 import pt.isel.liftdrop.services.http.Result
-
 
 class HomeViewModel(
     private val homeService: HomeService,
@@ -36,7 +32,6 @@ class HomeViewModel(
     val stateFlow: StateFlow<HomeScreenState> = _stateFlow.asStateFlow()
     val previousState: StateFlow<HomeScreenState> = _previousState.asStateFlow()
 
-
     val dailyEarnings: Flow<String>
         get() = _dailyEarnings.asStateFlow()
 
@@ -44,7 +39,6 @@ class HomeViewModel(
 
     val _serviceStarted = MutableStateFlow<Boolean>(false)
     val serviceStarted: StateFlow<Boolean> = _serviceStarted.asStateFlow()
-
 
     fun handlePermissions(
         permissions: Map<String, Boolean>,
@@ -285,13 +279,13 @@ class HomeViewModel(
                     when (current) {
                         is HomeScreenState.Listening -> {
                             launchNavigationAppChooser(context, pickupLat, pickupLon)
-                            HomeScreenState.PickingUp(
-                                dropoffCoordinates = Pair(
+                            HomeScreenState.HeadingToPickUp(
+                                dropOffCoordinates = Pair(
                                     current.requestDetails!!.dropoffLatitude,
                                     current.requestDetails.dropoffLongitude
                                 ),
                                 deliveryEarnings = current.requestDetails.price,
-                                pickedUp = false,
+                                isPickUpSpotValid = false,
                                 requestId = current.requestDetails.requestId,
                                 courierId = current.requestDetails.courierId,
                             )
@@ -363,7 +357,39 @@ class HomeViewModel(
         }
     }
 
-    fun pickupOrder(requestId: String, courierId: String, context: Context) {
+    fun validatePickup(requestId: String, courierId: String, context: Context) {
+        viewModelScope.launch {
+            val token = preferences.getUserInfo()?.bearer
+                ?: throw IllegalStateException("User not logged in, please log in first.")
+            val result = homeService.validatePickup(requestId, courierId, token)
+            if (result is Result.Error) {
+                updateState(HomeScreenState.Error(result.problem))
+            } else {
+                Log.v("HomeViewModel", "Pickup validated successfully")
+                _stateFlow.update { current ->
+                    when (current) {
+                        is HomeScreenState.HeadingToPickUp -> { current.copy(isPickUpSpotValid = true) }
+
+                        else -> {
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "ValidatePickupError",
+                                        title = "Validate Pickup Error",
+                                        detail = "Cannot validate pickup in the $current state.",
+                                        status = 403
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    fun validatePickUpPin(requestId: String, courierId: String, pickUpPin: String, context: Context) {
         Log.d(
             "HomeViewModel",
             "pickupOrder() called with requestId: $requestId, courierId: $courierId"
@@ -371,24 +397,22 @@ class HomeViewModel(
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
-            val result = homeService.pickupOrder(requestId, courierId, token)
+            val result = homeService.pickupOrder(requestId, courierId, pickUpPin, token)
             if (result is Result.Error) {
                 updateState(HomeScreenState.Error(result.problem))
             } else {
                 Log.v("HomeViewModel", "Order picked up successfully")
                 _stateFlow.update { current ->
                     when (current) {
-                        is HomeScreenState.PickingUp -> {
-                            launchNavigationAppChooser(
-                                context,
-                                current.dropoffCoordinates!!.first,
-                                current.dropoffCoordinates.second
-                            )
-                            HomeScreenState.Delivering(
+                        is HomeScreenState.HeadingToPickUp -> {
+                            HomeScreenState.PickedUp(
                                 deliveryEarnings = current.deliveryEarnings,
-                                delivered = false,
                                 requestId = current.requestId,
-                                courierId = current.courierId
+                                courierId = current.courierId,
+                                dropOffCoordinates = Pair(
+                                    current.dropOffCoordinates.first,
+                                    current.dropOffCoordinates.second
+                                )
                             )
                         }
 
@@ -410,11 +434,87 @@ class HomeViewModel(
         }
     }
 
-    fun deliverOrder(requestId: String, courierId: String) {
+    fun startNavigationToDropOff(
+        context: Context,
+    ) {
+        viewModelScope.launch {
+                _stateFlow.update { current ->
+                    when (current) {
+                        is HomeScreenState.PickedUp -> {
+                            launchNavigationAppChooser(
+                                context,
+                                current.dropOffCoordinates.first,
+                                current.dropOffCoordinates.second
+                            )
+                            HomeScreenState.HeadingToDropOff(
+                                deliveryEarnings = current.deliveryEarnings,
+                                isDropOffSpotValid = false,
+                                requestId = current.requestId,
+                                courierId = current.courierId
+                            )
+                        }
+
+                        else -> {
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "PickupOrderError",
+                                        title = "Pickup Order Error",
+                                        detail = "Cannot pick up order in the current state.",
+                                        status = 403
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+    fun validateDropOff(requestId: String, courierId: String) {
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
-            val result = homeService.deliverOrder(requestId, courierId, token)
+            val result = homeService.validateDropOff(requestId, courierId, token)
+            if (result is Result.Error) {
+                updateState(HomeScreenState.Error(result.problem))
+            } else {
+                Log.v("HomeViewModel", "Drop-off validated successfully")
+                _stateFlow.update { current ->
+                    when (current) {
+                        is HomeScreenState.HeadingToDropOff -> current.copy(isDropOffSpotValid = true)
+
+                        else -> {
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "ValidateDropOffError",
+                                        title = "Validate Drop Off Error",
+                                        detail = "Cannot validate drop-off in the $current state.",
+                                        status = 403
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun validateDropOffPin(
+        requestId: String,
+        courierId: String,
+        dropOffPin: String,
+    ) {
+        Log.d(
+            "HomeViewModel",
+            "deliverOrder() called with requestId: $requestId, courierId: $courierId"
+        )
+        viewModelScope.launch {
+            val token = preferences.getUserInfo()?.bearer
+                ?: throw IllegalStateException("User not logged in, please log in first.")
+            val result = homeService.deliverOrder(requestId, courierId, dropOffPin, token)
             if (result is Result.Error) {
                 updateState(HomeScreenState.Error(result.problem))
             } else {
@@ -422,10 +522,11 @@ class HomeViewModel(
                 Log.v("HomeViewModel", "Order delivered successfully")
                 _stateFlow.update { current ->
                     when (current) {
-                        is HomeScreenState.Delivering -> HomeScreenState.Delivered(
-                            deliveryEarnings = current.deliveryEarnings
-                        )
-
+                        is HomeScreenState.HeadingToDropOff -> {
+                            HomeScreenState.Delivered(
+                                deliveryEarnings = current.deliveryEarnings
+                            )
+                        }
                         else -> {
                             updateState(
                                 HomeScreenState.Error(
@@ -448,7 +549,7 @@ class HomeViewModel(
         viewModelScope.launch {
             _stateFlow.update { current ->
                 when (current) {
-                    is HomeScreenState.PickingUp -> {
+                    is HomeScreenState.HeadingToPickUp -> {
                         _previousState.value = current
                         HomeScreenState.Cancelling(
                             courierId = current.courierId,
@@ -456,7 +557,7 @@ class HomeViewModel(
                         )
                     }
 
-                    is HomeScreenState.Delivering -> {
+                    is HomeScreenState.HeadingToDropOff -> {
                         _previousState.value = current
                         HomeScreenState.Cancelling(
                             courierId = current.courierId,

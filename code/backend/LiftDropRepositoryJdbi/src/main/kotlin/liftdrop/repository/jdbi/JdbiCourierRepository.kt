@@ -3,10 +3,7 @@ package liftdrop.repository.jdbi
 import liftdrop.repository.CourierRepository
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.kotlin.mapTo
-import pt.isel.liftdrop.Courier
-import pt.isel.liftdrop.CourierWithLocation
-import pt.isel.liftdrop.User
-import pt.isel.liftdrop.UserRole
+import pt.isel.liftdrop.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 
 class JdbiCourierRepository(
@@ -189,7 +186,30 @@ class JdbiCourierRepository(
     override fun pickupDelivery(
         requestId: Int,
         courierId: Int,
+        pickupPin: String,
     ): Boolean {
+        val isValidPickupPin =
+            handle
+                .createQuery(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1 FROM liftdrop.request
+                        WHERE request_id = :requestId 
+                        AND courier_id = :courierId
+                        AND pickup_code = :pickupPin
+                    )
+                    """,
+                ).bind("requestId", requestId)
+                .bind("courierId", courierId)
+                .bind("pickupPin", pickupPin)
+                .mapTo<Boolean>()
+                .one()
+
+        if (!isValidPickupPin) {
+            GlobalLogger.log("Invalid pickup pin for request ID $requestId.")
+            return false // Invalid pickup pin
+        }
+
         handle
             .createUpdate(
                 """
@@ -289,7 +309,28 @@ class JdbiCourierRepository(
     override fun completeDelivery(
         requestId: Int,
         courierId: Int,
+        completionPin: String,
     ): Boolean {
+        val isValidCompletionPin =
+            handle
+                .createQuery(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1 FROM liftdrop.request
+                        WHERE request_id = :requestId 
+                        AND courier_id = :courierId 
+                        AND dropoff_code = :completionPin
+                    )
+                    """,
+                ).bind("requestId", requestId)
+                .bind("courierId", courierId)
+                .bind("completionPin", completionPin)
+                .mapTo<Boolean>()
+                .one()
+        if (!isValidCompletionPin) {
+            GlobalLogger.log("Invalid completion pin for request ID $requestId.")
+            return false // Invalid completion pin
+        }
         handle
             .createUpdate(
                 """

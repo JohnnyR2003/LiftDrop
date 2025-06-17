@@ -1,8 +1,6 @@
 package pt.isel.liftdrop.home.model
 
-data class DeliverOrderInputModel(
+data class ValidateDropOffInputModel(
     val requestId: Int,
     val courierId: Int,
-    val dropoffCode: String,
 )
-

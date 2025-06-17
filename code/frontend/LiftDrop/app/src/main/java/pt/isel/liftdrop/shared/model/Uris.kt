@@ -14,11 +14,17 @@ object Uris {
         const val LOGIN = "$BASE/login"
         const val LOGOUT = "$BASE/logout"
         const val UPDATE_LOCATION = "$BASE/updateLocation"
-        const val WAITING_ORDERS = "$BASE/waitingOrders"
         const val CANCEL_DELIVERY = "$BASE/cancelDelivery"
+        const val TRY_PICKUP = "$BASE/tryPickup"
+        const val TRY_DELIVERY = "$BASE/tryDelivery"
         const val PICKED_UP_ORDER = "$BASE/pickedUpOrder"
         const val DELIVERED_ORDER = "$BASE/deliveredOrder"
         const val FETCH_DAILY_EARNINGS = "$BASE/fetchDailyEarnings/{courierId}"
         const val COMPLETE_ORDER = "$BASE/completeOrder"
+    }
+
+    object Sse {
+        const val BASE = "$PREFIX/sse/courier"
+        const val STREAM_EVENTS = "$BASE/{courierId}"
     }
 }

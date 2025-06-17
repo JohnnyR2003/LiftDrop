@@ -255,7 +255,7 @@ fun Address.toFormattedString(): String {
 }
 
 fun generateRandomCode(length: Int): String {
-    val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    val allowedChars = "0123456789"
     return (1..length)
         .map { allowedChars.random() }
         .joinToString("")

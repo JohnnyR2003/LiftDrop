@@ -8,26 +8,28 @@ sealed class HomeScreenState {
         val dailyEarnings: String,
         val incomingRequest: Boolean = false,
         val requestDetails: CourierRequestDetails?,
-        //val accepted: Boolean = false,
     ) : HomeScreenState()
-    data class PickingUp(
+    data class HeadingToPickUp(
         val deliveryEarnings: String,
-        val dropoffCoordinates: Pair<Double, Double>? = null,
+        val dropOffCoordinates: Pair<Double, Double>,
         val requestId: String,
         val courierId: String,
-        //val requestDetails: CourierRequestDetails
-        val pickedUp : Boolean = false,
+        val isPickUpSpotValid : Boolean = false,
     ) : HomeScreenState()
-    data class Delivering(
+    data class PickedUp(
         val deliveryEarnings: String,
         val requestId: String,
         val courierId: String,
-        //val requestDetails: CourierRequestDetails
-        val delivered : Boolean = false,
+        val dropOffCoordinates: Pair<Double, Double>,
+    ) : HomeScreenState()
+    data class HeadingToDropOff(
+        val deliveryEarnings: String,
+        val requestId: String,
+        val courierId: String,
+        val isDropOffSpotValid : Boolean = false,
     ) : HomeScreenState()
     data class Delivered(
         val deliveryEarnings: String,
-        //val requestDetails: CourierRequestDetails
     ) : HomeScreenState()
     data class Idle(
         val dailyEarnings: String,
