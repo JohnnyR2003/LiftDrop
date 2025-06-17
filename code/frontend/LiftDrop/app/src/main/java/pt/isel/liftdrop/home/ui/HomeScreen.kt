@@ -29,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
 import androidx.compose.material.icons.filled.ExitToApp
-import pt.isel.liftdrop.home.model.WeatherAlertState
 import pt.isel.liftdrop.shared.ui.BottomSlideToConfirm
 import pt.isel.liftdrop.shared.ui.ErrorCard
 import androidx.compose.material3.BadgedBox
@@ -76,16 +75,13 @@ fun HomeScreen(
             val icons = when (state) {
                 is HomeScreenState.Idle -> listOf(
                     Triple(Icons.Default.Menu, onMenuClick, false),
-                    Triple(Icons.Default.Notifications, onNotificationClick, weatherAlertState.alerts.isNotEmpty()),
                     Triple(Icons.Default.ExitToApp, onLogoutClick, false)
                 )
                 is HomeScreenState.Listening -> listOf(
                     Triple(Icons.Default.Menu, onMenuClick, false),
-                    Triple(Icons.Default.Notifications, onNotificationClick, weatherAlertState.alerts.isNotEmpty())
                 )
                 is HomeScreenState.HeadingToPickUp, is HomeScreenState.HeadingToDropOff -> listOf(
                     Triple(Icons.Default.Menu, onMenuClick, false),
-                    Triple(Icons.Default.Notifications, onNotificationClick, weatherAlertState.alerts.isNotEmpty()),
                     Triple(Icons.Default.Close, onCancelDeliveryClick, false)
                 )
                 else -> emptyList()

@@ -114,7 +114,6 @@ class HomeActivity : ComponentActivity() {
                 },
                 onCancelDeliveryClick = { viewModel.tryCancelDelivery() },
                 dailyEarnings = dailyEarnings,
-                weatherAlertState = weatherAlertState
             )
         }
     }
