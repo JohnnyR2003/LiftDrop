@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.Dispatchers
 import pt.isel.liftdrop.TAG
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -52,20 +53,15 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.v(TAG, "LoginActivity.onCreate() on process ${android.os.Process.myPid()}")
 
-        // Check if the user is already logged in
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                if(repo.preferencesRepository.isLoggedIn()){
-                    HomeActivity.navigate(this@LoginActivity)
-                }
-            }
-        }
-
         lifecycleScope.launch {
             viewModel.stateFlow.collect {
+                val userInfo = repo.preferencesRepository.getUserInfo()
+                if( it is LoginScreenState.Idle && userInfo != null && userInfo.bearer.isNotEmpty()) {
+                    viewModel.checkLoginState(userInfo.bearer)
+                }
                 if (it is LoginScreenState.Login && it.isLoggedIn) {
+                    Log.v(TAG, "User logged in successfully through second cycle, navigating to HomeActivity")
                     HomeActivity.navigate(this@LoginActivity)
-                    viewModel.resetToIdle()
                 }
             }
         }

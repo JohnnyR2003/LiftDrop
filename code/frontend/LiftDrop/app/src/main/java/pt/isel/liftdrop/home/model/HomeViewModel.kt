@@ -62,7 +62,6 @@ class HomeViewModel(
         }
     }
 
-
     fun updateState(newState: HomeScreenState): HomeScreenState {
         _previousState.value = _stateFlow.value // Salva o estado atual como o anterior
         _stateFlow.value = newState // Atualiza o estado atual
@@ -438,38 +437,38 @@ class HomeViewModel(
         context: Context,
     ) {
         viewModelScope.launch {
-                _stateFlow.update { current ->
-                    when (current) {
-                        is HomeScreenState.PickedUp -> {
-                            launchNavigationAppChooser(
-                                context,
-                                current.dropOffCoordinates.first,
-                                current.dropOffCoordinates.second
-                            )
-                            HomeScreenState.HeadingToDropOff(
-                                deliveryEarnings = current.deliveryEarnings,
-                                isDropOffSpotValid = false,
-                                requestId = current.requestId,
-                                courierId = current.courierId
-                            )
-                        }
+            _stateFlow.update { current ->
+                when (current) {
+                    is HomeScreenState.PickedUp -> {
+                        launchNavigationAppChooser(
+                            context,
+                            current.dropOffCoordinates.first,
+                            current.dropOffCoordinates.second
+                        )
+                        HomeScreenState.HeadingToDropOff(
+                            deliveryEarnings = current.deliveryEarnings,
+                            isDropOffSpotValid = false,
+                            requestId = current.requestId,
+                            courierId = current.courierId
+                        )
+                    }
 
-                        else -> {
-                            updateState(
-                                HomeScreenState.Error(
-                                    Problem(
-                                        type = "PickupOrderError",
-                                        title = "Pickup Order Error",
-                                        detail = "Cannot pick up order in the current state.",
-                                        status = 403
-                                    )
+                    else -> {
+                        updateState(
+                            HomeScreenState.Error(
+                                Problem(
+                                    type = "PickupOrderError",
+                                    title = "Pickup Order Error",
+                                    detail = "Cannot pick up order in the current state.",
+                                    status = 403
                                 )
                             )
-                        }
+                        )
                     }
                 }
             }
         }
+    }
 
     fun validateDropOff(requestId: String, courierId: String) {
         viewModelScope.launch {

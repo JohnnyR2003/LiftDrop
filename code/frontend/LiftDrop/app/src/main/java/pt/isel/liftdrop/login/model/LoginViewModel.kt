@@ -7,7 +7,9 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pt.isel.liftdrop.login.ui.LoginScreen
 import pt.isel.liftdrop.login.ui.LoginScreenState
 import pt.isel.liftdrop.services.http.Result
 
@@ -19,7 +21,7 @@ class LoginViewModel(
     val stateFlow: Flow<LoginScreenState>
         get() = _stateFlow.asStateFlow()
 
-    private val _stateFlow: MutableStateFlow<LoginScreenState> =
+    internal val _stateFlow: MutableStateFlow<LoginScreenState> =
         MutableStateFlow(LoginScreenState.Idle)
 
     @Throws(IllegalStateException::class)
@@ -54,6 +56,32 @@ class LoginViewModel(
 
                 )
 
+            }
+        }
+    }
+
+    fun checkLoginState(token: String){
+        viewModelScope.launch {
+            _stateFlow.update { it ->
+                val userInfo = preferences.getUserInfo()
+                val result = service.getCourierIdByToken(token)
+                if (result is Result.Error) {
+                    Log.v("Login", "Problem fetching courier id with ${result.problem}")
+                    if(userInfo != null) {
+                        Log.v("Login", "Resposta do backend: ${result.problem}")
+                       // Log.v("Login", "Problem  fetching courier id with ${result.problem}, clearing user info")
+                        preferences.clearUserInfo(userInfo)
+                        LoginScreenState.Idle
+                    }
+                    it
+                }
+                else{
+                    Log.v("Login", "User is logged in with id $result and token $token")
+                     LoginScreenState.Login(
+                        userInfo = userInfo,
+                        isLoggedIn = true
+                    )
+                }
             }
         }
     }

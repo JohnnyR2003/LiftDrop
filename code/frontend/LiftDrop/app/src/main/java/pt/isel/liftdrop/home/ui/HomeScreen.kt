@@ -74,14 +74,14 @@ fun HomeScreen(
 
             val icons = when (state) {
                 is HomeScreenState.Idle -> listOf(
-                    Triple(Icons.Default.Menu, onMenuClick, false),
+                    //Triple(Icons.Default.Menu, onMenuClick, false),
                     Triple(Icons.Default.ExitToApp, onLogoutClick, false)
                 )
                 is HomeScreenState.Listening -> listOf(
-                    Triple(Icons.Default.Menu, onMenuClick, false),
+                   // Triple(Icons.Default.Menu, onMenuClick, false),
                 )
-                is HomeScreenState.HeadingToPickUp, is HomeScreenState.HeadingToDropOff -> listOf(
-                    Triple(Icons.Default.Menu, onMenuClick, false),
+                is HomeScreenState.HeadingToPickUp -> listOf(
+                    //Triple(Icons.Default.Menu, onMenuClick, false),
                     Triple(Icons.Default.Close, onCancelDeliveryClick, false)
                 )
                 else -> emptyList()
