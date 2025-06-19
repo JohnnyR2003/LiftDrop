@@ -38,7 +38,8 @@ interface CourierRepository {
     fun completeDelivery( // if possible should support external pin for completion
         requestId: Int,
         courierId: Int,
-        completionPin: String, // optional pin for completion
+        completionPin: String,
+        deliveryEarnings: Double,
     ): Boolean
 
     fun getCourierByUserId(userId: Int): Courier?

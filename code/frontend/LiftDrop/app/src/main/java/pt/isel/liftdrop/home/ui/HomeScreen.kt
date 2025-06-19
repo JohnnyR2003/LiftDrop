@@ -412,6 +412,7 @@ fun HomeScreen(
                                         state.requestId,
                                         state.courierId,
                                         pin,
+                                        state.deliveryEarnings.toDouble()
                                     )
                                 }
                             )

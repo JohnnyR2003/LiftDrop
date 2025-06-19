@@ -28,6 +28,7 @@ import pt.isel.services.AssignmentCoordinator
 import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.courier.CourierError
 import pt.isel.services.courier.LocationUpdateError
+import java.util.*
 
 @Named("GeocodingServices")
 class GeocodingServices(
@@ -78,6 +79,14 @@ class GeocodingServices(
                         GlobalLogger.log("Request details not found for request ID: $requestId")
                         return@run false
                     }
+
+                    val estimatedEarnings =
+                        estimateCourierEarnings(
+                            distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
+                            itemValue = requestDetails.price.toDouble(),
+                        )
+
+                    val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
                     // Send the assignment request via WebSocket
                     courierWebSocketHandler.sendDeliveryRequestToCourier(
                         courier.courierId,
@@ -90,7 +99,7 @@ class GeocodingServices(
                             dropoffLatitude = requestDetails.dropoffLocation.latitude,
                             dropoffLongitude = requestDetails.dropoffLocation.longitude,
                             dropoffAddress = requestDetails.dropoffAddress,
-                            price = requestDetails.price,
+                            price = formattedEarnings,
                         ),
                     )
                 }
@@ -321,4 +330,12 @@ class GeocodingServices(
             }
         }
     }
+
+    fun estimateCourierEarnings(
+        distanceKm: Double,
+        itemValue: Double,
+        baseFee: Double = 2.0,
+        perKmRate: Double = 0.5,
+        valueRate: Double = 0.005,
+    ): Double = baseFee + (distanceKm * perKmRate) + (itemValue * valueRate)
 }

@@ -85,12 +85,4 @@ class LoginViewModel(
             }
         }
     }
-
-    @Throws(IllegalStateException::class)
-    fun resetToIdle() {
-        check(_stateFlow.value is LoginScreenState.Login || _stateFlow.value is LoginScreenState.Error) {
-            "The view model is not in the Login state or in the Error state."
-        }
-        _stateFlow.value = LoginScreenState.Idle
-    }
 }

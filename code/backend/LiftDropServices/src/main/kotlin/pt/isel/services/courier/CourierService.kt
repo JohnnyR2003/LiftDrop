@@ -169,11 +169,12 @@ class CourierService(
         requestId: Int,
         courierId: Int,
         dropOffPin: String,
+        deliveryEarnings: Double,
     ): Either<CourierDeliveryError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
 
-            val request = courierRepository.completeDelivery(requestId, courierId, dropOffPin)
+            val request = courierRepository.completeDelivery(requestId, courierId, dropOffPin, deliveryEarnings)
             if (!request) {
                 return@run failure(CourierDeliveryError.PickupPINMismatch)
             } else {

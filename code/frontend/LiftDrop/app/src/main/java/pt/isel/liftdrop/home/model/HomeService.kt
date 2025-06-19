@@ -25,7 +25,7 @@ interface HomeService {
 
     suspend fun validateDropOff(requestId: String, courierId: String, token: String): Result<Boolean>
 
-    suspend fun deliverOrder(requestId: String, courierId: String, dropOffPin: String, token: String): Result<Boolean>
+    suspend fun deliverOrder(requestId: String, courierId: String, dropOffPin: String, deliveryEarnings: Double, token: String): Result<Boolean>
 
     suspend fun cancelDelivery(courierId: String, requestId: String, token: String): Result<Boolean>
 
@@ -161,12 +161,14 @@ class RealHomeService(
         requestId: String,
         courierId: String,
         dropOffPin: String,
+        deliveryEarnings: Double,
         token: String
     ): Result<Boolean> {
         val body = DeliverOrderInputModel(
             requestId = requestId.toInt(),
             courierId = courierId.toInt(),
-            dropoffCode = dropOffPin
+            dropoffCode = dropOffPin,
+            deliveryEarnings = deliveryEarnings
         )
 
         return httpService.post<DeliverOrderInputModel, Boolean>(

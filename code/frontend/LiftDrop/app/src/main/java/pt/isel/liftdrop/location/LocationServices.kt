@@ -76,6 +76,7 @@ class LocationServices {
         val cameraPositionState = rememberCameraPositionState()
         var currentLocation by remember { mutableStateOf<LatLng?>(null) }
         val coroutineScope = rememberCoroutineScope()
+        var hasZoomedToLocation by remember { mutableStateOf(false) }
 
         DisposableEffect(Unit) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -84,10 +85,11 @@ class LocationServices {
                     val location = result.lastLocation ?: return
                     val latLng = LatLng(location.latitude, location.longitude)
                     currentLocation = latLng
+                    val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
                     coroutineScope.launch {
-                        val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-                        if (bounds == null || !bounds.contains(latLng)) {
+                        if (!hasZoomedToLocation || bounds == null || !bounds.contains(latLng)) {
                             cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                            hasZoomedToLocation = true
                         }
                     }
                 }

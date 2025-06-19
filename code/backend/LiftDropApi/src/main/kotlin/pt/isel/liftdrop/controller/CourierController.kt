@@ -320,6 +320,7 @@ class CourierController(
                 requestId = input.requestId,
                 courierId = input.courierId,
                 dropOffPin = input.dropoffCode,
+                deliveryEarnings = input.deliveryEarnings,
             )
 
         return when (request) {

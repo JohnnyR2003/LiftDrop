@@ -505,6 +505,7 @@ class HomeViewModel(
         requestId: String,
         courierId: String,
         dropOffPin: String,
+        deliveryEarnings: Double
     ) {
         Log.d(
             "HomeViewModel",
@@ -513,7 +514,7 @@ class HomeViewModel(
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
-            val result = homeService.deliverOrder(requestId, courierId, dropOffPin, token)
+            val result = homeService.deliverOrder(requestId, courierId, dropOffPin, deliveryEarnings, token)
             if (result is Result.Error) {
                 updateState(HomeScreenState.Error(result.problem))
             } else {

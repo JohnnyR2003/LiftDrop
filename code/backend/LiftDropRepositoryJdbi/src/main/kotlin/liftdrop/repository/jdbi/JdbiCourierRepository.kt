@@ -310,6 +310,7 @@ class JdbiCourierRepository(
         requestId: Int,
         courierId: Int,
         completionPin: String,
+        deliveryEarnings: Double,
     ): Boolean {
         val isValidCompletionPin =
             handle
@@ -355,20 +356,6 @@ class JdbiCourierRepository(
                 ).bind("courierId", courierId)
                 .bind("requestId", requestId)
                 .execute()
-
-        val deliveryEarnings =
-            handle
-                .createQuery(
-                    """
-                    SELECT i.price
-                    FROM liftdrop.item i join liftdrop.request_details rd on rd.description = i.designation
-                    join liftdrop.request r on rd.request_id = r.request_id
-                    WHERE rd.request_id = :requestId and r.courier_id = :courierId
-                """,
-                ).bind("requestId", requestId)
-                .bind("courierId", courierId)
-                .mapTo<Double>()
-                .first()
 
         val updateCourierStatusAndEarnings =
             handle
