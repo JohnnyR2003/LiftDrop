@@ -204,6 +204,7 @@ class HomeViewModel(
                                     is HomeScreenState.CancellingDropOff -> {
                                         current.copy(
                                             isOrderReassigned = request.hasBeenAccepted,
+                                            isOrderPickedUp = request.hasBeenPickedUp,
                                             pickupCode = request.pinCode,
                                         )
                                     }
@@ -337,6 +338,7 @@ class HomeViewModel(
                                 isPickUpSpotValid = false,
                                 requestId = current.requestDetails.requestId,
                                 courierId = current.requestDetails.courierId,
+                                deliveryKind = current.requestDetails.deliveryKind,
                             )
                         }
 
@@ -438,7 +440,7 @@ class HomeViewModel(
     }
 
 
-    fun validatePickUpPin(requestId: String, courierId: String, pickUpPin: String, context: Context) {
+    fun validatePickUpPin(requestId: String, courierId: String, pickUpPin: String, deliveryKind: String, context: Context) {
         Log.d(
             "HomeViewModel",
             "pickupOrder() called with requestId: $requestId, courierId: $courierId"
@@ -446,7 +448,7 @@ class HomeViewModel(
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
-            val result = homeService.pickupOrder(requestId, courierId, pickUpPin, token)
+            val result = homeService.pickupOrder(requestId, courierId, pickUpPin, deliveryKind, token)
             if (result is Result.Error) {
                 updateState(HomeScreenState.Error(result.problem))
             } else {
@@ -800,22 +802,6 @@ fun parseDynamicMessage(message: String): Any {
         "DELIVERY_UPDATE" -> mapper.treeToValue(root, DeliveryUpdate::class.java)
         else -> throw IllegalArgumentException("Unknown message type: $type")
     }
-}
-
-private fun parseRequestDetails(message: String): CourierRequestDetails {
-    val mapper = jacksonObjectMapper()
-    val details = mapper.readValue(message, CourierRequestDetails::class.java)
-    return CourierRequestDetails(
-        requestId = details.requestId,
-        courierId = details.courierId,
-        pickupLatitude = details.pickupLatitude,
-        pickupLongitude = details.pickupLongitude,
-        dropoffLatitude = details.dropoffLatitude,
-        dropoffLongitude = details.dropoffLongitude,
-        pickupAddress = details.pickupAddress,
-        dropoffAddress = details.dropoffAddress,
-        price = details.price
-    )
 }
 fun launchNavigationAppChooser(
     context: Context,

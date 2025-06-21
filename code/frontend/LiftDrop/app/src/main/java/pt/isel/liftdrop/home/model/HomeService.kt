@@ -21,7 +21,7 @@ interface HomeService {
 
     suspend fun validatePickup(requestId: String, courierId: String, token: String): Result<Boolean>
 
-    suspend fun pickupOrder(requestId: String, courierId: String, pickUpPin: String, token: String): Result<Boolean>
+    suspend fun pickupOrder(requestId: String, courierId: String, pickUpPin: String, deliveryKind: String, token: String): Result<Boolean>
 
     suspend fun validateDropOff(requestId: String, courierId: String, token: String): Result<Boolean>
 
@@ -130,11 +130,12 @@ class RealHomeService(
         )
     }
 
-    override suspend fun pickupOrder(requestId: String, courierId: String, pickUpPin: String, token: String): Result<Boolean> {
+    override suspend fun pickupOrder(requestId: String, courierId: String, pickUpPin: String, deliveryKind: String, token: String): Result<Boolean> {
         val body = PickupOrderInputModel(
             requestId = requestId.toInt(),
             courierId = courierId.toInt(),
-            pickupCode = pickUpPin
+            pickupCode = pickUpPin,
+            deliveryKind = deliveryKind // Assuming a default value for deliveryKind
         )
 
         return httpService.post<PickupOrderInputModel, Boolean>(

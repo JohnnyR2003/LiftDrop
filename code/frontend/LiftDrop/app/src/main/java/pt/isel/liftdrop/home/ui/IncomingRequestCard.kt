@@ -249,7 +249,8 @@ fun IncomingRequestCardPreview() {
             dropoffLongitude = -9.1399,
             pickupAddress = "123 Main St, City",
             dropoffAddress = "456 Elm St, City",
-            price = "15.0"
+            price = "15.0",
+            deliveryKind = "DEFAULT"
         ),
         onAccept = {},
         onDecline = {}

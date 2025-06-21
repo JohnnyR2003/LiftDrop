@@ -12,4 +12,10 @@ enum class DeliveryStatus {
     }
 
     override fun toString(): String = this.name
+
+    fun toDeliveryKind(): DeliveryKind =
+        when (this) {
+            HEADING_TO_PICKUP -> DeliveryKind.DEFAULT
+            HEADING_TO_DROPOFF -> DeliveryKind.RELAY
+        }
 }

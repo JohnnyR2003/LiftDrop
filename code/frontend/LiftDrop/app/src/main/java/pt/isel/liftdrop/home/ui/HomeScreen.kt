@@ -369,6 +369,7 @@ fun HomeScreen(
                                         state.requestId,
                                         state.courierId,
                                         pin,
+                                        state.deliveryKind,
                                         context
                                     )
                                 }
@@ -526,6 +527,43 @@ fun HomeScreen(
 
                 is HomeScreenState.CancellingDropOff -> {
                     if (state.isOrderReassigned) {
+                        if(state.isOrderPickedUp){
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.5f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.padding(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(24.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            "Delivery cancelled successfully!",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp,
+                                            color = Color(0xFF384259)
+                                        )
+                                        Spacer(modifier = Modifier.height(24.dp))
+                                        Button(
+                                            onClick = { viewModel.resetToIdleState() },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(
+                                                    0xFF43A047
+                                                )
+                                            )
+                                        ) {
+                                            Text("OK", color = Color.White)
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()

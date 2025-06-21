@@ -61,6 +61,8 @@ sealed class CourierError {
 
     data object RequestNotAccepted : CourierError()
 
+    data object RelayRequestNotAccepted : CourierError()
+
     data object NoAvailableCouriers : CourierError()
 
     data object NoCourierAvailable : CourierError()

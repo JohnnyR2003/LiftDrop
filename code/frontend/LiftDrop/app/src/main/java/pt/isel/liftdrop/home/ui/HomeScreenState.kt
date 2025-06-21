@@ -16,7 +16,7 @@ sealed class HomeScreenState {
         val requestId: String,
         val courierId: String,
         val isPickUpSpotValid : Boolean = false,
-        val currentLocationDTO: LocationDTO? = null,
+        val deliveryKind: String,
         val deliveryStatus: String = "HEADING_TO_PICKUP",
     ) : HomeScreenState()
     data class PickedUp(
@@ -24,7 +24,6 @@ sealed class HomeScreenState {
         val requestId: String,
         val courierId: String,
         val dropOffCoordinates: Pair<Double, Double>,
-        val currentLocationDTO: LocationDTO? = null,
         val deliveryStatus: String = "PICKED_UP",
     ) : HomeScreenState()
     data class HeadingToDropOff(
@@ -32,7 +31,6 @@ sealed class HomeScreenState {
         val requestId: String,
         val courierId: String,
         val isDropOffSpotValid : Boolean = false,
-        val currentLocationDTO: LocationDTO? = null,
         val deliveryStatus: String = "HEADING_TO_DROPOFF",
     ) : HomeScreenState()
     data class Delivered(
@@ -57,6 +55,7 @@ sealed class HomeScreenState {
         val courierId: String,
         val requestId: String,
         val isOrderReassigned: Boolean = false,
+        val isOrderPickedUp: Boolean = false,
         val pickUpLocation: LocationDTO? = null,
         val pickupCode: String? = null,
     ) : HomeScreenState()

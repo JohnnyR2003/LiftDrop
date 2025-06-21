@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import pt.isel.liftdrop.DeliveryKind
 import pt.isel.liftdrop.DeliveryStatus
 import pt.isel.liftdrop.Uris
 import pt.isel.liftdrop.model.*
@@ -260,9 +261,20 @@ class CourierController(
                 pickupPin = input.pickupCode,
             )
 
+        val deliveryKind = DeliveryKind.fromString(input.deliveryKind)
         return when (request) {
             is Success -> {
-                ResponseEntity.ok(true)
+                when (deliveryKind) {
+                    DeliveryKind.DEFAULT -> {
+                        ResponseEntity.ok(true)
+                    }
+                    DeliveryKind.RELAY -> {
+                        geocodingServices.completeReassignment(
+                            input.courierId,
+                        )
+                        ResponseEntity.ok(true)
+                    }
+                }
             }
             is Failure -> {
                 when (request.value) {

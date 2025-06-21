@@ -13,5 +13,6 @@ data class CourierRequestDetails(
     val dropoffLatitude: Double,
     val dropoffLongitude: Double,
     val dropoffAddress: String,
-    val price: String
+    val price: String,
+    val deliveryKind: String
 )

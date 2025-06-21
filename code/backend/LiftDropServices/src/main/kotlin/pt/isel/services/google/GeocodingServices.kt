@@ -57,7 +57,8 @@ class GeocodingServices(
         requestId: Int,
         initialMaxDistance: Double = 1000.0,
         maxDistanceIncrement: Double = 1000.0,
-        maxAllowedDistance: Double = 4000.0, // Maximum distance cap
+        maxAllowedDistance: Double = 4000.0,
+        deliveryKind: String = "DEFAULT", // Maximum distance cap
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
         GlobalLogger.log("Fetching ranked couriers for request ID: $requestId with maxDistance: $currentMaxDistance")
@@ -99,6 +100,7 @@ class GeocodingServices(
                             dropoffLongitude = requestDetails.dropoffLocation.longitude,
                             dropoffAddress = requestDetails.dropoffAddress,
                             price = formattedEarnings,
+                            deliveryKind = deliveryKind,
                         ),
                     )
                 }
@@ -132,6 +134,7 @@ class GeocodingServices(
                 minOf(currentMaxDistance + maxDistanceIncrement, maxAllowedDistance),
                 maxDistanceIncrement,
                 maxAllowedDistance,
+                deliveryKind,
             )
         } else {
             GlobalLogger.log("No couriers found. Retrying in 5 seconds...")
@@ -251,9 +254,10 @@ class GeocodingServices(
 
             CoroutineScope(Dispatchers.Default).launch {
                 if (handleCourierAssignment(
-                        pickupLat,
-                        pickupLon,
-                        requestId,
+                        pickupLat = pickupLat,
+                        pickupLon = pickupLon,
+                        requestId = requestId,
+                        deliveryKind = deliveryStatus.toDeliveryKind().name,
                     )
                 ) {
                     if (deliveryStatus == DeliveryStatus.HEADING_TO_DROPOFF) {
@@ -270,9 +274,18 @@ class GeocodingServices(
                     }
                 }
             }
-
             return@run true
         }
+    }
+
+    fun completeReassignment(courierId: Int) {
+        courierWebSocketHandler.sendMessageToCourier(
+            courierId = courierId,
+            message =
+                DeliveryUpdateMessage(
+                    hasBeenPickedUp = true,
+                ),
+        )
     }
 
     val baseUrl: String = "https://maps.googleapis.com/maps/api/geocode/json"
