@@ -278,14 +278,23 @@ class GeocodingServices(
         }
     }
 
-    fun completeReassignment(courierId: Int) {
-        courierWebSocketHandler.sendMessageToCourier(
-            courierId = courierId,
-            message =
-                DeliveryUpdateMessage(
-                    hasBeenPickedUp = true,
-                ),
-        )
+    fun completeReassignment(requestId: Int) {
+        transactionManager.run {
+            val courierRepository = it.courierRepository
+            val courierId = courierRepository.getCourierIdByCancelledRequest(requestId)
+            if (courierId == null) {
+                GlobalLogger.log("Courier ID not found for request ID: $requestId")
+                return@run
+            } else {
+                courierWebSocketHandler.sendMessageToCourier(
+                    courierId = courierId,
+                    message =
+                        DeliveryUpdateMessage(
+                            hasBeenPickedUp = true,
+                        ),
+                )
+            }
+        }
     }
 
     val baseUrl: String = "https://maps.googleapis.com/maps/api/geocode/json"

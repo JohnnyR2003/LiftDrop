@@ -577,6 +577,17 @@ class JdbiCourierRepository(
         return sessionsUpdated > 0 && updatedCourier > 0
     }
 
+    override fun getCourierIdByCancelledRequest(requestId: Int): Int? =
+        handle
+            .createQuery(
+                """
+                SELECT courier_id FROM liftdrop.request_declines
+                WHERE request_id = :requestId
+                """,
+            ).bind("requestId", requestId)
+            .mapTo<Int>()
+            .singleOrNull()
+
     override fun clear() {
         handle.createUpdate("TRUNCATE TABLE liftdrop.courier CASCADE;").execute()
     }

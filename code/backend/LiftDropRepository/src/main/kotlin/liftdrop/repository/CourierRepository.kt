@@ -69,5 +69,7 @@ interface CourierRepository {
 
     fun logoutCourier(sessionToken: String): Boolean
 
+    fun getCourierIdByCancelledRequest(requestId: Int): Int?
+
     fun clear()
 }

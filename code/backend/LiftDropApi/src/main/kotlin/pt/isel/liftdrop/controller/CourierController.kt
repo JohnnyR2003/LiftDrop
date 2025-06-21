@@ -270,7 +270,7 @@ class CourierController(
                     }
                     DeliveryKind.RELAY -> {
                         geocodingServices.completeReassignment(
-                            input.courierId,
+                            input.requestId,
                         )
                         ResponseEntity.ok(true)
                     }
