@@ -58,7 +58,7 @@ class GeocodingServices(
         initialMaxDistance: Double = 1000.0,
         maxDistanceIncrement: Double = 1000.0,
         maxAllowedDistance: Double = 4000.0,
-        deliveryKind: String = "DEFAULT", // Maximum distance cap
+        deliveryKind: String, // Maximum distance cap
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
         GlobalLogger.log("Fetching ranked couriers for request ID: $requestId with maxDistance: $currentMaxDistance")
@@ -146,6 +146,7 @@ class GeocodingServices(
                 minOf(currentMaxDistance + maxDistanceIncrement, maxAllowedDistance),
                 maxDistanceIncrement,
                 maxAllowedDistance,
+                deliveryKind,
             )
         }
     }
@@ -251,6 +252,8 @@ class GeocodingServices(
                     DeliveryStatus.HEADING_TO_PICKUP -> null
                     DeliveryStatus.HEADING_TO_DROPOFF -> requestRepository.getPickupCodeForCancelledRequest(requestId)
                 }
+
+            GlobalLogger.log("Reassigning delivery with status $deliveryStatus and kind ${deliveryStatus.toDeliveryKind().name}")
 
             CoroutineScope(Dispatchers.Default).launch {
                 if (handleCourierAssignment(

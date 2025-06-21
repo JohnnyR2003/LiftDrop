@@ -169,6 +169,7 @@ class ClientService(
                     restaurantLocation.second.latitude,
                     restaurantLocation.second.longitude,
                     requestId,
+                    deliveryKind = "DEFAULT",
                 )
             }
 
