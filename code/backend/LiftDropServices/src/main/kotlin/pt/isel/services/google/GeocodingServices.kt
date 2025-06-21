@@ -293,6 +293,7 @@ class GeocodingServices(
                     courierId = courierId,
                     message =
                         DeliveryUpdateMessage(
+                            hasBeenAccepted = true,
                             hasBeenPickedUp = true,
                         ),
                 )
