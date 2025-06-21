@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import pt.isel.liftdrop.DeliveryStatus
 import pt.isel.liftdrop.Uris
 import pt.isel.liftdrop.model.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
@@ -355,13 +356,22 @@ class CourierController(
                 courierId = input.courierId,
             )
 
+        val deliveryStatus = DeliveryStatus.fromString(input.deliveryStatus)
+
         return when (request) {
             is Success -> {
+                GlobalLogger.log("Courier cancelled delivery while heading to dropoff")
                 // Handle successful order cancellation and try reassigning it
-                val reassignResult = geocodingServices.handleRequestReassignment(input.requestId)
+                val reassignResult =
+                    geocodingServices.handleRequestReassignment(
+                        input.requestId,
+                        input.courierId,
+                        deliveryStatus,
+                        input.pickupLocationDTO,
+                    )
 
                 if (!reassignResult) {
-                    GlobalLogger.log("Failed to reassign request ${input.requestId}: $reassignResult")
+                    GlobalLogger.log("Failed to reassign request ${input.requestId}")
                     Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                 } else {
                     GlobalLogger.log("Request ${input.requestId} reassigned successfully")

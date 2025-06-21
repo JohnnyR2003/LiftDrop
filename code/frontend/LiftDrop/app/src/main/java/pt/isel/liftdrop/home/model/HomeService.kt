@@ -27,7 +27,7 @@ interface HomeService {
 
     suspend fun deliverOrder(requestId: String, courierId: String, dropOffPin: String, deliveryEarnings: Double, token: String): Result<Boolean>
 
-    suspend fun cancelDelivery(courierId: String, requestId: String, token: String): Result<Boolean>
+    suspend fun cancelDelivery(courierId: String, requestId: String, deliveryStatus: String, pickUpLocation: LocationDTO? = null, token: String): Result<Boolean>
 
     suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean>
 
@@ -181,11 +181,15 @@ class RealHomeService(
     override suspend fun cancelDelivery(
         courierId: String,
         requestId: String,
+        deliveryStatus: String,
+        pickUpLocation: LocationDTO?,
         token: String
     ): Result<Boolean> {
         val body = CancelDeliveryInputModel(
             courierId = courierId.toInt(),
-            requestId = requestId.toInt()
+            requestId = requestId.toInt(),
+            deliveryStatus = deliveryStatus,
+            pickupLocation = pickUpLocation
         )
 
         return httpService.post<CancelDeliveryInputModel, Boolean>(

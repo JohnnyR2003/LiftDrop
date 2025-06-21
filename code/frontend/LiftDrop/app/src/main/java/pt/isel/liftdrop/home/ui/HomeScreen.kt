@@ -9,8 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -33,6 +31,8 @@ import pt.isel.liftdrop.shared.ui.BottomSlideToConfirm
 import pt.isel.liftdrop.shared.ui.ErrorCard
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Badge
+import androidx.compose.runtime.collectAsState
+import pt.isel.liftdrop.home.model.toDeliveryStatus
 import pt.isel.liftdrop.shared.ui.PinInsertionCard
 
 /*
@@ -78,9 +78,9 @@ fun HomeScreen(
                     Triple(Icons.Default.ExitToApp, onLogoutClick, false)
                 )
                 is HomeScreenState.Listening -> listOf(
-                   // Triple(Icons.Default.Menu, onMenuClick, false),
+                    // Triple(Icons.Default.Menu, onMenuClick, false),
                 )
-                is HomeScreenState.HeadingToPickUp -> listOf(
+                is HomeScreenState.HeadingToPickUp, is HomeScreenState.HeadingToDropOff -> listOf(
                     //Triple(Icons.Default.Menu, onMenuClick, false),
                     Triple(Icons.Default.Close, onCancelDeliveryClick, false)
                 )
@@ -344,7 +344,7 @@ fun HomeScreen(
 
                 is HomeScreenState.HeadingToPickUp -> {
                     val context = LocalContext.current
-                    if(!state.isPickUpSpotValid) {
+                    if (!state.isPickUpSpotValid) {
                         BottomSlideToConfirm(
                             text = "Slide to Pick Up",
                             onConfirmed = {
@@ -355,8 +355,7 @@ fun HomeScreen(
                                 )
                             }
                         )
-                    }
-                    else{
+                    } else {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -380,15 +379,15 @@ fun HomeScreen(
 
                 is HomeScreenState.PickedUp -> {
                     val context = LocalContext.current
-                        PickupSuccessCard(
-                            onOk = {
-                                viewModel.startNavigationToDropOff(context = context)
-                            }
-                        )
+                    PickupSuccessCard(
+                        onOk = {
+                            viewModel.startNavigationToDropOff(context = context)
+                        }
+                    )
                 }
 
                 is HomeScreenState.HeadingToDropOff -> {
-                    if(!state.isDropOffSpotValid) {
+                    if (!state.isDropOffSpotValid) {
                         BottomSlideToConfirm(
                             text = "Slide to Drop Off",
                             onConfirmed = {
@@ -438,40 +437,7 @@ fun HomeScreen(
                     )
                 }
 
-                is HomeScreenState.Cancelling -> {
-                    if (state.isCancelled) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.5f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Card(
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.padding(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(24.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        "Delivery cancelled successfully!",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        color = Color(0xFF384259)
-                                    )
-                                    Spacer(modifier = Modifier.height(24.dp))
-                                    Button(
-                                        onClick = { viewModel.resetToIdleState() },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047))
-                                    ) {
-                                        Text("OK", color = Color.White)
-                                    }
-                                }
-                            }
-                        }
-                    } else {
+                is HomeScreenState.CancellingOrder -> {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -499,9 +465,10 @@ fun HomeScreen(
                                             onClick = {
                                                 viewModel.cancelDelivery(
                                                     state.courierId,
-                                                    state.requestId
+                                                    state.requestId,
+                                                    state.deliveryStatus,
                                                 )
-                                            }, // Implemente esta função
+                                            },
                                             colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                                         ) {
                                             Text("Cancel", color = Color.White)
@@ -514,6 +481,111 @@ fun HomeScreen(
                                             Text("Back", color = Color.White)
                                         }
                                     }
+                                }
+                            }
+                        }
+                }
+
+                is HomeScreenState.CancellingPickup -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.padding(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    "Delivery cancelled successfully!",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    color = Color(0xFF384259)
+                                )
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Button(
+                                    onClick = { viewModel.resetToIdleState() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(
+                                            0xFF43A047
+                                        )
+                                    )
+                                ) {
+                                    Text("OK", color = Color.White)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                is HomeScreenState.CancellingDropOff -> {
+                    if (state.isOrderReassigned) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.padding(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Provide the following code to the new courier:",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Color(0xFF384259)
+                                    )
+                                    Spacer(modifier = Modifier.height(24.dp))
+                                    Text(
+                                        text = "${state.pickupCode}",
+                                        color = Color.White,
+                                        fontSize = 24.sp,
+                                        modifier = Modifier
+                                            .background(
+                                                Color(0xFF384259),
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(16.dp)
+                                    )
+
+                                }
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.padding(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Waiting for the order to be reassigned...",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Color(0xFF384259)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
                                 }
                             }
                         }

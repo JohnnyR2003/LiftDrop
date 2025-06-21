@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -34,6 +35,17 @@ class HomeViewModel(
 
     val dailyEarnings: Flow<String>
         get() = _dailyEarnings.asStateFlow()
+
+    val deliveryStatus : Flow<String>
+        get() = _stateFlow.map { state ->
+            when (state) {
+                is HomeScreenState.HeadingToPickUp -> "HEADING_TO_PICKUP"
+                is HomeScreenState.HeadingToDropOff -> "HEADING_TO_DROPOFF"
+                is HomeScreenState.PickedUp -> "PICKED_UP"
+                is HomeScreenState.Delivered -> "DELIVERED"
+                else -> "IDLE"
+            }
+        }
 
     val _dailyEarnings: MutableStateFlow<String> = MutableStateFlow("0.00")
 
@@ -152,29 +164,61 @@ class HomeViewModel(
             homeService.startListening(
                 token = token,
                 onMessage = { message ->
-                    val request = parseRequestDetails(message)
-                    _stateFlow.update { current ->
-                        when (current) {
-                            is HomeScreenState.Listening -> {
-                                HomeScreenState.Listening(
-                                    incomingRequest = true,
-                                    requestDetails = request,
-                                    dailyEarnings = current.dailyEarnings
-                                )
-                            }
-
-                            else -> {
-                                updateState(
-                                    HomeScreenState.Error(
-                                        Problem(
-                                            type = "ListeningError",
-                                            title = "Listening Error",
-                                            detail = "Cannot receive requests in the $current state.",
-                                            status = 403
+                    val request = parseDynamicMessage(message)
+                    when (request) {
+                        is CourierRequestDetails -> {
+                            _stateFlow.update { current ->
+                                when (current) {
+                                    is HomeScreenState.Listening -> {
+                                        HomeScreenState.Listening(
+                                            incomingRequest = true,
+                                            requestDetails = request,
+                                            dailyEarnings = current.dailyEarnings
                                         )
-                                    )
-                                )
+                                    }
+
+                                    else -> {
+                                        updateState(
+                                            HomeScreenState.Error(
+                                                Problem(
+                                                    type = "ListeningError",
+                                                    title = "Listening Error",
+                                                    detail = "Cannot receive requests in the $current state.",
+                                                    status = 403
+                                                )
+                                            )
+                                        )
+                                    }
+                                }
                             }
+                        }
+                        is DeliveryUpdate -> {
+                            _stateFlow.update { current ->
+                                when (current) {
+                                    is HomeScreenState.CancellingDropOff -> {
+                                        current.copy(
+                                            isOrderReassigned = true,
+                                            pickupCode = request.pinCode,
+                                        )
+                                    }
+
+                                    else -> {
+                                        updateState(
+                                            HomeScreenState.Error(
+                                                Problem(
+                                                    type = "ListeningError",
+                                                    title = "Listening Error",
+                                                    detail = "Cannot receive updates in the $current state.",
+                                                    status = 403
+                                                )
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        else -> {
+                            Log.w("HomeViewModel", "Unknown message type: $request")
                         }
                     }
                 },
@@ -229,7 +273,7 @@ class HomeViewModel(
                         dailyEarnings = current.deliveryEarnings,
                     )
 
-                    is HomeScreenState.Cancelling -> HomeScreenState.Idle(
+                    is HomeScreenState.CancellingPickup -> HomeScreenState.Idle(
                         dailyEarnings = _dailyEarnings.value,
                     )
 
@@ -551,17 +595,19 @@ class HomeViewModel(
                 when (current) {
                     is HomeScreenState.HeadingToPickUp -> {
                         _previousState.value = current
-                        HomeScreenState.Cancelling(
+                        HomeScreenState.CancellingOrder(
                             courierId = current.courierId,
-                            requestId = current.requestId
+                            requestId = current.requestId,
+                            deliveryStatus = current.deliveryStatus
                         )
                     }
 
                     is HomeScreenState.HeadingToDropOff -> {
                         _previousState.value = current
-                        HomeScreenState.Cancelling(
+                        HomeScreenState.CancellingOrder(
                             courierId = current.courierId,
-                            requestId = current.requestId
+                            requestId = current.requestId,
+                            deliveryStatus = current.deliveryStatus
                         )
                     }
 
@@ -581,61 +627,140 @@ class HomeViewModel(
             }
         }
     }
-
-    fun cancelDelivery(courierId: String, requestId: String) {
+    //TODO(refactor this method so that it has the new homescreen state)
+    fun cancelDelivery(
+        courierId: String,
+        requestId: String,
+        deliveryStatus: String,
+        pickUpLocation: LocationDTO? = null,
+    ) {
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
-            val result = homeService.cancelDelivery(courierId, requestId, token)
+            val result = homeService.cancelDelivery(courierId, requestId, deliveryStatus, pickUpLocation, token)
             if (result is Result.Error) {
                 updateState(HomeScreenState.Error(result.problem))
                 Log.v("HomeViewModel", "Failed to cancel delivery: ${result.problem.detail}")
             } else {
                 Log.v("HomeViewModel", "Delivery cancelled successfully")
-                _stateFlow.update { current ->
-                    when (current) {
-                        is HomeScreenState.Cancelling  -> {
-                            HomeScreenState.Cancelling(
-                                courierId = courierId,
-                                requestId = requestId,
-                                isCancelled = true
-                            )
-                        }
-
-                        is HomeScreenState.Idle -> {
-                            Log.v("HomeViewModel", "Already in idle state, no action needed")
-                            HomeScreenState.Cancelling(
-                                courierId = courierId,
-                                requestId = requestId,
-                                isCancelled = true
-                            )
-                        }
-
-                        is HomeScreenState.Error -> {
-                            Log.v("HomeViewModel", "Error state encountered: ${current.problem.detail}")
-                            HomeScreenState.Error(
-                                problem = current.problem
-                            )
-                        }
-
-                        else -> {
-                            Log.v("HomeViewModel", "Cannot cancel delivery in the current state: $current")
-                            updateState(
-                                HomeScreenState.Error(
-                                    Problem(
-                                        type = "CancelDeliveryError",
-                                        title = "Cancel Delivery Error",
-                                        detail = "Cannot cancel delivery in the $current state.",
-                                        status = 403
+                when(deliveryStatus) {
+                    "HEADING_TO_PICKUP" -> {
+                        _stateFlow.update { current ->
+                            when (current) {
+                                is HomeScreenState.CancellingOrder -> {
+                                    HomeScreenState.CancellingPickup(
+                                        courierId = courierId,
+                                        requestId = requestId,
                                     )
-                                )
-                            )
+                                }
+//TODO(check the use case where the state is Idle upon cancelling a delivery)
+                                is HomeScreenState.Idle -> {
+                                    Log.v(
+                                        "HomeViewModel",
+                                        "Already in idle state, no action needed"
+                                    )
+                                    HomeScreenState.CancellingPickup(
+                                        courierId = courierId,
+                                        requestId = requestId,
+                                    )
+                                }
+
+                                is HomeScreenState.Error -> {
+                                    Log.v(
+                                        "HomeViewModel",
+                                        "Error state encountered: ${current.problem.detail}"
+                                    )
+                                    updateState(
+                                        HomeScreenState.Error(
+                                            problem = current.problem
+                                        )
+                                    )
+                                }
+
+                                else -> {
+                                    Log.v(
+                                        "HomeViewModel",
+                                        "Cannot cancel delivery in the current state: $current"
+                                    )
+                                    updateState(
+                                        HomeScreenState.Error(
+                                            Problem(
+                                                type = "CancelDeliveryError",
+                                                title = "Cancel Delivery Error",
+                                                detail = "Cannot cancel delivery in the $current state.",
+                                                status = 403
+                                            )
+                                        )
+                                    )
+                                }
+                            }
                         }
+                    }
+
+                    "HEADING_TO_DROPOFF" -> {
+                        _stateFlow.update { current ->
+                            when (current) {
+                                is HomeScreenState.CancellingOrder -> {
+                                    HomeScreenState.CancellingDropOff(
+                                        courierId = courierId,
+                                        requestId = requestId,
+                                        isOrderReassigned = false,
+                                        pickUpLocation = pickUpLocation,
+                                    )
+                                }
+
+                                is HomeScreenState.Idle -> {
+                                    Log.v(
+                                        "HomeViewModel",
+                                        "Already in idle state, no action needed"
+                                    )
+                                    HomeScreenState.CancellingDropOff(
+                                        courierId = courierId,
+                                        requestId = requestId,
+                                        isOrderReassigned = false,
+                                        pickUpLocation = pickUpLocation,
+                                    )
+                                }
+
+                                is HomeScreenState.Error -> {
+                                    Log.v(
+                                        "HomeViewModel",
+                                        "Error state encountered: ${current.problem.detail}"
+                                    )
+                                    updateState(
+                                        HomeScreenState.Error(
+                                            problem = current.problem
+                                        )
+                                    )
+                                }
+
+                                else -> {
+                                    Log.v(
+                                        "HomeViewModel",
+                                        "Cannot cancel delivery in the current state: $current"
+                                    )
+                                    updateState(
+                                        HomeScreenState.Error(
+                                            Problem(
+                                                type = "CancelDeliveryError",
+                                                title = "Cancel Delivery Error",
+                                                detail = "Cannot cancel delivery in the $current state.",
+                                                status = 403
+                                            )
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        Log.v("HomeViewModel", "Unknown delivery status: $deliveryStatus")
                     }
                 }
             }
         }
     }
+
     fun resetToIdleState(): HomeScreenState {
         stopListening()
         return HomeScreenState.Idle(
@@ -644,6 +769,28 @@ class HomeViewModel(
     }
 }
 
+fun HomeScreenState.toDeliveryStatus(): String {
+    return when (this) {
+        is HomeScreenState.HeadingToPickUp -> "HEADING_TO_PICKUP"
+        is HomeScreenState.PickedUp -> "PICKED_UP"
+        is HomeScreenState.HeadingToDropOff -> "HEADING_TO_DROPOFF"
+        is HomeScreenState.Delivered -> "DELIVERED"
+        is HomeScreenState.CancellingPickup -> "CANCELLING"
+        else -> "IDLE"
+    }
+}
+
+fun parseDynamicMessage(message: String): Any {
+    val mapper = jacksonObjectMapper()
+    val root: JsonNode = mapper.readTree(message)
+    val type = root.get("type")?.asText() ?: throw IllegalArgumentException("Missing type field")
+
+    return when (type) {
+        "DELIVERY_REQUEST" -> mapper.treeToValue(root, CourierRequestDetails::class.java)
+        "DELIVERY_UPDATE" -> mapper.treeToValue(root, DeliveryUpdate::class.java)
+        else -> throw IllegalArgumentException("Unknown message type: $type")
+    }
+}
 
 private fun parseRequestDetails(message: String): CourierRequestDetails {
     val mapper = jacksonObjectMapper()

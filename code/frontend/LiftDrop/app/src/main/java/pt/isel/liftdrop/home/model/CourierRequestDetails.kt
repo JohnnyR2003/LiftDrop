@@ -2,15 +2,9 @@ package pt.isel.liftdrop.home.model
 
 import kotlinx.serialization.Serializable
 
-data class CourierRequest(
-    val id: String,
-    val pickup: String,
-    val dropoff: String,
-    val price: String
-)
-
 @Serializable
 data class CourierRequestDetails(
+    val type: String = "DELIVERY_REQUEST",
     val courierId : String,
     val requestId: String,
     val pickupLatitude: Double,

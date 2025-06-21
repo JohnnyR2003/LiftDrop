@@ -8,7 +8,6 @@ import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
-import pt.isel.pipeline.pt.isel.liftdrop.DeliveryRequestMessage
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.courier.CourierService
 import pt.isel.services.user.UserService
@@ -113,13 +112,13 @@ class CourierWebSocketHandler(
         }
     }
 
-    fun sendDeliveryRequestToCourier(
+    fun <T : Any> sendMessageToCourier(
         courierId: Int,
-        request: DeliveryRequestMessage,
+        message: T,
     ) {
         val session = sessions[courierId]
         if (session != null && session.isOpen) {
-            val payload = jacksonObjectMapper().writeValueAsString(request)
+            val payload = jacksonObjectMapper().writeValueAsString(message)
             session.sendMessage(TextMessage(payload))
         }
     }

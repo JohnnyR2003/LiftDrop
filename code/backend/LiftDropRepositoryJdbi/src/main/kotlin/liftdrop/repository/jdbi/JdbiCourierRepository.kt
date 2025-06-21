@@ -120,7 +120,7 @@ class JdbiCourierRepository(
                     .createUpdate(
                         """
                 INSERT INTO liftdrop.delivery (courier_id, request_id, started_at, completed_at, ETA, delivery_status)
-                VALUES (:courierId, :requestId, EXTRACT(EPOCH FROM NOW()), NULL, NULL, 'PENDING')
+                VALUES (:courierId, :requestId, EXTRACT(EPOCH FROM NOW()), NULL, NULL, 'IN_PROGRESS')
                 """,
                     ).bind("courierId", courierId)
                     .bind("requestId", requestId)

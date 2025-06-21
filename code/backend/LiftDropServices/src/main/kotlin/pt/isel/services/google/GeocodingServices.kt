@@ -20,8 +20,7 @@ import kotlinx.serialization.json.longOrNull
 import liftdrop.repository.TransactionManager
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import pt.isel.liftdrop.Address
-import pt.isel.liftdrop.CourierWithLocation
+import pt.isel.liftdrop.*
 import pt.isel.pipeline.pt.isel.liftdrop.DeliveryRequestMessage
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.AssignmentCoordinator
@@ -88,7 +87,7 @@ class GeocodingServices(
 
                     val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
                     // Send the assignment request via WebSocket
-                    courierWebSocketHandler.sendDeliveryRequestToCourier(
+                    courierWebSocketHandler.sendMessageToCourier(
                         courier.courierId,
                         DeliveryRequestMessage(
                             requestId = requestId,
@@ -221,7 +220,12 @@ class GeocodingServices(
         }
     }
 
-    fun handleRequestReassignment(requestId: Int): Boolean {
+    fun handleRequestReassignment(
+        requestId: Int,
+        courierId: Int,
+        deliveryStatus: DeliveryStatus,
+        pickupLocationDTO: LocationDTO?,
+    ): Boolean {
         return transactionManager.run {
             val requestRepository = it.requestRepository
             val requestDetails = requestRepository.getRequestForCourierById(requestId)
@@ -229,16 +233,41 @@ class GeocodingServices(
                 GlobalLogger.log("Request details not found for request ID: $requestId")
                 return@run false
             }
-            val pickupLat = requestDetails.pickupLocation.latitude
-            val pickupLon = requestDetails.pickupLocation.longitude
+
+            val (pickupLat, pickupLon) =
+                when (deliveryStatus) {
+                    DeliveryStatus.HEADING_TO_PICKUP ->
+                        requestDetails.pickupLocation.latitude to requestDetails.pickupLocation.longitude
+                    DeliveryStatus.HEADING_TO_DROPOFF ->
+                        (pickupLocationDTO?.latitude ?: requestDetails.pickupLocation.latitude) to
+                            (pickupLocationDTO?.longitude ?: requestDetails.pickupLocation.longitude)
+                }
 
             CoroutineScope(Dispatchers.Default).launch {
-                handleCourierAssignment(
-                    pickupLat,
-                    pickupLon,
-                    requestId,
-                )
+                if (handleCourierAssignment(
+                        pickupLat,
+                        pickupLon,
+                        requestId,
+                    )
+                ) {
+                    if (deliveryStatus == DeliveryStatus.HEADING_TO_DROPOFF) {
+                        val pickupPin =
+                            requestRepository.getPickupCodeForCancelledRequest(requestId)
+                                ?: throw IllegalStateException("Pickup pin code not found for request ID: $requestId")
+                        courierWebSocketHandler.sendMessageToCourier(
+                            courierId = courierId,
+                            message =
+                                DeliveryUpdateMessage(
+                                    hasBeenAccepted = true,
+                                    pinCode = pickupPin,
+                                ),
+                        )
+                    } else {
+                        GlobalLogger.log("Courier $courierId reassigned to request $requestId")
+                    }
+                }
             }
+
             return@run true
         }
     }

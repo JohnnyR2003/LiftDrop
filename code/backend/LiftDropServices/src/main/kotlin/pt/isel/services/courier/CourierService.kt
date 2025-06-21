@@ -189,20 +189,10 @@ class CourierService(
     ): Either<CourierCancelDeliveryError, Boolean> {
         return transactionManager.run {
             val courierRepository = it.courierRepository
-            val requestRepository = it.requestRepository
             val request = courierRepository.cancelDelivery(requestId, courierId)
             if (!request) {
                 return@run failure(CourierCancelDeliveryError.PackageAlreadyDelivered)
             } else {
-//                GlobalLogger.log("Trying reassignment for request $requestId")
-//                val reqDetails = requestRepository.getRequestForCourierById(requestId)
-//                CoroutineScope(Dispatchers.Default).launch {
-//                    geocodingServices.handleCourierAssignment(
-//                        reqDetails.pickupLocation.latitude,
-//                        reqDetails.pickupLocation.longitude,
-//                        requestId,
-//                    )
-//                }
                 return@run success(true)
             }
         }
