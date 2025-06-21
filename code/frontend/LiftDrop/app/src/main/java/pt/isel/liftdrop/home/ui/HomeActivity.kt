@@ -75,6 +75,12 @@ class HomeActivity : ComponentActivity() {
                 startLocationService(this, authToken, courierId)
                 Log.i(TAG, "Permission granted. Starting location service with token: $authToken and courierId: $courierId")
             }
+            // Agora peça a permissão de notificação, se necessário
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermissionGranted) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                notificationPermissionGranted = true
+            }
         }
 
         setContent {
@@ -87,9 +93,13 @@ class HomeActivity : ComponentActivity() {
                 if (userInfo != null && userInfo.id != 0 && !viewModel.serviceStarted.value) {
                     viewModel.fetchDailyEarnings(userInfo.id.toString(), userInfo.bearer)
                     if (hasLocationPermissions()) {
-                        startLocationService(this@HomeActivity, userInfo.bearer, userInfo.id.toString())
-                        Log.i(TAG, "Starting location service with token: ${userInfo.bearer} and courierId: ${userInfo.id}")
-                        viewModel._serviceStarted.value = true
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || notificationPermissionGranted) {
+                            startLocationService(this@HomeActivity, userInfo.bearer, userInfo.id.toString())
+                            Log.i(TAG, "Starting location service with token: ${userInfo.bearer} and courierId: ${userInfo.id}")
+                            viewModel._serviceStarted.value = true
+                        } else {
+                            requestAllPermissions()
+                        }
                     } else {
                         requestAllPermissions()
                     }
@@ -165,12 +175,7 @@ class HomeActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             permissions.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
         }
+        // Solicita apenas as permissões de localização primeiro
         locationPermissionLauncher.launch(permissions.toTypedArray())
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        } else {
-            notificationPermissionGranted = true
-        }
     }
 }

@@ -65,15 +65,15 @@ class LocationForegroundService : Service() {
                 val channel = NotificationChannel(
                     channelId,
                     "LiftDrop Location Tracking",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_HIGH
                 )
                 manager.createNotificationChannel(channel)
             }
         }
 
         return NotificationCompat.Builder(this, channelId)
-            .setContentTitle("LiftDrop está a enviar a sua localização")
-            .setContentText("Está disponível para entregas.")
+            .setContentTitle("LiftDrop is receiving your location")
+            .setContentText("Your location is being tracked to ensure timely deliveries.")
             .setSmallIcon(R.drawable.logold) // Use um ícone do seu app!
             .setOngoing(true)
             .build()
