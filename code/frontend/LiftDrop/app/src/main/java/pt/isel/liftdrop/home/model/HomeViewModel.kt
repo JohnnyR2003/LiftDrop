@@ -15,12 +15,15 @@ import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.PreferencesRepository
+import pt.isel.liftdrop.services.LocationServices
+import pt.isel.liftdrop.services.LocationTrackingService
 import pt.isel.liftdrop.services.http.Problem
 import pt.isel.liftdrop.services.http.Result
 
 class HomeViewModel(
     private val homeService: HomeService,
     private val loginService: LoginService,
+    private val locationServices: LocationTrackingService,
     private val preferences: PreferencesRepository,
 ) : ViewModel() {
 
@@ -632,11 +635,15 @@ class HomeViewModel(
         courierId: String,
         requestId: String,
         deliveryStatus: String,
-        pickUpLocation: LocationDTO? = null,
     ) {
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
                 ?: throw IllegalStateException("User not logged in, please log in first.")
+            val currLocation = locationServices.getCurrentLocation()
+            val pickUpLocation = when (deliveryStatus) {
+                "HEADING_TO_DROPOFF" -> LocationDTO(currLocation!!.latitude , currLocation.longitude)
+                else -> null
+            }
             val result = homeService.cancelDelivery(courierId, requestId, deliveryStatus, pickUpLocation, token)
             if (result is Result.Error) {
                 updateState(HomeScreenState.Error(result.problem))

@@ -36,7 +36,7 @@ class HomeActivity : ComponentActivity() {
 
     private val viewModel: HomeViewModel by viewModels {
         viewModelInit {
-            HomeViewModel(repo.homeService, repo.loginService, repo.preferencesRepository)
+            HomeViewModel(repo.homeService, repo.loginService, repo.locationTrackingService, repo.preferencesRepository)
         }
     }
 
