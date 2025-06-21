@@ -168,8 +168,10 @@ class HomeViewModel(
                 token = token,
                 onMessage = { message ->
                     val request = parseDynamicMessage(message)
+                    Log.v("HomeViewModel", "Received message: $message")
                     when (request) {
                         is CourierRequestDetails -> {
+                            Log.v("HomeViewModel", "Received delivery request: $request")
                             _stateFlow.update { current ->
                                 when (current) {
                                     is HomeScreenState.Listening -> {
@@ -196,11 +198,12 @@ class HomeViewModel(
                             }
                         }
                         is DeliveryUpdate -> {
+                            Log.v("HomeViewModel", "Received delivery update: $request")
                             _stateFlow.update { current ->
                                 when (current) {
                                     is HomeScreenState.CancellingDropOff -> {
                                         current.copy(
-                                            isOrderReassigned = true,
+                                            isOrderReassigned = request.hasBeenAccepted,
                                             pickupCode = request.pinCode,
                                         )
                                     }

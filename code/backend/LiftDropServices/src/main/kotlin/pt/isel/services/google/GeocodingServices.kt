@@ -243,6 +243,12 @@ class GeocodingServices(
                             (pickupLocationDTO?.longitude ?: requestDetails.pickupLocation.longitude)
                 }
 
+            val pickupPin =
+                when (deliveryStatus) {
+                    DeliveryStatus.HEADING_TO_PICKUP -> null
+                    DeliveryStatus.HEADING_TO_DROPOFF -> requestRepository.getPickupCodeForCancelledRequest(requestId)
+                }
+
             CoroutineScope(Dispatchers.Default).launch {
                 if (handleCourierAssignment(
                         pickupLat,
@@ -251,15 +257,12 @@ class GeocodingServices(
                     )
                 ) {
                     if (deliveryStatus == DeliveryStatus.HEADING_TO_DROPOFF) {
-                        val pickupPin =
-                            requestRepository.getPickupCodeForCancelledRequest(requestId)
-                                ?: throw IllegalStateException("Pickup pin code not found for request ID: $requestId")
                         courierWebSocketHandler.sendMessageToCourier(
                             courierId = courierId,
                             message =
                                 DeliveryUpdateMessage(
                                     hasBeenAccepted = true,
-                                    pinCode = pickupPin,
+                                    pinCode = pickupPin ?: "",
                                 ),
                         )
                     } else {

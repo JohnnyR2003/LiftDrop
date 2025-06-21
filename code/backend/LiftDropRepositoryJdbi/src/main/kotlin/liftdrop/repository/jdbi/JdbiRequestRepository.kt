@@ -133,7 +133,7 @@ class JdbiRequestRepository(
             .mapTo<Request>()
             .list()
 
-    override fun getPickupCodeForCancelledRequest(requestId: Int): String? =
+    override fun getPickupCodeForCancelledRequest(requestId: Int): String =
         handle
             .createQuery(
                 """
@@ -143,8 +143,7 @@ class JdbiRequestRepository(
         """,
             ).bind("request_id", requestId)
             .mapTo<String>()
-            .findOne()
-            .orElse(null)
+            .one()
 
     override fun getRequestById(requestId: Int): Request? =
         handle
