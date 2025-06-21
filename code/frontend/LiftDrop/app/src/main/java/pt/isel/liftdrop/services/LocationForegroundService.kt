@@ -65,7 +65,7 @@ class LocationForegroundService : Service() {
                 val channel = NotificationChannel(
                     channelId,
                     "LiftDrop Location Tracking",
-                    NotificationManager.IMPORTANCE_LOW
+                    NotificationManager.IMPORTANCE_DEFAULT
                 )
                 manager.createNotificationChannel(channel)
             }
