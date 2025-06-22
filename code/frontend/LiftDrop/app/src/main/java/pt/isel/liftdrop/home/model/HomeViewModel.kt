@@ -280,7 +280,7 @@ class HomeViewModel(
                         dailyEarnings = current.deliveryEarnings,
                     )
 
-                    is HomeScreenState.CancellingPickup -> HomeScreenState.Idle(
+                    is HomeScreenState.CancellingPickup, is HomeScreenState.CancellingDropOff -> HomeScreenState.Idle(
                         dailyEarnings = _dailyEarnings.value,
                     )
 

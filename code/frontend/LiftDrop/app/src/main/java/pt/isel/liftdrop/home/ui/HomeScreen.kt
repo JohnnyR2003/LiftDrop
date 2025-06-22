@@ -527,7 +527,7 @@ fun HomeScreen(
 
                 is HomeScreenState.CancellingDropOff -> {
                     if (state.isOrderReassigned) {
-                        if(state.isOrderPickedUp){
+                        if(state.isOrderPickedUp) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -564,40 +564,42 @@ fun HomeScreen(
                                 }
                             }
                         }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.5f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Card(
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.padding(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                        else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.5f)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(24.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.padding(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White)
                                 ) {
-                                    Text(
-                                        "Provide the following code to the new courier:",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        color = Color(0xFF384259)
-                                    )
-                                    Spacer(modifier = Modifier.height(24.dp))
-                                    Text(
-                                        text = "${state.pickupCode}",
-                                        color = Color.White,
-                                        fontSize = 24.sp,
-                                        modifier = Modifier
-                                            .background(
-                                                Color(0xFF384259),
-                                                shape = RoundedCornerShape(8.dp)
-                                            )
-                                            .padding(16.dp)
-                                    )
+                                    Column(
+                                        modifier = Modifier.padding(24.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            "Provide the following code to the new courier:",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp,
+                                            color = Color(0xFF384259)
+                                        )
+                                        Spacer(modifier = Modifier.height(24.dp))
+                                        Text(
+                                            text = "${state.pickupCode}",
+                                            color = Color.White,
+                                            fontSize = 24.sp,
+                                            modifier = Modifier
+                                                .background(
+                                                    Color(0xFF384259),
+                                                    shape = RoundedCornerShape(8.dp)
+                                                )
+                                                .padding(16.dp)
+                                        )
 
+                                    }
                                 }
                             }
                         }
