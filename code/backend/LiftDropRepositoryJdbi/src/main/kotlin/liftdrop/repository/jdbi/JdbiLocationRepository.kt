@@ -186,8 +186,7 @@ class JdbiLocationRepository(
                 """,
             ).bind("clientId", clientId)
             .mapTo<Int>()
-            .findOne()
-            .orElse(null)
+            .firstOrNull()
 
     override fun createItem(
         establishment: String,

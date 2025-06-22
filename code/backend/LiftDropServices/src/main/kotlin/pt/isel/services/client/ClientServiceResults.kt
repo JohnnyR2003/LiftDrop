@@ -8,6 +8,10 @@ sealed class RequestCreationError {
     data object ClientNotFound : RequestCreationError()
 
     data object ClientAddressNotFound : RequestCreationError()
+
+    data object InvalidAddress : RequestCreationError()
+
+    data object InvalidLocation : RequestCreationError()
 }
 
 sealed class ClientCreationError {

@@ -36,6 +36,7 @@ class ClientController(
                     Client(user.client.user),
                     order.itemDesignation,
                     order.restaurantName,
+                    order.dropOffAddress?.toAddress(),
                 )
         ) {
             is Success -> {

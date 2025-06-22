@@ -121,14 +121,26 @@ class ClientService(
         client: Client,
         description: String,
         restaurantName: String,
+        dropOffAddress: Address?,
     ): Either<RequestCreationError, Int> =
         transactionManager.run {
             val requestRepository = it.requestRepository
             val locationRepository = it.locationRepository
 
             val dropOffLocationId =
-                locationRepository.getClientDropOffLocation(client.user.id)
-                    ?: return@run failure(RequestCreationError.ClientAddressNotFound)
+                if (dropOffAddress == null) {
+                    locationRepository.getClientDropOffLocation(client.user.id)
+                        ?: return@run failure(RequestCreationError.ClientAddressNotFound)
+                } else {
+                    val dropOff =
+                        geocodingServices.getLatLngFromAddress(dropOffAddress.toFormattedString())
+                            ?: return@run failure(RequestCreationError.InvalidAddress)
+
+                    val locId = locationRepository.createLocation(LocationDTO(dropOff.first, dropOff.second), dropOffAddress)
+
+                    locationRepository.createDropOffLocation(client.user.id, locId)
+                        ?: return@run failure(RequestCreationError.InvalidLocation)
+                }
 
             val restaurantLocation =
                 locationRepository.getClosestRestaurantLocation(restaurantName, dropOffLocationId)
@@ -137,7 +149,7 @@ class ClientService(
             val itemETA =
                 locationRepository.itemExistsAtRestaurant(description, restaurantName)
                     ?: return@run failure(RequestCreationError.ItemNotFound)
-            // Change itemExistsAtRestaurant so that it returns the Item ETA or null if not found
+
             val requestId =
                 requestRepository.createRequest(
                     clientId = client.user.id,
@@ -145,9 +157,6 @@ class ClientService(
                     pickupCode = generateRandomCode(6),
                     dropoffCode = generateRandomCode(6),
                 ) ?: return@run failure(RequestCreationError.ClientNotFound)
-
-            // Is it really necessary to reverse geocode the restaurant location?
-            // and create a new location?
 
             val pickupLocationId = restaurantLocation.first
 
