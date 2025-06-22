@@ -168,22 +168,28 @@ class GeocodingServices(
             return failure(CourierError.NoAvailableCouriers)
         }
 
-        val ranked =
+        val couriersWithTravelTime =
             rankCouriersByTravelTime(
                 nearbyCouriers,
                 pickupLat,
                 pickupLon,
             )
 
-        GlobalLogger.log("Ranked couriers by travel time: $ranked")
-        if (ranked.isEmpty()) {
+        GlobalLogger.log("Ranked couriers by travel time: $couriersWithTravelTime")
+        if (couriersWithTravelTime.isEmpty()) {
             return failure(CourierError.NoAvailableCouriers)
         }
 
+        val ranked =
+            rankCouriersByScore(
+                couriersWithTravelTime,
+            )
+
+        GlobalLogger.log("Ranked couriers by combined score: $ranked")
         return success(ranked)
     }
 
-    suspend fun rankCouriersByTravelTime(
+    private suspend fun rankCouriersByTravelTime(
         couriers: List<CourierWithLocation>,
         destinationLat: Double,
         destinationLon: Double,
@@ -222,6 +228,32 @@ class GeocodingServices(
         return couriers.zip(travelTimes).sortedBy { it.second }.map { (courier, time) ->
             courier.copy(estimatedTravelTime = time)
         }
+    }
+
+    fun rankCouriersByScore(couriers: List<CourierWithLocation>): List<CourierWithLocation> {
+        val minTime = couriers.minOf { it.estimatedTravelTime ?: 0L }
+        val maxTime = couriers.maxOf { it.estimatedTravelTime ?: 1L }
+        val minRating = couriers.minOf { it.rating ?: 0.0 }
+        val maxRating = couriers.maxOf { it.rating ?: 5.0 }
+
+        val alpha = 0.7 // weight for travel time
+        val beta = 0.3 // weight for rating
+
+        val ranked =
+            couriers.sortedBy { courier ->
+                val normTime =
+                    if (maxTime >
+                        minTime
+                    ) {
+                        ((courier.estimatedTravelTime ?: 0L) - minTime).toDouble() / (maxTime - minTime)
+                    } else {
+                        0.0
+                    }
+                val normRating = if (maxRating > minRating) ((courier.rating ?: 0.0) - minRating) / (maxRating - minRating) else 0.0
+                alpha * normTime + beta * (1 - normRating)
+            }
+
+        return ranked
     }
 
     fun handleRequestReassignment(

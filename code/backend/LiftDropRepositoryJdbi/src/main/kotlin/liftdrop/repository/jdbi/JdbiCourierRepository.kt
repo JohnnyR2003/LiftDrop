@@ -472,6 +472,7 @@ class JdbiCourierRepository(
                 c.courier_id,
                 l.latitude,
                 l.longitude,
+                c.rating,
                 ST_Distance(
                     ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
                     ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
@@ -502,6 +503,7 @@ class JdbiCourierRepository(
                     latitude = rs.getDouble("latitude"),
                     longitude = rs.getDouble("longitude"),
                     distanceMeters = rs.getDouble("distance_meters"),
+                    rating = rs.getDouble("rating"),
                 )
             }.list()
 

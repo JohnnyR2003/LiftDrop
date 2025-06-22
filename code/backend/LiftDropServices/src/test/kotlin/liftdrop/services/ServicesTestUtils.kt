@@ -34,7 +34,7 @@ object ServicesTestUtils {
             JdbiTransactionManager(jdbi),
         )
 
-    private fun createGeocodingService() = GeocodingServices(JdbiTransactionManager(jdbi), createCourierWebSocketHandler())
+    fun createGeocodingService() = GeocodingServices(JdbiTransactionManager(jdbi), createCourierWebSocketHandler())
 
     fun createClientService() =
         ClientService(
