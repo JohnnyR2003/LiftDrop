@@ -204,6 +204,65 @@ class JdbiRequestRepository(
             .findOne()
             .orElse(null)
 
+    override fun giveRatingToCourier(
+        clientId: Int,
+        rating: Int,
+    ): Boolean {
+        // 1. Get the latest delivered request for this client
+        val request =
+            handle
+                .createQuery(
+                    """
+        SELECT request_id, courier_id
+        FROM liftdrop.request
+        WHERE client_id = :client_id AND request_status = 'DELIVERED'
+        ORDER BY request_id DESC
+        LIMIT 1
+        """,
+                ).bind("client_id", clientId)
+                .mapToMap()
+                .findOne()
+                .orElse(null) ?: return false
+
+        val requestId = request["request_id"] as Int
+        val courierId = request["courier_id"] as Int
+
+        // 2. Insert or update the rating for this request
+        val updated =
+            handle
+                .createUpdate(
+                    """
+        INSERT INTO liftdrop.courier_rating (courier_id, request_id, client_id, rating)
+        VALUES (:courier_id, :request_id, :client_id, :rating)
+        ON CONFLICT (client_id, courier_id, request_id) DO UPDATE SET rating = :rating
+        """,
+                ).bind("courier_id", courierId)
+                .bind("request_id", requestId)
+                .bind("client_id", clientId)
+                .bind("rating", rating)
+                .execute() > 0
+
+        if (!updated) return false
+
+        // 3. Update the courier's average rating
+        val avgRating =
+            handle
+                .createQuery(
+                    "SELECT AVG(rating) FROM liftdrop.courier_rating WHERE courier_id = :courier_id",
+                ).bind("courier_id", courierId)
+                .mapTo<Double>()
+                .one()
+
+        handle
+            .createUpdate(
+                "UPDATE liftdrop.courier SET rating = :avg_rating WHERE courier_id = :courier_id",
+            ).bind("avg_rating", avgRating)
+            .bind("courier_id", courierId)
+            .execute()
+
+        return true
+    }
+
     override fun clear() {
         handle
             .createUpdate(

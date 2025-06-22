@@ -228,16 +228,15 @@ class ClientService(
 
     fun giveRating(
         clientId: Int,
-        requestId: Int,
         rating: Int,
-    ): Either<ClientLoginError, Boolean> =
+    ): Either<ClientRatingError, Boolean> =
         transactionManager.run {
             val requestRepository = it.requestRepository
-            // val result = requestRepository.giveRating(clientId, requestId, rating)
+            val result = requestRepository.giveRatingToCourier(clientId, rating)
             if (true) {
                 return@run success(true)
             } else {
-                return@run failure(ClientLoginError.ClientNotFound)
+                return@run failure(ClientRatingError.CourierNotFound)
             }
         }
 }

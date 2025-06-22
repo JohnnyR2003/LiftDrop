@@ -334,13 +334,12 @@ class ClientController(
     @PostMapping(Uris.Client.GIVE_CLASSIFICATION)
     fun giveClassification(
         client: AuthenticatedClient,
-        classification: ClassificationInputModel,
+        @RequestBody classification: ClassificationInputModel,
     ): ResponseEntity<Any> {
         val result =
             clientService
                 .giveRating(
                     client.client.user.id,
-                    classification.requestId,
                     classification.rating,
                 )
 

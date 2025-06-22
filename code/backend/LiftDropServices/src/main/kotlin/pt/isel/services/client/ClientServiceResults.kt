@@ -32,6 +32,10 @@ sealed class ClientLoginError {
     data object InvalidAddress : ClientLoginError()
 }
 
+sealed class ClientRatingError {
+    data object CourierNotFound : ClientRatingError()
+}
+
 sealed class ClientGetRequestStatusError {
     data object RequestNotFound : ClientGetRequestStatusError()
 }

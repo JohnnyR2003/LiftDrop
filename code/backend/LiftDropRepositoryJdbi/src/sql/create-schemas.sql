@@ -33,7 +33,7 @@ CREATE TABLE liftdrop.location (
                                    FOREIGN KEY (address) REFERENCES liftdrop.address(address_id) ON DELETE SET NULL
 );
 
-CREATE TABLE liftdrop.client(
+CREATE TABLE liftdrop.client (
                                 client_id                       INT PRIMARY KEY,
                                 address                         INT,
                                 FOREIGN KEY (client_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE,
@@ -46,19 +46,20 @@ CREATE TABLE liftdrop.courier (
                                 current_location                INT DEFAULT NULL,
                                 is_available                    BOOLEAN DEFAULT FALSE,
                                 daily_earnings                  DOUBLE PRECISION,
+                                rating                          NUMERIC(2,1) CHECK (rating >= 1.0 AND rating <= 5.0) DEFAULT NULL,
                                 FOREIGN KEY (courier_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE,
                                 FOREIGN KEY (current_location)  REFERENCES liftdrop.location (location_id) ON DELETE SET NULL
 );
 
 CREATE TABLE liftdrop.request (
-                                  request_id                      SERIAL PRIMARY KEY,
-                                  client_id                       INT,
-                                  courier_id                      INT,
-                                  created_at                      BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
-                                  request_status                  TEXT CHECK (request_status IN ('PENDING','HEADING_TO_PICKUP', 'HEADING_TO_DROPOFF', 'DELIVERED', 'PENDING_REASSIGNMENT')),
-                                  ETA                             BIGINT,
-                                  pickup_code                    TEXT,
-                                  dropoff_code                   TEXT,
+                                  request_id      SERIAL PRIMARY KEY,
+                                  client_id       INT,
+                                  courier_id      INT,
+                                  created_at      BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
+                                  request_status  TEXT CHECK (request_status IN ('PENDING','HEADING_TO_PICKUP', 'HEADING_TO_DROPOFF', 'DELIVERED', 'PENDING_REASSIGNMENT')),
+                                  ETA             BIGINT,
+                                  pickup_code     TEXT,
+                                  dropoff_code    TEXT,
                                   FOREIGN KEY (client_id) REFERENCES liftdrop.client(client_id) ON DELETE CASCADE,
                                   FOREIGN KEY (courier_id) REFERENCES liftdrop.courier(courier_id) ON DELETE SET NULL
 );
@@ -125,5 +126,20 @@ CREATE TABLE liftdrop.sessions (
 --     expires_at TIMESTAMP DEFAULT NOW() + INTERVAL '1 hour',
                                    FOREIGN KEY (user_id) REFERENCES liftdrop.user(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE liftdrop.courier_rating (
+                                         rating_id    SERIAL PRIMARY KEY,
+                                         courier_id   INT NOT NULL,
+                                         request_id   INT,
+                                         client_id    INT,
+                                         rating       NUMERIC(2,1) CHECK (rating >= 1.0 AND rating <= 5.0) NOT NULL,
+                                         comment      TEXT,
+                                         created_at   BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
+                                         FOREIGN KEY (courier_id) REFERENCES liftdrop.courier(courier_id) ON DELETE CASCADE,
+                                         FOREIGN KEY (request_id) REFERENCES liftdrop.request(request_id) ON DELETE SET NULL,
+                                         FOREIGN KEY (client_id) REFERENCES liftdrop.client(client_id) ON DELETE SET NULL
+);
+ALTER TABLE liftdrop.courier_rating
+    ADD CONSTRAINT unique_client_courier_request_rating UNIQUE (client_id, courier_id, request_id);
 
 CREATE INDEX ON liftdrop.item USING GIN (establishment gin_trgm_ops);

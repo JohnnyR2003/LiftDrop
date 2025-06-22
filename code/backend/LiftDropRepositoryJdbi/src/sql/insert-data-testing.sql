@@ -11,9 +11,7 @@ VALUES ('john.doe@example.com', 'hashed_password_1', 'John Doe', 'CLIENT'),
        ('courier9@example.com', 'hashed_password_9', 'Courier Nine', 'COURIER'),
        ('courier10@example.com', 'hashed_password_10', 'Courier Ten', 'COURIER');
 
-
-
---Insert Addresses
+-- Insert Addresses
 INSERT INTO liftdrop."address" (country, city, street, house_number, floor, zip_code)
 VALUES ('PORTUGAL', 'Lisbon', 'Avenida de Roma', '15', 'RC', '1000-264'),
        ('PORTUGAL', 'Lisbon', 'Avenida Fontes Pereira de Melo', '16', 'RC', '1050-116'),
@@ -22,7 +20,6 @@ VALUES ('PORTUGAL', 'Lisbon', 'Avenida de Roma', '15', 'RC', '1000-264'),
        ('PORTUGAL', 'Lisbon', 'Avenida Dom João II', '40', '3', '1990-094'),
        ('PORTUGAL', 'Lisbon', 'Avenida da Liberdade', '2', 'RC', '1250-113'),
        ('PORTUGAL', 'Odivelas', 'Av. Prof. Dr. Augusto Abreu Lopes', '2', 'RC', '2675-462');
-
 
 -- Insert locations next (no dependencies)
 INSERT INTO liftdrop."location" (location_id, latitude, longitude, address, name)
@@ -41,15 +38,14 @@ VALUES (1, 1),
        (3, 3);
 
 -- Insert couriers (depends on Users and Location)
-INSERT INTO liftdrop."courier" (courier_id, current_location, daily_earnings, is_available)
-VALUES (4, 1, 0.00, true),
-       (5, 2, 0.00, false),
-       (6, 3, 0.00, false),
-       (7, 4, 0.00, false),
-       (8, 5, 0.00, true),
-       (9, 6, 0.00, false),
-       (10, 4, 0.00, false);
-
+INSERT INTO liftdrop."courier" (courier_id, current_location, rating, daily_earnings, is_available)
+VALUES (4, 1, 1.0, 0.00, true),
+       (5, 2, 1.0, 0.00, false),
+       (6, 3, 1.0, 0.00, false),
+       (7, 4, 1.0, 0.00, false),
+       (8, 5, 1.0, 0.00, true),
+       (9, 6, 1.0, 0.00, false),
+       (10, 4, 1.0, 0.00, false);
 
 -- Insert requests (depends on Clients and Couriers)
 INSERT INTO liftdrop."request" (request_id, client_id, courier_id, created_at, request_status, ETA, pickup_code, dropoff_code)
@@ -59,24 +55,12 @@ VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, '123456', '65432
        (4, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, '901234', '432109'),
        (5, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700, '567890', '098765');
 
-
 -- Insert request details (depends on Request and Location)
 INSERT INTO liftdrop."request_details" (request_id, description, pickup_location, dropoff_location)
 VALUES (1, 'Chicken Wings', 1, 2),
        (2, 'Big Mac', 2, 3);
 
--- INSERT INTO liftdrop."pickup_spot" (location_id, latitude, longitude, address, name)
--- VALUES (1, 40.7128, -74.0060, 1, 'Pickup Spot 1'),
---        (2, 34.0522, -118.2437, 2, 'Pickup Spot 2'),
---        (3, 37.7749, -122.4194, 3, 'Pickup Spot 3'),
---        (4, 38.73908, -9.12461, 4, 'Pickup Spot 4'),
---        (5, 38.74362, -9.13896, 5, 'Pickup Spot 5'),
---        (6, 38.74140, -9.14667, 6, 'Pickup Spot 6'),
---        (7, 38.74000, -9.15000, 7, 'Pickup Spot 7'),
---        (8, 38.74000, -9.15000, 8, 'Pickup Spot 8'),
---        (9, 38.74000, -9.15000, 9, 'Pickup Spot 9'),
---        (10, 38.74000, -9.15000, 10, 'Pickup Spot 10');
-
+-- Insert items
 INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)
 VALUES
     (1, 'MC DONALDS Roma', 1, 'Big Mac', 5.99, 1800),
@@ -87,22 +71,20 @@ VALUES
     (6, 'SUBWAY AVENIDA DA LIBERDADE', 6, 'Turkey Sub', 6.89, 1200),
     (7, 'MC DONALDS Odivelas', 7, 'Big Mac', 5.99, 1800);
 
-
---deliveries todo
-
+-- Insert deliveries
 INSERT INTO liftdrop."delivery" (delivery_id, courier_id, request_id, started_at, completed_at, ETA, delivery_status)
-VALUES (1, 4, 3, EXTRACT(EPOCH FROM NOW()), NULL, 1800, 'IN_PROGRESS');
---      (2, 4, 1, NOW(), NULL, INTERVAL '30 minutes', 'IN_PROGRESS'),
---      (2, 5, 2, NOW(), NULL, INTERVAL '45 minutes', 'IN_PROGRESS'),
---      (3, 6, 3, NOW(), NULL, INTERVAL '1 hour', 'IN_PROGRESS');
+VALUES (1, 4, 3, EXTRACT(EPOCH FROM NOW()), EXTRACT(EPOCH FROM NOW()), 1800, 'IN_PROGRESS');
+
+-- Insert courier ratings (new table)
+INSERT INTO liftdrop."courier_rating" (courier_id, request_id, client_id, rating, comment)
+VALUES (4, 3, 3, 4.5, 'Great delivery!'),
+       (5, 2, 2, 5.0, 'Very fast and polite.'),
+       (6, 1, 1, 3.5, 'Average experience.');
+
+-- Update sequences
 SELECT setval(pg_get_serial_sequence('liftdrop.user', 'user_id'), (SELECT MAX(user_id) FROM liftdrop.user));
-
 SELECT setval(pg_get_serial_sequence('liftdrop.address', 'address_id'), (SELECT MAX(address_id) FROM liftdrop.address));
-
 SELECT setval(pg_get_serial_sequence('liftdrop.location', 'location_id'), (SELECT MAX(location_id) FROM liftdrop.location));
-
 SELECT setval(pg_get_serial_sequence('liftdrop.request', 'request_id'), (SELECT MAX(request_id) FROM liftdrop.request));
-
 SELECT setval(pg_get_serial_sequence('liftdrop.delivery', 'delivery_id'), (SELECT MAX(delivery_id) FROM liftdrop.delivery));
-
 SELECT setval(pg_get_serial_sequence('liftdrop.request_declines', 'decline_id'), (SELECT MAX(decline_id) FROM liftdrop.request_declines));

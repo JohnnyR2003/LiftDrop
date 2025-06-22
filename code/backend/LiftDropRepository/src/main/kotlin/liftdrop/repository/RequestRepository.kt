@@ -35,5 +35,10 @@ interface RequestRepository {
 
     fun getRequestForCourierById(requestId: Int): RequestDetailsDTO?
 
+    fun giveRatingToCourier(
+        clientId: Int,
+        rating: Int,
+    ): Boolean
+
     fun clear()
 }
