@@ -87,7 +87,7 @@ class LiftDropApplication : DependenciesContainer, Application() {
         get() = RealHomeService(httpService)
 
     override val locationTrackingService: LocationTrackingService
-        get() = RealLocationTrackingService(httpClient, this)
+        get() = RealLocationTrackingService(httpService, this)
 
     override val locationRepo: LocationRepository
         get() = LocationRepositoryImpl(this)

@@ -9,32 +9,32 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
 import com.google.android.gms.location.LocationServices
-import com.google.gson.Gson
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
-import pt.isel.liftdrop.ApplicationJsonType
-import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.HOST
 import pt.isel.liftdrop.TAG
-import pt.isel.liftdrop.home.model.HomeService
+import pt.isel.liftdrop.home.model.LocationDTO
+import pt.isel.liftdrop.home.model.LocationUpdateInputModel
 import pt.isel.liftdrop.services.http.HttpService
 import kotlin.coroutines.resumeWithException
+import pt.isel.liftdrop.services.http.Result
+import pt.isel.liftdrop.shared.model.Uris
 
 interface LocationTrackingService {
-    suspend fun getCurrentLocation(): Location?
+    suspend fun getCurrentLocation(): Result<Location>
     fun startUpdating(authToken: String, courierId: String)
     fun stopUpdating()
-    suspend fun sendLocationToBackend(lat: Double, lon: Double, courierId: String, authToken: String)
+    suspend fun sendLocationToBackend(
+        lat: Double,
+        lon: Double,
+        courierId: String,
+        authToken: String
+    ): Result<Boolean>
 }
 
 class RealLocationTrackingService(
-    private val httpClient: OkHttpClient,
+    private val httpService: HttpService,
     private val context: Context
 ) : LocationTrackingService {
 
@@ -49,13 +49,13 @@ class RealLocationTrackingService(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @SuppressLint("MissingPermission")
-    override suspend fun getCurrentLocation(): Location? {
+    override suspend fun getCurrentLocation(): Result<Location> {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         return suspendCancellableCoroutine { continuation ->
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
                     Log.v(TAG, "Got location: $location")
-                    continuation.resume(location, null)
+                    continuation.resume(Result.Success(location), null)
                 }
                 .addOnFailureListener { exception ->
                     Log.e(TAG, "Failed to get location", exception)
@@ -67,8 +67,8 @@ class RealLocationTrackingService(
     @SuppressLint("MissingPermission")
     override fun startUpdating(authToken: String, courierId: String) {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 20_000L)
-            .setMinUpdateIntervalMillis(20_000L)
+        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 30_000L)
+            .setMinUpdateIntervalMillis(30_000L)
             .build()
 
         locationCallback = object : LocationCallback() {
@@ -97,28 +97,25 @@ class RealLocationTrackingService(
         }
     }
 
-    override suspend fun sendLocationToBackend(lat: Double, lon: Double, courierId: String, authToken: String) {
-        val body = ("{\"courierId\": ${courierId.toInt()}, \"newLocation\": {" +
-                "\"latitude\": $lat" +
-                ", \"longitude\": $lon" +
-                "}}").toRequestBody(ApplicationJsonType)
+    override suspend fun sendLocationToBackend(
+        lat: Double,
+        lon: Double,
+        courierId: String,
+        authToken: String
+    ): Result<Boolean> {
+        val body = LocationUpdateInputModel(
+            courierId = courierId.toInt(),
+            newLocation = LocationDTO(
+                latitude = lat,
+                longitude = lon
+            )
+        )
 
-        val requestBuilder = Request.Builder()
-            .url(apiEndpoint)
-            .post(body)
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Accept", "application/json")
-            .addHeader("Authorization", "Bearer $authToken")
-
-        try {
-            val response = httpClient.newCall(requestBuilder.build()).execute()
-            if (!response.isSuccessful) {
-                println("Failed to send location: ${response.code}")
-            }
-            response.close()
-        } catch (e: Exception) {
-            println("Error sending location: ${e.localizedMessage}")
-        }
+        return httpService.post<LocationUpdateInputModel, Boolean>(
+            url = Uris.Courier.UPDATE_LOCATION,
+            data = body,
+            token = authToken
+        )
     }
 }
 

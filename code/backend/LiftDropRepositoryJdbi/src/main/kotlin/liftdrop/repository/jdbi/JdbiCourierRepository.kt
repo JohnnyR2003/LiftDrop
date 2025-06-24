@@ -77,28 +77,47 @@ class JdbiCourierRepository(
             handle
                 .createQuery(
                     """
-        SELECT request_id FROM liftdrop.request
-        WHERE request_id = :request_id
-        """,
+            SELECT request_id FROM liftdrop.request
+            WHERE request_id = :request_id
+            """,
                 ).bind("request_id", requestId)
                 .mapTo<Int>()
                 .singleOrNull()
 
         if (request == null) {
             GlobalLogger.log("Request with ID $requestId not found.")
-            return false // Request not found
+            return false
+        }
+
+        val hasDeclined =
+            handle
+                .createQuery(
+                    """
+            SELECT EXISTS (
+                SELECT 1 FROM liftdrop.request_declines
+                WHERE request_id = :requestId AND courier_id = :courierId
+            )
+            """,
+                ).bind("requestId", requestId)
+                .bind("courierId", courierId)
+                .mapTo<Boolean>()
+                .one()
+
+        if (hasDeclined) {
+            GlobalLogger.log("Courier $courierId has already declined request $requestId.")
+            return false
         }
 
         val rowsUpdated =
             handle
                 .createUpdate(
                     """
-        UPDATE liftdrop.request
-        SET courier_id = :courierId,
-            request_status = 'HEADING_TO_PICKUP'
-        WHERE request_id = :requestId
-          AND request_status = 'PENDING' OR request_status = 'PENDING_REASSIGNMENT'
-        """,
+            UPDATE liftdrop.request
+            SET courier_id = :courierId,
+                request_status = 'HEADING_TO_PICKUP'
+            WHERE request_id = :requestId
+              AND (request_status = 'PENDING' OR request_status = 'PENDING_REASSIGNMENT')
+            """,
                 ).bind("courierId", courierId)
                 .bind("requestId", requestId)
                 .execute()
@@ -108,10 +127,10 @@ class JdbiCourierRepository(
                 handle
                     .createUpdate(
                         """
-            UPDATE liftdrop.courier
-            SET is_available = FALSE
-            WHERE courier_id = :courierId AND is_available = TRUE
-            """,
+                UPDATE liftdrop.courier
+                SET is_available = FALSE
+                WHERE courier_id = :courierId AND is_available = TRUE
+                """,
                     ).bind("courierId", courierId)
                     .execute()
 
@@ -128,7 +147,6 @@ class JdbiCourierRepository(
                     .mapTo<Int>()
                     .one()
 
-            @Suppress("ktlint:standard:comment-wrapping")
             return (updateCourierStatus > 0 && createdDelivery > 0)
         }
         GlobalLogger.log("No rows updated for request ID $requestId with courier ID $courierId.")
@@ -290,8 +308,8 @@ class JdbiCourierRepository(
                 .createUpdate(
                     """
             UPDATE liftdrop.courier
-            SET is_available = TRUE 
-            WHERE courier_id = :courierId AND is_available = FALSE
+            SET is_available = FALSE 
+            WHERE courier_id = :courierId
             """,
                 ).bind("courierId", courierId)
                 .execute()

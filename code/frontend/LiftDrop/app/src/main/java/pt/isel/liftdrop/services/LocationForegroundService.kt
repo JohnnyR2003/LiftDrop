@@ -14,10 +14,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import okhttp3.OkHttpClient
 import pt.isel.liftdrop.HOST
-import pt.isel.liftdrop.R // Use o R do seu app!
+import pt.isel.liftdrop.R
 import pt.isel.liftdrop.services.http.HttpService
+import java.util.concurrent.TimeUnit
 
-class LocationForegroundService : Service() {
+class LocationForegroundService() : Service() {
 
     private lateinit var locationService: RealLocationTrackingService
 
@@ -26,9 +27,19 @@ class LocationForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val httpClient = OkHttpClient()
+        val timeout = 10L // Timeout for HTTP requests in seconds
+        val httpClient: OkHttpClient by lazy {
+            OkHttpClient.Builder()
+                .callTimeout(timeout, TimeUnit.SECONDS)
+                .build()
+        }
         val jsonEncoder = Gson()
-        locationService = RealLocationTrackingService(httpClient, applicationContext)
+        val httpService = HttpService(
+            baseUrl = HOST,
+            client = httpClient,
+            gson = jsonEncoder
+        )
+        locationService = RealLocationTrackingService(httpService, applicationContext)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

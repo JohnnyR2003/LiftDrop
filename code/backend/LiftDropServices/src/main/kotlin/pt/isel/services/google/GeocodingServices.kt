@@ -58,7 +58,7 @@ class GeocodingServices(
         initialMaxDistance: Double = 1000.0,
         maxDistanceIncrement: Double = 1000.0,
         maxAllowedDistance: Double = 4000.0,
-        deliveryKind: String, // Maximum distance cap
+        deliveryKind: String,
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
         GlobalLogger.log("Fetching ranked couriers for request ID: $requestId with maxDistance: $currentMaxDistance")

@@ -29,7 +29,7 @@ interface HomeService {
 
     suspend fun cancelDelivery(courierId: String, requestId: String, deliveryStatus: String, pickUpLocation: LocationDTO? = null, token: String): Result<Boolean>
 
-    suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean>
+   // suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean>
 
     suspend fun getDailyEarnings(courierId: String, token: String): Result<Double>
 
@@ -207,19 +207,21 @@ class RealHomeService(
         )
     }
 
-    override suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean> {
-        val body = UpdateCourierLocationInputModel(
-            courierId = courierId.toInt(),
-            latitude = lat ,
-            longitude = lon
-        )
-
-        return httpService.post<UpdateCourierLocationInputModel, Boolean>(
-            url = Uris.Courier.UPDATE_LOCATION,
-            data = body,
-            token = token
-        )
-    }
+//    override suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean> {
+//        val body = UpdateCourierLocationInputModel(
+//            courierId = courierId.toInt(),
+//            newLocation = LocationDTO(
+//                latitude = lat,
+//                longitude = lon
+//            )
+//        )
+//
+//        return httpService.post<UpdateCourierLocationInputModel, Boolean>(
+//            url = Uris.Courier.UPDATE_LOCATION,
+//            data = body,
+//            token = token
+//        )
+//    }
 
     override suspend fun getCourierIdByToken(token: String): Result<Int> {
         return httpService.get(
