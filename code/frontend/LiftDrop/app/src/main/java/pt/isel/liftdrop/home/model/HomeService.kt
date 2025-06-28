@@ -8,6 +8,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import pt.isel.liftdrop.HOST
 import pt.isel.liftdrop.services.http.HttpService
+import pt.isel.liftdrop.services.http.Problem
 import pt.isel.liftdrop.shared.model.Uris
 
 interface HomeService {
@@ -28,8 +29,6 @@ interface HomeService {
     suspend fun deliverOrder(requestId: String, courierId: String, dropOffPin: String, deliveryEarnings: Double, token: String): Result<Boolean>
 
     suspend fun cancelDelivery(courierId: String, requestId: String, deliveryStatus: String, pickUpLocation: LocationDTO? = null, token: String): Result<Boolean>
-
-   // suspend fun updateCourierLocation(courierId: String, lat: Double, lon: Double, token: String): Result<Boolean>
 
     suspend fun getDailyEarnings(courierId: String, token: String): Result<Double>
 

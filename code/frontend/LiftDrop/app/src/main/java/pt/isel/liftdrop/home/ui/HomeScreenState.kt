@@ -10,6 +10,23 @@ sealed class HomeScreenState {
         val incomingRequest: Boolean = false,
         val requestDetails: CourierRequestDetails?,
     ) : HomeScreenState()
+    data class RequestAccepted(
+        val requestId: String,
+        val courierId: String,
+        val deliveryEarnings: String,
+        val pickUpCoordinates: Pair<Double, Double>,
+        val dropOffCoordinates: Pair<Double, Double>,
+        val deliveryKind: String,
+        val deliveryStatus: String = "REQUEST_ACCEPTED",
+        val message: String
+    ) : HomeScreenState()
+    data class RequestDeclined(
+        val requestId: String,
+        val courierId: String,
+        val deliveryEarnings: String,
+        val deliveryStatus: String = "REQUEST_DECLINED",
+        val message: String
+    ) : HomeScreenState()
     data class HeadingToPickUp(
         val deliveryEarnings: String,
         val dropOffCoordinates: Pair<Double, Double>,
@@ -58,5 +75,8 @@ sealed class HomeScreenState {
         val isOrderPickedUp: Boolean = false,
         val pickUpLocation: LocationDTO? = null,
         val pickupCode: String? = null,
+    ) : HomeScreenState()
+    data class Offline(
+        val message: String = "You are offline. Please check your internet connection.",
     ) : HomeScreenState()
 }

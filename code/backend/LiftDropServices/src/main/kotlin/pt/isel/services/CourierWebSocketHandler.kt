@@ -8,7 +8,7 @@ import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
-import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
+import pt.isel.liftdrop.ResultMessage
 import pt.isel.services.courier.CourierService
 import pt.isel.services.user.UserService
 import java.util.concurrent.ConcurrentHashMap
@@ -66,32 +66,68 @@ class CourierWebSocketHandler(
 
         if (courierId != null) {
             when (status) {
-                "ACCEPT" -> handleCourierAccept(courierId, requestId)
-                "DECLINE" -> handleCourierDecline(courierId, requestId)
+                "ACCEPT" -> handleAcceptRequest(courierId, requestId)
+                "DECLINE" -> handleDeclineRequest(courierId, requestId)
             }
         }
     }
 
-    private fun handleCourierAccept(
+    private fun handleAcceptRequest(
         courierId: Int,
         requestId: Int,
     ) {
         val accept = courierService.acceptRequest(courierId, requestId)
         if (accept is Either.Left) {
-            GlobalLogger.log("Courier $courierId failed to accept request $requestId: ${accept.value}")
-            return
+            handleError("ACCEPT", courierId)
+        } else {
+            handleSuccess("ACCEPT", requestId, courierId)
         }
-        AssignmentCoordinator.complete(requestId, true)
     }
 
-    fun handleCourierDecline(
+    fun handleDeclineRequest(
         courierId: Int,
         requestId: Int,
     ) {
         val decline = courierService.declineRequest(courierId, requestId)
         if (decline is Either.Left) {
-            GlobalLogger.log("Courier $courierId failed to decline request $requestId: ${decline.value}")
-            return
+            handleError("DECLINE", courierId)
+        } else {
+            handleSuccess("DECLINE", requestId, courierId)
+        }
+    }
+
+    fun handleSuccess(
+        successKind: String,
+        requestId: Int,
+        courierId: Int,
+    ) {
+        when (successKind) {
+            "ACCEPT" -> {
+                val message = ResultMessage.acceptSuccessMessage()
+                sendMessageToCourier(courierId, message)
+                AssignmentCoordinator.complete(requestId, true)
+            }
+            "DECLINE" -> {
+                val message = ResultMessage.declineSuccessMessage()
+                sendMessageToCourier(courierId, message)
+                AssignmentCoordinator.complete(requestId, false)
+            }
+        }
+    }
+
+    fun handleError(
+        errorKind: String,
+        courierId: Int,
+    ) {
+        when (errorKind) {
+            "ACCEPT" -> {
+                val message = ResultMessage.acceptErrorMessage()
+                sendMessageToCourier(courierId, message)
+            }
+            "DECLINE" -> {
+                val message = ResultMessage.declineErrorMessage()
+                sendMessageToCourier(courierId, message)
+            }
         }
     }
 

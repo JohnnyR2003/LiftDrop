@@ -31,21 +31,8 @@ import pt.isel.liftdrop.shared.ui.BottomSlideToConfirm
 import pt.isel.liftdrop.shared.ui.ErrorCard
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Badge
-import androidx.compose.runtime.collectAsState
-import pt.isel.liftdrop.home.model.toDeliveryStatus
+import pt.isel.liftdrop.shared.ui.FadingStatusCard
 import pt.isel.liftdrop.shared.ui.PinInsertionCard
-
-/*
-data class HomeScreenState(
-    val dailyEarnings: String,
-    val isUserLoggedIn: Boolean,
-    val isListening: Boolean,
-    val isRequestAccepted: Boolean = false,
-    val isPickedUp: Boolean = false,
-    val isDelivered: Boolean = false,
-    val incomingRequest: Boolean = false,
-    val requestDetails: CourierRequestDetails? = null
-)*/
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -69,6 +56,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+
             // Map
             LocationServices().LocationAwareMap()
 
@@ -282,9 +270,6 @@ fun HomeScreen(
                             onAccept = {
                                 viewModel.acceptRequest(
                                     requestDetails.requestId,
-                                    context,
-                                    requestDetails.pickupLatitude,
-                                    requestDetails.pickupLongitude,
                                 )
                             },
                             onDecline = { viewModel.declineRequest(requestDetails.requestId) }
@@ -422,7 +407,7 @@ fun HomeScreen(
 
                 is HomeScreenState.Delivered -> {
                     DeliveryEarningsCard(
-                        earnings = state.deliveryEarnings.toString(),
+                        earnings = state.deliveryEarnings,
                         onOk = { viewModel.resetToListeningState() }
                     )
                 }
@@ -439,52 +424,52 @@ fun HomeScreen(
                 }
 
                 is HomeScreenState.CancellingOrder -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.5f)),
-                            contentAlignment = Alignment.Center
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.padding(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
-                            Card(
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.padding(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(24.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        "Cancel Ongoing Delivery?",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        color = Color(0xFF384259)
-                                    )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Row {
-                                        Button(
-                                            onClick = {
-                                                viewModel.cancelDelivery(
-                                                    state.courierId,
-                                                    state.requestId,
-                                                    state.deliveryStatus,
-                                                )
-                                            },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                                        ) {
-                                            Text("Cancel", color = Color.White)
-                                        }
-                                        Spacer(modifier = Modifier.width(16.dp))
-                                        Button(
-                                            onClick = { viewModel.dismissError() },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-                                        ) {
-                                            Text("Back", color = Color.White)
-                                        }
+                                Text(
+                                    "Cancel Ongoing Delivery?",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    color = Color(0xFF384259)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row {
+                                    Button(
+                                        onClick = {
+                                            viewModel.cancelDelivery(
+                                                state.courierId,
+                                                state.requestId,
+                                                state.deliveryStatus,
+                                            )
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                                    ) {
+                                        Text("Cancel", color = Color.White)
+                                    }
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Button(
+                                        onClick = { viewModel.dismissError() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                                    ) {
+                                        Text("Back", color = Color.White)
                                     }
                                 }
                             }
                         }
+                    }
                 }
 
                 is HomeScreenState.CancellingPickup -> {
@@ -629,6 +614,45 @@ fun HomeScreen(
                                 }
                             }
                         }
+                    }
+                }
+                is HomeScreenState.RequestAccepted -> {
+                    val context = LocalContext.current
+                    FadingStatusCard(
+                        message = state.message,
+                        backgroundColor = Color(0xFF43A047), // Verde
+                        onFadeOut = {
+                            viewModel.headToPickUp(
+                                context = context,
+                                pickupLat = state.pickUpCoordinates.first,
+                                pickupLon = state.pickUpCoordinates.second
+                            )
+                        }
+                    )
+                }
+
+                is HomeScreenState.RequestDeclined -> {
+                    FadingStatusCard(
+                        message = state.message,
+                        backgroundColor = Color(0xFFD32F2F), // Vermelho
+                        onFadeOut = { viewModel.resetToListeningState() }
+                    )
+                }
+                is HomeScreenState.Offline -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .background(Color(0xFFFFE082)) // Amarelo claro, pode trocar
+                            .align(Alignment.TopCenter),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = state.message,
+                            color = Color(0xFF8D6E63), // Marrom escuro, pode trocar
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
                     }
                 }
             }

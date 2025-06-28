@@ -22,9 +22,4 @@ object Uris {
         const val FETCH_DAILY_EARNINGS = "$BASE/fetchDailyEarnings/{courierId}"
         const val COMPLETE_ORDER = "$BASE/completeOrder"
     }
-
-    object Sse {
-        const val BASE = "$PREFIX/sse/courier"
-        const val STREAM_EVENTS = "$BASE/{courierId}"
-    }
 }

@@ -1,4 +1,4 @@
-package pt.isel.pipeline.pt.isel.liftdrop
+package pt.isel.liftdrop
 
 data class DeliveryRequestMessage(
     val type: String = "DELIVERY_REQUEST",

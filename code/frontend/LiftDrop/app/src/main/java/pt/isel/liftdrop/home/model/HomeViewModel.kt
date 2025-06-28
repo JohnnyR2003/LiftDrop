@@ -10,7 +10,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.login.model.LoginService
@@ -32,6 +35,8 @@ class HomeViewModel(
 
     private val _previousState: MutableStateFlow<HomeScreenState> =
         MutableStateFlow(HomeScreenState.Idle("0.00"))
+
+    private var connectivityJob: Job? = null
 
     val stateFlow: StateFlow<HomeScreenState> = _stateFlow.asStateFlow()
     val previousState: StateFlow<HomeScreenState> = _previousState.asStateFlow()
@@ -124,8 +129,14 @@ class HomeViewModel(
         }
         _stateFlow.update { current ->
             when (current) {
-                is HomeScreenState.Delivered -> HomeScreenState.Listening(
-                    dailyEarnings = dailyEarnings.toString(),
+                is HomeScreenState.Delivered-> HomeScreenState.Listening(
+                    dailyEarnings = current.deliveryEarnings,
+                    incomingRequest = false,
+                    requestDetails = null
+                )
+
+                is HomeScreenState.RequestDeclined -> HomeScreenState.Listening(
+                    dailyEarnings = current.deliveryEarnings,
                     incomingRequest = false,
                     requestDetails = null
                 )
@@ -225,23 +236,130 @@ class HomeViewModel(
                                 }
                             }
                         }
-
+                        is ResultMessage ->{
+                            _stateFlow.update {
+                                when (request.type) {
+                                    "SUCCESS" -> {
+                                        when (request.subType) {
+                                            "ACCEPT" -> {
+                                                when (it) {
+                                                    is HomeScreenState.Listening -> HomeScreenState.RequestAccepted(
+                                                        requestId = it.requestDetails!!.requestId,
+                                                        courierId = it.requestDetails.courierId,
+                                                        deliveryEarnings = it.requestDetails.price,
+                                                        pickUpCoordinates = Pair(
+                                                            it.requestDetails.pickupLatitude,
+                                                            it.requestDetails.pickupLongitude
+                                                        ),
+                                                        dropOffCoordinates = Pair(
+                                                            it.requestDetails.dropoffLatitude,
+                                                            it.requestDetails.dropoffLongitude
+                                                        ),
+                                                        deliveryKind = it.requestDetails.deliveryKind,
+                                                        deliveryStatus = "REQUEST_ACCEPTED",
+                                                        message = request.message
+                                                    )
+                                                    is HomeScreenState.RequestAccepted -> it
+                                                    else -> HomeScreenState.Error(
+                                                        Problem(
+                                                            type = "AcceptRequestError",
+                                                            title = "Accept Request Error",
+                                                            detail = "Cannot accept request in the $it state.",
+                                                            status = 403
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                            "DECLINE" -> {
+                                                when (it) {
+                                                    is HomeScreenState.Listening -> HomeScreenState.RequestDeclined(
+                                                        requestId = it.requestDetails!!.requestId,
+                                                        courierId = it.requestDetails.courierId,
+                                                        deliveryEarnings = it.requestDetails.price,
+                                                        message = request.message,
+                                                    )
+                                                    is HomeScreenState.RequestDeclined -> it
+                                                    else -> HomeScreenState.Error(
+                                                        Problem(
+                                                            type = "DeclineRequestError",
+                                                            title = "Decline Request Error",
+                                                            detail = "Cannot decline request in the $it state.",
+                                                            status = 403
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                            else -> {
+                                                Log.w("HomeViewModel", "Unhandled subType: ${request.subType}")
+                                                HomeScreenState.Error(
+                                                    Problem(
+                                                        type = "UnhandledSubType",
+                                                        title = "Unhandled SubType",
+                                                        detail = "Received an unhandled subType: ${request.subType}",
+                                                        status = 400
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                    "ERROR" -> {
+                                        Log.e("HomeViewModel", "Received error message: ${request.message}")
+                                        HomeScreenState.Error(
+                                            Problem(
+                                                type = request.subType ?: "UnknownError",
+                                                title = request.message,
+                                                detail = request.detail ?: "An error occurred",
+                                                status = 500
+                                            )
+                                        )
+                                    }
+                                    else -> {
+                                        Log.w("HomeViewModel", "Unhandled type: ${request.type}")
+                                        HomeScreenState.Error(
+                                            Problem(
+                                                type = "UnhandledType",
+                                                title = "Unhandled Type",
+                                                detail = "Received an unhandled type: ${request.type}",
+                                                status = 400
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         else -> {
                             Log.w("HomeViewModel", "Unknown message type: $request")
+                            updateState(
+                                HomeScreenState.Error(
+                                    Problem(
+                                        type = "UnknownMessageType",
+                                        title = "Unknown Message Type",
+                                        detail = "Received an unknown message type: $request",
+                                        status = 400
+                                    )
+                                )
+                            )
                         }
                     }
                 },
                 onFailure = {
-                    updateState(
-                        HomeScreenState.Error(
-                            Problem(
-                                type = "ListeningError",
-                                title = "Listening Error",
-                                detail = it.message ?: "Failed to start listening.",
-                                status = 500
-                            )
-                        )
-                    )
+                    _stateFlow.update {
+                        when (it) {
+                            is HomeScreenState.Listening -> resetToIdleState()
+                            else -> {
+                                updateState(
+                                    HomeScreenState.Error(
+                                        Problem(
+                                            type = "ListeningError",
+                                            title = "Listening Error",
+                                            detail = "Failed to start listening: ${it}",
+                                            status = 500
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
             )
             _stateFlow.update { current ->
@@ -306,9 +424,6 @@ class HomeViewModel(
 
     fun acceptRequest(
         requestId: String,
-        context: Context,
-        pickupLat: Double,
-        pickupLon: Double,
     ) {
         viewModelScope.launch {
             val token = preferences.getUserInfo()?.bearer
@@ -325,45 +440,51 @@ class HomeViewModel(
                         )
                     )
                 )
-            } else {
-                Log.v("HomeViewModel", "Request accepted successfully")
-                _stateFlow.update { current ->
-                    when (current) {
-                        is HomeScreenState.Listening -> {
-                            launchNavigationAppChooser(context, pickupLat, pickupLon)
-                            HomeScreenState.HeadingToPickUp(
-                                dropOffCoordinates = Pair(
-                                    current.requestDetails!!.dropoffLatitude,
-                                    current.requestDetails.dropoffLongitude
-                                ),
-                                deliveryEarnings = current.requestDetails.price,
-                                isPickUpSpotValid = false,
-                                requestId = current.requestDetails.requestId,
-                                courierId = current.requestDetails.courierId,
-                                deliveryKind = current.requestDetails.deliveryKind,
-                            )
-                        }
-
-                        else -> {
-                            updateState(
-                                HomeScreenState.Error(
-                                    Problem(
-                                        type = "AcceptRequestError",
-                                        title = "Accept Request Error",
-                                        detail = "Cannot accept request in the $current state.",
-                                        status = 403
-                                    )
-                                )
-                            )
-                        }
-                    }
-                }
-                Log.v(
-                    "HomeViewModel",
-                    "Request accepted successfully, navigating to pickup location, current state: ${_stateFlow.value}"
-                )
             }
         }
+    }
+
+    fun headToPickUp(
+        context: Context,
+        pickupLat: Double,
+        pickupLon: Double,
+    ){
+        Log.v("HomeViewModel", "Request accepted successfully")
+        _stateFlow.update { current ->
+            when (current) {
+                is HomeScreenState.RequestAccepted -> {
+                    launchNavigationAppChooser(context, pickupLat, pickupLon)
+                    HomeScreenState.HeadingToPickUp(
+                        dropOffCoordinates = Pair(
+                            current.dropOffCoordinates.first,
+                            current.dropOffCoordinates.second
+                        ),
+                        deliveryEarnings = current.deliveryEarnings,
+                        isPickUpSpotValid = false,
+                        requestId = current.requestId,
+                        courierId = current.courierId,
+                        deliveryKind = current.deliveryKind,
+                    )
+                }
+
+                else -> {
+                    updateState(
+                        HomeScreenState.Error(
+                            Problem(
+                                type = "AcceptRequestError",
+                                title = "Accept Request Error",
+                                detail = "Cannot accept request in the $current state.",
+                                status = 403
+                            )
+                        )
+                    )
+                }
+            }
+        }
+        Log.v(
+            "HomeViewModel",
+            "Request accepted successfully, navigating to pickup location, current state: ${_stateFlow.value}"
+        )
     }
 
 
@@ -381,31 +502,6 @@ class HomeViewModel(
                         )
                     )
                 )
-            } else {
-                Log.v("HomeViewModel", "Request declined successfully")
-                _stateFlow.update { current ->
-                    when (current) {
-                        is HomeScreenState.Listening -> {
-                            current.copy(
-                                incomingRequest = false,
-                                requestDetails = null
-                            )
-                        }
-
-                        else -> {
-                            updateState(
-                                HomeScreenState.Error(
-                                    Problem(
-                                        type = "DeclineRequestError",
-                                        title = "Decline Request Error",
-                                        detail = "Cannot decline request in the $current state.",
-                                        status = 403
-                                    )
-                                )
-                            )
-                        }
-                    }
-                }
             }
         }
     }
@@ -697,7 +793,6 @@ class HomeViewModel(
         }
     }
 
-    //TODO(refactor this method so that it has the new homescreen state)
     fun cancelDelivery(
         courierId: String,
         requestId: String,
@@ -745,16 +840,16 @@ class HomeViewModel(
                                         )
                                     }
 //TODO(check the use case where the state is Idle upon cancelling a delivery)
-                                    is HomeScreenState.Idle -> {
-                                        Log.v(
-                                            "HomeViewModel",
-                                            "Already in idle state, no action needed"
-                                        )
-                                        HomeScreenState.CancellingPickup(
-                                            courierId = courierId,
-                                            requestId = requestId,
-                                        )
-                                    }
+//                                    is HomeScreenState.Idle -> {
+//                                        Log.v(
+//                                            "HomeViewModel",
+//                                            "Already in idle state, no action needed"
+//                                        )
+//                                        HomeScreenState.CancellingPickup(
+//                                            courierId = courierId,
+//                                            requestId = requestId,
+//                                        )
+//                                    }
 
                                     is HomeScreenState.Error -> {
                                         Log.v(
@@ -769,20 +864,7 @@ class HomeViewModel(
                                     }
 
                                     else -> {
-                                        Log.v(
-                                            "HomeViewModel",
-                                            "Cannot cancel delivery in the current state: $current"
-                                        )
-                                        updateState(
-                                            HomeScreenState.Error(
-                                                Problem(
-                                                    type = "CancelDeliveryError",
-                                                    title = "Cancel Delivery Error",
-                                                    detail = "Cannot cancel delivery in the $current state.",
-                                                    status = 403
-                                                )
-                                            )
-                                        )
+                                        resetToIdleState()
                                     }
                                 }
                             }
@@ -862,17 +944,6 @@ class HomeViewModel(
     }
 }
 
-fun HomeScreenState.toDeliveryStatus(): String {
-    return when (this) {
-        is HomeScreenState.HeadingToPickUp -> "HEADING_TO_PICKUP"
-        is HomeScreenState.PickedUp -> "PICKED_UP"
-        is HomeScreenState.HeadingToDropOff -> "HEADING_TO_DROPOFF"
-        is HomeScreenState.Delivered -> "DELIVERED"
-        is HomeScreenState.CancellingPickup -> "CANCELLING"
-        else -> "IDLE"
-    }
-}
-
 fun parseDynamicMessage(message: String): Any {
     val mapper = jacksonObjectMapper()
     val root: JsonNode = mapper.readTree(message)
@@ -881,6 +952,7 @@ fun parseDynamicMessage(message: String): Any {
     return when (type) {
         "DELIVERY_REQUEST" -> mapper.treeToValue(root, CourierRequestDetails::class.java)
         "DELIVERY_UPDATE" -> mapper.treeToValue(root, DeliveryUpdate::class.java)
+        "SUCCESS", "ERROR" -> mapper.treeToValue(root, ResultMessage::class.java)
         else -> throw IllegalArgumentException("Unknown message type: $type")
     }
 }

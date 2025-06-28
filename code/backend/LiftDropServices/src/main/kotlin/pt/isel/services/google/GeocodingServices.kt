@@ -21,7 +21,7 @@ import liftdrop.repository.TransactionManager
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import pt.isel.liftdrop.*
-import pt.isel.pipeline.pt.isel.liftdrop.DeliveryRequestMessage
+import pt.isel.liftdrop.DeliveryRequestMessage
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.AssignmentCoordinator
 import pt.isel.services.CourierWebSocketHandler
@@ -119,7 +119,7 @@ class GeocodingServices(
                 if (accepted) {
                     return true
                 } else {
-                    courierWebSocketHandler.handleCourierDecline(
+                    courierWebSocketHandler.handleDeclineRequest(
                         courier.courierId,
                         requestId,
                     )

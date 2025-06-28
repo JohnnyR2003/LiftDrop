@@ -34,6 +34,7 @@ object Uris {
         const val DELIVERED_ORDER = "/deliveredOrder"
         const val FETCH_DAILY_EARNINGS = "/fetchDailyEarnings/{courierId}"
         const val COMPLETE_ORDER = "/completeOrder"
+        const val RESEND_LAST_MESSAGE = "/resendLastMessage"
     }
 
     object Sse {
