@@ -10,6 +10,7 @@ import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.client.ClientService
 import pt.isel.services.courier.CourierService
+import pt.isel.services.google.GeocodingServices
 import pt.isel.services.user.UserService
 import kotlin.math.abs
 import kotlin.random.Random
@@ -34,11 +35,18 @@ object ServicesTestUtils {
             JdbiTransactionManager(jdbi),
         )
 
-    fun createGeocodingService() = AssignmentServices(JdbiTransactionManager(jdbi), createCourierWebSocketHandler())
+    fun createAssignmentService() =
+        AssignmentServices(
+            JdbiTransactionManager(jdbi),
+            createCourierWebSocketHandler(),
+        )
+
+    fun createGeocodingService() = GeocodingServices()
 
     fun createClientService() =
         ClientService(
             JdbiTransactionManager(jdbi),
+            createAssignmentService(),
             createGeocodingService(),
         )
 
