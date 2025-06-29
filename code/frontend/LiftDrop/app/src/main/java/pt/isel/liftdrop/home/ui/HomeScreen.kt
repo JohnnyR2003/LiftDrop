@@ -349,6 +349,7 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             PinInsertionCard(
+                                orderNumber = state.requestId,
                                 onPinEntered = { pin ->
                                     viewModel.validatePickUpPin(
                                         state.requestId,

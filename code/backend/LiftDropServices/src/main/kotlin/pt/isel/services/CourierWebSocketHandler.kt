@@ -69,6 +69,8 @@ class CourierWebSocketHandler(
                 "ACCEPT" -> handleAcceptRequest(courierId, requestId)
                 "DECLINE" -> handleDeclineRequest(courierId, requestId)
             }
+        } else {
+            session.close(CloseStatus.NOT_ACCEPTABLE)
         }
     }
 

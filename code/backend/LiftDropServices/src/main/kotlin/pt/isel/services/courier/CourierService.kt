@@ -15,7 +15,6 @@ import java.util.*
 @Service
 class CourierService(
     private val transactionManager: TransactionManager,
-    // private val geocodingServices: GeocodingServices,
 ) {
     fun registerCourier(
         email: String,

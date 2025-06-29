@@ -13,6 +13,7 @@ import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.LocationDTO
 import pt.isel.liftdrop.UserRole
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
+import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.google.GeocodingServices
 import pt.isel.services.utils.Codify.encodePassword
 import pt.isel.services.utils.Codify.matchesPassword
@@ -21,6 +22,7 @@ import java.util.UUID
 @Named
 class ClientService(
     private val transactionManager: TransactionManager,
+    private val assignmentServices: AssignmentServices,
     private val geocodingServices: GeocodingServices,
 ) {
     fun registerClient(
@@ -174,7 +176,7 @@ class ClientService(
             )
 
             CoroutineScope(Dispatchers.Default).launch {
-                geocodingServices.handleCourierAssignment(
+                assignmentServices.handleCourierAssignment(
                     restaurantLocation.second.latitude,
                     restaurantLocation.second.longitude,
                     requestId,
@@ -241,11 +243,14 @@ class ClientService(
     ): Either<ClientRatingError, Boolean> =
         transactionManager.run {
             val requestRepository = it.requestRepository
-            val result = requestRepository.giveRatingToCourier(clientId, rating)
-            if (true) {
+            val requestId =
+                requestRepository.getMostRecentRequestIdForClient(clientId)
+                    ?: return@run failure(ClientRatingError.RequestNotFound)
+            val result = requestRepository.giveRatingToCourier(clientId, requestId, rating)
+            if (result) {
                 return@run success(true)
             } else {
-                return@run failure(ClientRatingError.CourierNotFound)
+                return@run failure(ClientRatingError.RatingAlreadyDone)
             }
         }
 }

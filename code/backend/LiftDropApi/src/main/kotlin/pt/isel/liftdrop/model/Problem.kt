@@ -191,6 +191,14 @@ data class Problem(
                 detail = "The requested item could not be found.",
             )
 
+        fun ratingAlreadyDone(): Problem =
+            Problem(
+                type = "$PROBLEM_URI_PATH/rating-already-done",
+                title = "Rating Already Done",
+                status = HttpStatus.CONFLICT.value(),
+                detail = "The rating for this request has already been submitted.",
+            )
+
         fun clientAddressNotFound(): Problem =
             Problem(
                 type = "$PROBLEM_URI_PATH/client-address-not-found",

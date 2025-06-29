@@ -14,6 +14,7 @@ import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
 import pt.isel.services.CourierWebSocketHandler
+import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.client.ClientService
 import pt.isel.services.courier.CourierService
 import pt.isel.services.google.GeocodingServices
@@ -44,6 +45,8 @@ class ClientServiceTest {
 
         private val geocodingServices = createGeocodingService()
 
+        private val assignmentServices = createAssignmentService()
+
         private fun cleanup(trxManager: TransactionManager) {
             trxManager.run { trx ->
                 trx.requestRepository
@@ -59,9 +62,11 @@ class ClientServiceTest {
 
         private fun createCourierWebSocketHandler(): CourierWebSocketHandler = CourierWebSocketHandler(courierService, userService)
 
-        private fun createGeocodingService(): GeocodingServices = GeocodingServices(transactionManager, courierWebSocketHandler)
+        private fun createAssignmentService(): AssignmentServices = AssignmentServices(transactionManager, courierWebSocketHandler)
 
-        private fun createClientService(): ClientService = ClientService(transactionManager, geocodingServices)
+        private fun createGeocodingService(): GeocodingServices = GeocodingServices()
+
+        private fun createClientService(): ClientService = ClientService(transactionManager, assignmentServices, geocodingServices)
     }
 
     private val testAddress =
@@ -144,6 +149,7 @@ class ClientServiceTest {
                         client = client.value,
                         description = "Big Mac",
                         restaurantName = "MC DONALDS Roma",
+                        dropOffAddress = null,
                     )
                 }
 

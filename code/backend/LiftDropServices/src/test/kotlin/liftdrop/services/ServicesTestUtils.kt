@@ -7,9 +7,9 @@ import org.postgresql.ds.PGSimpleDataSource
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.LocationDTO
 import pt.isel.services.CourierWebSocketHandler
+import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.client.ClientService
 import pt.isel.services.courier.CourierService
-import pt.isel.services.google.GeocodingServices
 import pt.isel.services.user.UserService
 import kotlin.math.abs
 import kotlin.random.Random
@@ -34,7 +34,7 @@ object ServicesTestUtils {
             JdbiTransactionManager(jdbi),
         )
 
-    fun createGeocodingService() = GeocodingServices(JdbiTransactionManager(jdbi), createCourierWebSocketHandler())
+    fun createGeocodingService() = AssignmentServices(JdbiTransactionManager(jdbi), createCourierWebSocketHandler())
 
     fun createClientService() =
         ClientService(

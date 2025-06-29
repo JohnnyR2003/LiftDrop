@@ -1,5 +1,6 @@
 package pt.isel.liftdrop.shared.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,12 +17,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.input.VisualTransformation
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
 
 @Composable
 fun PinInsertionCard(
+    orderNumber: String? = null,
     onPinEntered: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -41,6 +42,30 @@ fun PinInsertionCard(
             modifier = Modifier.padding(vertical = 20.dp, horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            if(orderNumber != null) {
+                // Novo bloco: título e número da encomenda
+            Text(
+                text = "O seu número de encomenda",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF384259)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFF43A047), shape = RoundedCornerShape(12.dp))
+                    .padding(horizontal = 24.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    text = orderNumber,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 26.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            }
             Text(
                 text = "Insira o PIN de 6 dígitos",
                 fontSize = 20.sp,
@@ -79,11 +104,11 @@ fun PinInsertionCard(
                             }
                         },
                         modifier = Modifier
-                            .width(48.dp) // Aumenta a largura
+                            .width(48.dp)
                             .focusRequester(focusRequesters[index]),
                         singleLine = true,
                         textStyle = LocalTextStyle.current.copy(
-                            fontSize = 22.sp, // Pode reduzir um pouco se quiser
+                            fontSize = 22.sp,
                             textAlign = TextAlign.Center
                         ),
                         visualTransformation = PasswordVisualTransformation(),

@@ -11,14 +11,11 @@ import androidx.lifecycle.viewModelScope
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.PreferencesRepository
-import pt.isel.liftdrop.services.LocationServices
 import pt.isel.liftdrop.services.LocationTrackingService
 import pt.isel.liftdrop.services.http.Problem
 import pt.isel.liftdrop.services.http.Result
@@ -35,8 +32,6 @@ class HomeViewModel(
 
     private val _previousState: MutableStateFlow<HomeScreenState> =
         MutableStateFlow(HomeScreenState.Idle("0.00"))
-
-    private var connectivityJob: Job? = null
 
     val stateFlow: StateFlow<HomeScreenState> = _stateFlow.asStateFlow()
     val previousState: StateFlow<HomeScreenState> = _previousState.asStateFlow()

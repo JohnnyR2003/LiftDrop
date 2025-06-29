@@ -351,10 +351,24 @@ class ClientController(
             }
 
             is Failure -> {
-                println("Failed to give classification")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to give classification")
+                when (result.value) {
+                    is ClientRatingError.RequestNotFound -> {
+                        Problem
+                            .requestNotFound()
+                            .response(HttpStatus.NOT_FOUND)
+                    }
+                    is ClientRatingError.RatingAlreadyDone -> {
+                        Problem
+                            .ratingAlreadyDone()
+                            .response(HttpStatus.BAD_REQUEST)
+                    }
+
+                    else -> {
+                        Problem
+                            .internalServerError()
+                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
+                    }
+                }
             }
         }
     }

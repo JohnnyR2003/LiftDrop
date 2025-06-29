@@ -37,7 +37,9 @@ sealed class ClientLoginError {
 }
 
 sealed class ClientRatingError {
-    data object CourierNotFound : ClientRatingError()
+    data object RequestNotFound : ClientRatingError()
+
+    data object RatingAlreadyDone : ClientRatingError()
 }
 
 sealed class ClientGetRequestStatusError {

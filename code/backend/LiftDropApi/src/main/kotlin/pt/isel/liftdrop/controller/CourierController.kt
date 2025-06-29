@@ -20,6 +20,7 @@ import pt.isel.liftdrop.DeliveryStatus
 import pt.isel.liftdrop.Uris
 import pt.isel.liftdrop.model.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
+import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.courier.*
 import pt.isel.services.google.GeocodingServices
 
@@ -27,6 +28,7 @@ import pt.isel.services.google.GeocodingServices
 @RequestMapping(Uris.Courier.BASE)
 class CourierController(
     val courierService: CourierService,
+    val assignmentServices: AssignmentServices,
     val geocodingServices: GeocodingServices,
 ) {
     @PostMapping(Uris.Courier.REGISTER)
@@ -269,7 +271,7 @@ class CourierController(
                         ResponseEntity.ok(true)
                     }
                     DeliveryKind.RELAY -> {
-                        geocodingServices.completeReassignment(
+                        assignmentServices.completeReassignment(
                             input.requestId,
                         )
                         ResponseEntity.ok(true)
@@ -375,7 +377,7 @@ class CourierController(
                 GlobalLogger.log("Courier cancelled delivery while heading to dropoff")
                 // Handle successful order cancellation and try reassigning it
                 val reassignResult =
-                    geocodingServices.handleRequestReassignment(
+                    assignmentServices.handleRequestReassignment(
                         input.requestId,
                         input.courierId,
                         deliveryStatus,

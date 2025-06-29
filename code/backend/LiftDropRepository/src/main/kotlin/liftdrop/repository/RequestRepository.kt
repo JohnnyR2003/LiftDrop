@@ -35,8 +35,11 @@ interface RequestRepository {
 
     fun getRequestForCourierById(requestId: Int): RequestDetailsDTO?
 
+    fun getMostRecentRequestIdForClient(clientId: Int): Int?
+
     fun giveRatingToCourier(
         clientId: Int,
+        requestId: Int,
         rating: Int,
     ): Boolean
 

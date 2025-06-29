@@ -36,6 +36,16 @@ sealed class HomeScreenState {
         val deliveryKind: String,
         val deliveryStatus: String = "HEADING_TO_PICKUP",
     ) : HomeScreenState()
+
+    data class CurrentOrderInfo(
+        val requestId: String,
+        val courierId: String,
+        val deliveryEarnings: String,
+        val pickUpCoordinates: Pair<Double, Double>,
+        val dropOffCoordinates: Pair<Double, Double>,
+        val deliveryKind: String,
+        val deliveryStatus: String = "CURRENT_REQUEST_INFO",
+    ) : HomeScreenState()
     data class PickedUp(
         val deliveryEarnings: String,
         val requestId: String,

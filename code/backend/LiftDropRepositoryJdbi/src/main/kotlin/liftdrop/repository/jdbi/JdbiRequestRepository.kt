@@ -204,8 +204,24 @@ class JdbiRequestRepository(
             .findOne()
             .orElse(null)
 
+    override fun getMostRecentRequestIdForClient(clientId: Int): Int? =
+        handle
+            .createQuery(
+                """
+        SELECT request_id
+        FROM liftdrop.request
+        WHERE client_id = :client_id AND request_status = 'DELIVERED'
+        ORDER BY created_at DESC
+        LIMIT 1
+        """,
+            ).bind("client_id", clientId)
+            .mapTo<Int>()
+            .findOne()
+            .orElse(null)
+
     override fun giveRatingToCourier(
         clientId: Int,
+        requestId: Int,
         rating: Int,
     ): Boolean {
         // 1. Get the latest delivered request for this client
@@ -224,27 +240,44 @@ class JdbiRequestRepository(
                 .findOne()
                 .orElse(null) ?: return false
 
-        val requestId = request["request_id"] as Int
+        val actualRequestId = request["request_id"] as Int
         val courierId = request["courier_id"] as Int
 
-        // 2. Insert or update the rating for this request
-        val updated =
+        // 2. Check if a rating already exists for this request
+        val ratingExists =
+            handle
+                .createQuery(
+                    """
+        SELECT 1 FROM liftdrop.courier_rating
+        WHERE client_id = :client_id AND courier_id = :courier_id AND request_id = :request_id
+        LIMIT 1
+        """,
+                ).bind("client_id", clientId)
+                .bind("courier_id", courierId)
+                .bind("request_id", actualRequestId)
+                .mapTo<Int>()
+                .findOne()
+                .isPresent
+
+        if (ratingExists) return false
+
+        // 3. Insert the rating for this request
+        val inserted =
             handle
                 .createUpdate(
                     """
         INSERT INTO liftdrop.courier_rating (courier_id, request_id, client_id, rating)
         VALUES (:courier_id, :request_id, :client_id, :rating)
-        ON CONFLICT (client_id, courier_id, request_id) DO UPDATE SET rating = :rating
         """,
                 ).bind("courier_id", courierId)
-                .bind("request_id", requestId)
+                .bind("request_id", actualRequestId)
                 .bind("client_id", clientId)
                 .bind("rating", rating)
                 .execute() > 0
 
-        if (!updated) return false
+        if (!inserted) return false
 
-        // 3. Update the courier's average rating
+        // 4. Update the courier's average rating
         val avgRating =
             handle
                 .createQuery(
