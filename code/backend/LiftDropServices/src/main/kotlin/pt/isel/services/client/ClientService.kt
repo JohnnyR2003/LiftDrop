@@ -67,7 +67,7 @@ class ClientService(
             return@run success(clientCreation)
         }
 
-    fun getClientById(clientId: Int): Either<ClientLoginError, Client>? =
+    fun getClientById(clientId: Int): Either<ClientLoginError, Client> =
         transactionManager.run {
             val clientRepository = it.clientRepository
             val client = clientRepository.getClientByUserId(clientId)
@@ -122,6 +122,7 @@ class ClientService(
     fun makeRequest(
         client: Client,
         description: String,
+        quantity: Int,
         restaurantName: String,
         dropOffAddress: Address?,
     ): Either<RequestCreationError, Int> =
@@ -165,6 +166,7 @@ class ClientService(
             requestRepository.createRequestDetails(
                 requestId = requestId,
                 description = description,
+                quantity = quantity,
                 pickupLocationId = pickupLocationId,
                 dropoffLocationId = dropOffLocationId,
             )

@@ -5,14 +5,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CourierRequestDetails(
     val type: String = "DELIVERY_REQUEST",
-    val courierId : String,
     val requestId: String,
+    val courierId : String,
     val pickupLatitude: Double,
     val pickupLongitude: Double,
     val pickupAddress: String,
     val dropoffLatitude: Double,
     val dropoffLongitude: Double,
     val dropoffAddress: String,
-    val price: String,
+    val item: String,
+    val quantity: Int,
+    val deliveryEarnings: String,
     val deliveryKind: String
 )

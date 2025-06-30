@@ -14,6 +14,7 @@ interface RequestRepository {
     fun createRequestDetails(
         requestId: Int,
         description: String,
+        quantity: Int,
         pickupLocationId: Int,
         dropoffLocationId: Int,
     ): Int

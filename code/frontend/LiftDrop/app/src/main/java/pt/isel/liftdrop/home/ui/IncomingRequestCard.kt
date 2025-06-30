@@ -35,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -104,7 +103,7 @@ fun IncomingRequestCard(
 
                     // Valor em destaque
                     Text(
-                        text = "+${request.price}€",
+                        text = "+${request.deliveryEarnings}€",
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 32.sp,
                         color = Color(0xFF384259),
@@ -249,8 +248,10 @@ fun IncomingRequestCardPreview() {
             dropoffLongitude = -9.1399,
             pickupAddress = "123 Main St, City",
             dropoffAddress = "456 Elm St, City",
-            price = "15.0",
-            deliveryKind = "DEFAULT"
+            deliveryEarnings = "15.0",
+            deliveryKind = "DEFAULT",
+            item = "Pizza",
+            quantity = 2
         ),
         onAccept = {},
         onDecline = {}

@@ -110,8 +110,6 @@ class HomeActivity : ComponentActivity() {
             HomeScreen(
                 viewModel = viewModel,
                 state = state,
-                onMenuClick = { /* TODO */ },
-                onNotificationClick = { /* TODO */ },
                 onStartClick = {
                     lifecycleScope.launch {
                         val user = repo.preferencesRepository.getUserInfo()
@@ -132,6 +130,7 @@ class HomeActivity : ComponentActivity() {
                         finish()
                     }
                 },
+                onOrderInfoClick = { viewModel.toggleOrderInfoVisibility() },
                 onCancelDeliveryClick = { viewModel.tryCancelDelivery() },
                 dailyEarnings = dailyEarnings,
             )

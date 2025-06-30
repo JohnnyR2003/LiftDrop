@@ -67,6 +67,7 @@ CREATE TABLE liftdrop.request (
 CREATE TABLE liftdrop.request_details (
                                           request_id                      INT PRIMARY KEY,
                                           description                     TEXT,
+                                          quantity                        INT,
                                           pickup_location                 INT ,
                                           dropoff_location                INT ,
                                           FOREIGN KEY (request_id) REFERENCES liftdrop.request(request_id) ON DELETE CASCADE,

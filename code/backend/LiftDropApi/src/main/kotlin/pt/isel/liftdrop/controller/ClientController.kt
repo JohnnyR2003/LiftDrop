@@ -33,10 +33,11 @@ class ClientController(
         when (
             val requestCreationResult =
                 clientService.makeRequest(
-                    Client(user.client.user),
-                    order.itemDesignation,
-                    order.restaurantName,
-                    order.dropOffAddress?.toAddress(),
+                    client = Client(user.client.user),
+                    description = order.itemDesignation,
+                    restaurantName = order.restaurantName,
+                    quantity = order.quantity,
+                    dropOffAddress = order.dropOffAddress?.toAddress(),
                 )
         ) {
             is Success -> {

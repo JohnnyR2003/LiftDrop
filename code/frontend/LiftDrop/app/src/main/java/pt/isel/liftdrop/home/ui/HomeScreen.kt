@@ -1,6 +1,8 @@
 package pt.isel.liftdrop.home.ui
 
 import DeliveryEarningsCard
+import OrderInfoCard
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -27,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.location.LocationServices
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
 import pt.isel.liftdrop.shared.ui.BottomSlideToConfirm
 import pt.isel.liftdrop.shared.ui.ErrorCard
 import androidx.compose.material3.BadgedBox
@@ -40,9 +43,8 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     state: HomeScreenState,
     dailyEarnings: String,
-    onMenuClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {},
     onStartClick: () -> Unit = {},
+    onOrderInfoClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onCancelDeliveryClick: () -> Unit = {},
 ) {
@@ -70,6 +72,7 @@ fun HomeScreen(
                 )
                 is HomeScreenState.HeadingToPickUp, is HomeScreenState.HeadingToDropOff -> listOf(
                     //Triple(Icons.Default.Menu, onMenuClick, false),
+                    Triple(Icons.Default.Info, onOrderInfoClick, false),
                     Triple(Icons.Default.Close, onCancelDeliveryClick, false)
                 )
                 else -> emptyList()
@@ -264,7 +267,6 @@ fun HomeScreen(
                 is HomeScreenState.Listening -> {
                     if (state.incomingRequest) {
                         val requestDetails = state.requestDetails
-                        val context = LocalContext.current
                         IncomingRequestCard(
                             request = requestDetails!!,
                             onAccept = {
@@ -329,37 +331,53 @@ fun HomeScreen(
 
                 is HomeScreenState.HeadingToPickUp -> {
                     val context = LocalContext.current
-                    if (!state.isPickUpSpotValid) {
-                        BottomSlideToConfirm(
-                            text = "Slide to Pick Up",
-                            onConfirmed = {
-                                viewModel.validatePickup(
-                                    state.requestId,
-                                    state.courierId,
-                                    context
+
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        // Botão de informações no canto superior direito
+
+                        if (!state.isPickUpSpotValid) {
+                            if(state.isOrderInfoVisible){
+                                OrderInfoCard(
+                                    requestDetails = viewModel.currentRequest.value!!,
+                                    onClose = { viewModel.toggleOrderInfoVisibility() },
                                 )
                             }
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 32.dp)
-                                .align(Alignment.BottomCenter),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            PinInsertionCard(
-                                orderNumber = state.requestId,
-                                onPinEntered = { pin ->
-                                    viewModel.validatePickUpPin(
-                                        state.requestId,
-                                        state.courierId,
-                                        pin,
-                                        state.deliveryKind,
+                            BottomSlideToConfirm(
+                                text = "Slide to Pick Up",
+                                onConfirmed = {
+                                    viewModel.validatePickup(
+                                        viewModel.currentRequest.value!!.requestId,
+                                        viewModel.currentRequest.value!!.courierId,
                                         context
                                     )
-                                }
+                                },
                             )
+                        } else {
+                            if(state.isOrderInfoVisible){
+                                OrderInfoCard(
+                                    requestDetails = viewModel.currentRequest.value!!,
+                                    onClose = { viewModel.toggleOrderInfoVisibility() },
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 32.dp)
+                                    .align(Alignment.BottomCenter),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                PinInsertionCard(
+                                    orderNumber = viewModel.currentRequest.value!!.requestId,
+                                    onPinEntered = { pin ->
+                                        viewModel.validatePickUpPin(
+                                            viewModel.currentRequest.value!!.requestId,
+                                            viewModel.currentRequest.value!!.courierId,
+                                            pin,
+                                            viewModel.currentRequest.value!!.deliveryKind,
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -375,16 +393,28 @@ fun HomeScreen(
 
                 is HomeScreenState.HeadingToDropOff -> {
                     if (!state.isDropOffSpotValid) {
+                        if(state.isOrderInfoVisible){
+                            OrderInfoCard(
+                                requestDetails = viewModel.currentRequest.value!!,
+                                onClose = { viewModel.toggleOrderInfoVisibility() },
+                            )
+                        }
                         BottomSlideToConfirm(
                             text = "Slide to Drop Off",
                             onConfirmed = {
                                 viewModel.validateDropOff(
-                                    state.requestId,
-                                    state.courierId
+                                    viewModel.currentRequest.value!!.requestId,
+                                    viewModel.currentRequest.value!!.courierId
                                 )
                             }
                         )
                     } else {
+                        if(state.isOrderInfoVisible){
+                            OrderInfoCard(
+                                requestDetails = viewModel.currentRequest.value!!,
+                                onClose = { viewModel.toggleOrderInfoVisibility() },
+                            )
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -395,10 +425,10 @@ fun HomeScreen(
                             PinInsertionCard(
                                 onPinEntered = { pin ->
                                     viewModel.validateDropOffPin(
-                                        state.requestId,
-                                        state.courierId,
+                                        viewModel.currentRequest.value!!.requestId,
+                                        viewModel.currentRequest.value!!.courierId,
                                         pin,
-                                        state.deliveryEarnings.toDouble()
+                                        viewModel.currentRequest.value!!.deliveryEarnings.toDouble()
                                     )
                                 }
                             )
@@ -408,7 +438,7 @@ fun HomeScreen(
 
                 is HomeScreenState.Delivered -> {
                     DeliveryEarningsCard(
-                        earnings = state.deliveryEarnings,
+                        earnings = viewModel.currentRequest.value!!.deliveryEarnings,
                         onOk = { viewModel.resetToListeningState() }
                     )
                 }
@@ -451,8 +481,8 @@ fun HomeScreen(
                                     Button(
                                         onClick = {
                                             viewModel.cancelDelivery(
-                                                state.courierId,
-                                                state.requestId,
+                                                viewModel.currentRequest.value!!.courierId,
+                                                viewModel.currentRequest.value!!.requestId,
                                                 state.deliveryStatus,
                                             )
                                         },
@@ -625,8 +655,8 @@ fun HomeScreen(
                         onFadeOut = {
                             viewModel.headToPickUp(
                                 context = context,
-                                pickupLat = state.pickUpCoordinates.first,
-                                pickupLon = state.pickUpCoordinates.second
+                                pickupLat = viewModel.currentRequest.value!!.pickupLatitude,
+                                pickupLon = viewModel.currentRequest.value!!.pickupLongitude,
                             )
                         }
                     )
@@ -638,23 +668,6 @@ fun HomeScreen(
                         backgroundColor = Color(0xFFD32F2F), // Vermelho
                         onFadeOut = { viewModel.resetToListeningState() }
                     )
-                }
-                is HomeScreenState.Offline -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .background(Color(0xFFFFE082)) // Amarelo claro, pode trocar
-                            .align(Alignment.TopCenter),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = state.message,
-                            color = Color(0xFF8D6E63), // Marrom escuro, pode trocar
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                    }
                 }
             }
         }

@@ -6,5 +6,7 @@ data class RequestDetailsDTO(
     val pickupAddress: String,
     val dropoffLocation: LocationDTO,
     val dropoffAddress: String,
+    val item: String,
+    val quantity: Int,
     val price: String,
 )

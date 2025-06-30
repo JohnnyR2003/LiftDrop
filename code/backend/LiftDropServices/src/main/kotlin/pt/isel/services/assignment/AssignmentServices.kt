@@ -80,6 +80,7 @@ class AssignmentServices(
                         estimateCourierEarnings(
                             distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
                             itemValue = requestDetails.price.toDouble(),
+                            quantity = requestDetails.quantity,
                         )
 
                     val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
@@ -95,7 +96,9 @@ class AssignmentServices(
                             dropoffLatitude = requestDetails.dropoffLocation.latitude,
                             dropoffLongitude = requestDetails.dropoffLocation.longitude,
                             dropoffAddress = requestDetails.dropoffAddress,
-                            price = formattedEarnings,
+                            item = requestDetails.item,
+                            quantity = requestDetails.quantity,
+                            deliveryEarnings = formattedEarnings,
                             deliveryKind = deliveryKind,
                         ),
                     )
@@ -108,7 +111,7 @@ class AssignmentServices(
                             deferredResponse.await()
                         }
                     } catch (e: TimeoutCancellationException) {
-                        AssignmentCoordinator.complete(requestId, false) // clean up in case it wasn't completed
+                        // AssignmentCoordinator.complete(requestId, false) // clean up in case it wasn't completed
                         false
                     }
 
@@ -332,8 +335,9 @@ class AssignmentServices(
     fun estimateCourierEarnings(
         distanceKm: Double,
         itemValue: Double,
+        quantity: Int,
         baseFee: Double = 2.0,
         perKmRate: Double = 0.5,
         valueRate: Double = 0.005,
-    ): Double = baseFee + (distanceKm * perKmRate) + (itemValue * valueRate)
+    ): Double = quantity * (baseFee + (distanceKm * perKmRate) + (itemValue * valueRate))
 }

@@ -34,5 +34,7 @@ class RequestDetailsMapper : RowMapper<RequestDetailsDTO> {
                     ", " +
                     rs.getString("dropoff_postal_code"),
             price = rs.getString("price"),
+            item = rs.getString("item"),
+            quantity = rs.getInt("quantity"),
         )
 }

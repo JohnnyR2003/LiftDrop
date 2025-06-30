@@ -10,6 +10,8 @@ data class DeliveryRequestMessage(
     val dropoffLatitude: Double,
     val dropoffLongitude: Double,
     val dropoffAddress: String,
-    val price: String,
+    val item: String,
+    val quantity: Int,
+    val deliveryEarnings: String,
     val deliveryKind: String,
 )

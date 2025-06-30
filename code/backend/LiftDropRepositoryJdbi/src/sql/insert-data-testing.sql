@@ -56,9 +56,9 @@ VALUES (1, 1, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 1800, '123456', '65432
        (5, 2, NULL, EXTRACT(EPOCH FROM NOW()), 'PENDING', 2700, '567890', '098765');
 
 -- Insert request details (depends on Request and Location)
-INSERT INTO liftdrop."request_details" (request_id, description, pickup_location, dropoff_location)
-VALUES (1, 'Chicken Wings', 1, 2),
-       (2, 'Big Mac', 2, 3);
+INSERT INTO liftdrop."request_details" (request_id, description, quantity, pickup_location, dropoff_location)
+VALUES (1, 'Chicken Wings', 1, 1, 2),
+       (2, 'Big Mac', 1, 2, 3);
 
 -- Insert items
 INSERT INTO liftdrop."item" (item_id, establishment, establishment_location, designation, price, ETA)

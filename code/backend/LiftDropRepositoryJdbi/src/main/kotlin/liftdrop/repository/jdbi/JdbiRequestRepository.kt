@@ -49,17 +49,19 @@ class JdbiRequestRepository(
     override fun createRequestDetails(
         requestId: Int,
         description: String,
+        quantity: Int,
         pickupLocationId: Int,
         dropoffLocationId: Int,
     ): Int =
         handle
             .createUpdate(
                 """
-            INSERT INTO liftdrop.request_details (request_id, description, pickup_location, dropoff_location)
-            VALUES (:request_id, :description, :pickup_location, :dropoff_location)
+            INSERT INTO liftdrop.request_details (request_id, description, quantity, pickup_location, dropoff_location)
+            VALUES (:request_id, :description, :quantity, :pickup_location, :dropoff_location)
             """,
             ).bind("request_id", requestId)
             .bind("description", description)
+            .bind("quantity", quantity)
             .bind("pickup_location", pickupLocationId)
             .bind("dropoff_location", dropoffLocationId)
             .executeAndReturnGeneratedKeys()
@@ -187,6 +189,8 @@ class JdbiRequestRepository(
             a2.house_number AS pickup_street_number,
             a2.zip_code AS pickup_postal_code,
             i.price AS price,
+            i.designation AS item,
+            d.quantity AS quantity,
             d.dropoff_location
         FROM liftdrop.request r
         JOIN liftdrop.request_details d ON r.request_id = d.request_id

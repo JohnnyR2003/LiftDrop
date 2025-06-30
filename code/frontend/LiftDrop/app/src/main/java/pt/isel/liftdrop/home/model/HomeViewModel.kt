@@ -10,7 +10,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.home.ui.HomeScreenState
@@ -27,12 +26,17 @@ class HomeViewModel(
     private val preferences: PreferencesRepository,
 ) : ViewModel() {
 
+    private val _currentRequest : MutableStateFlow<CourierRequestDetails?> =
+        MutableStateFlow(null)
+
     private val _stateFlow: MutableStateFlow<HomeScreenState> =
         MutableStateFlow(HomeScreenState.Idle("0.00"))
 
     private val _previousState: MutableStateFlow<HomeScreenState> =
         MutableStateFlow(HomeScreenState.Idle("0.00"))
 
+    val currentRequest: StateFlow<CourierRequestDetails?>
+        get() = _currentRequest.asStateFlow()
     val stateFlow: StateFlow<HomeScreenState> = _stateFlow.asStateFlow()
     val previousState: StateFlow<HomeScreenState> = _previousState.asStateFlow()
 
@@ -125,13 +129,13 @@ class HomeViewModel(
         _stateFlow.update { current ->
             when (current) {
                 is HomeScreenState.Delivered-> HomeScreenState.Listening(
-                    dailyEarnings = current.deliveryEarnings,
+                    dailyEarnings = current.dailyEarnings,
                     incomingRequest = false,
                     requestDetails = null
                 )
 
                 is HomeScreenState.RequestDeclined -> HomeScreenState.Listening(
-                    dailyEarnings = current.deliveryEarnings,
+                    dailyEarnings = _dailyEarnings.value,
                     incomingRequest = false,
                     requestDetails = null
                 )
@@ -238,22 +242,12 @@ class HomeViewModel(
                                         when (request.subType) {
                                             "ACCEPT" -> {
                                                 when (it) {
-                                                    is HomeScreenState.Listening -> HomeScreenState.RequestAccepted(
-                                                        requestId = it.requestDetails!!.requestId,
-                                                        courierId = it.requestDetails.courierId,
-                                                        deliveryEarnings = it.requestDetails.price,
-                                                        pickUpCoordinates = Pair(
-                                                            it.requestDetails.pickupLatitude,
-                                                            it.requestDetails.pickupLongitude
-                                                        ),
-                                                        dropOffCoordinates = Pair(
-                                                            it.requestDetails.dropoffLatitude,
-                                                            it.requestDetails.dropoffLongitude
-                                                        ),
-                                                        deliveryKind = it.requestDetails.deliveryKind,
-                                                        deliveryStatus = "REQUEST_ACCEPTED",
-                                                        message = request.message
-                                                    )
+                                                    is HomeScreenState.Listening -> {
+                                                        _currentRequest.value = it.requestDetails
+                                                        HomeScreenState.RequestAccepted(
+                                                            message = request.message
+                                                        )
+                                                    }
                                                     is HomeScreenState.RequestAccepted -> it
                                                     else -> HomeScreenState.Error(
                                                         Problem(
@@ -268,10 +262,7 @@ class HomeViewModel(
                                             "DECLINE" -> {
                                                 when (it) {
                                                     is HomeScreenState.Listening -> HomeScreenState.RequestDeclined(
-                                                        requestId = it.requestDetails!!.requestId,
-                                                        courierId = it.requestDetails.courierId,
-                                                        deliveryEarnings = it.requestDetails.price,
-                                                        message = request.message,
+                                                        message = request.message
                                                     )
                                                     is HomeScreenState.RequestDeclined -> it
                                                     else -> HomeScreenState.Error(
@@ -392,7 +383,7 @@ class HomeViewModel(
                     )
 
                     is HomeScreenState.Delivered -> HomeScreenState.Idle(
-                        dailyEarnings = current.deliveryEarnings,
+                        dailyEarnings = current.dailyEarnings,
                     )
 
                     is HomeScreenState.CancellingPickup, is HomeScreenState.CancellingDropOff -> HomeScreenState.Idle(
@@ -436,6 +427,7 @@ class HomeViewModel(
                     )
                 )
             }
+
         }
     }
 
@@ -449,17 +441,7 @@ class HomeViewModel(
             when (current) {
                 is HomeScreenState.RequestAccepted -> {
                     launchNavigationAppChooser(context, pickupLat, pickupLon)
-                    HomeScreenState.HeadingToPickUp(
-                        dropOffCoordinates = Pair(
-                            current.dropOffCoordinates.first,
-                            current.dropOffCoordinates.second
-                        ),
-                        deliveryEarnings = current.deliveryEarnings,
-                        isPickUpSpotValid = false,
-                        requestId = current.requestId,
-                        courierId = current.courierId,
-                        deliveryKind = current.deliveryKind,
-                    )
+                    HomeScreenState.HeadingToPickUp()
                 }
 
                 else -> {
@@ -563,7 +545,6 @@ class HomeViewModel(
         courierId: String,
         pickUpPin: String,
         deliveryKind: String,
-        context: Context
     ) {
         Log.d(
             "HomeViewModel",
@@ -581,15 +562,7 @@ class HomeViewModel(
                 _stateFlow.update { current ->
                     when (current) {
                         is HomeScreenState.HeadingToPickUp -> {
-                            HomeScreenState.PickedUp(
-                                deliveryEarnings = current.deliveryEarnings,
-                                requestId = current.requestId,
-                                courierId = current.courierId,
-                                dropOffCoordinates = Pair(
-                                    current.dropOffCoordinates.first,
-                                    current.dropOffCoordinates.second
-                                )
-                            )
+                            HomeScreenState.PickedUp()
                         }
 
                         else -> {
@@ -619,15 +592,10 @@ class HomeViewModel(
                     is HomeScreenState.PickedUp -> {
                         launchNavigationAppChooser(
                             context,
-                            current.dropOffCoordinates.first,
-                            current.dropOffCoordinates.second
+                            currentRequest.value!!.dropoffLatitude,
+                            currentRequest.value!!.dropoffLongitude
                         )
-                        HomeScreenState.HeadingToDropOff(
-                            deliveryEarnings = current.deliveryEarnings,
-                            isDropOffSpotValid = false,
-                            requestId = current.requestId,
-                            courierId = current.courierId
-                        )
+                        HomeScreenState.HeadingToDropOff()
                     }
 
                     else -> {
@@ -726,8 +694,9 @@ class HomeViewModel(
                 _stateFlow.update { current ->
                     when (current) {
                         is HomeScreenState.HeadingToDropOff -> {
+                            _currentRequest.value = null // Clear the current request after delivery
                             HomeScreenState.Delivered(
-                                deliveryEarnings = current.deliveryEarnings
+                                dailyEarnings = _dailyEarnings.value,
                             )
                         }
 
@@ -756,8 +725,6 @@ class HomeViewModel(
                     is HomeScreenState.HeadingToPickUp -> {
                         _previousState.value = current
                         HomeScreenState.CancellingOrder(
-                            courierId = current.courierId,
-                            requestId = current.requestId,
                             deliveryStatus = current.deliveryStatus
                         )
                     }
@@ -765,8 +732,6 @@ class HomeViewModel(
                     is HomeScreenState.HeadingToDropOff -> {
                         _previousState.value = current
                         HomeScreenState.CancellingOrder(
-                            courierId = current.courierId,
-                            requestId = current.requestId,
                             deliveryStatus = current.deliveryStatus
                         )
                     }
@@ -829,10 +794,7 @@ class HomeViewModel(
                             _stateFlow.update { current ->
                                 when (current) {
                                     is HomeScreenState.CancellingOrder -> {
-                                        HomeScreenState.CancellingPickup(
-                                            courierId = courierId,
-                                            requestId = requestId,
-                                        )
+                                        HomeScreenState.CancellingPickup()
                                     }
 //TODO(check the use case where the state is Idle upon cancelling a delivery)
 //                                    is HomeScreenState.Idle -> {
@@ -870,8 +832,6 @@ class HomeViewModel(
                                 when (current) {
                                     is HomeScreenState.CancellingOrder -> {
                                         HomeScreenState.CancellingDropOff(
-                                            courierId = courierId,
-                                            requestId = requestId,
                                             isOrderReassigned = false,
                                             pickUpLocation = pickUpLocation,
                                         )
@@ -883,8 +843,6 @@ class HomeViewModel(
                                             "Already in idle state, no action needed"
                                         )
                                         HomeScreenState.CancellingDropOff(
-                                            courierId = courierId,
-                                            requestId = requestId,
                                             isOrderReassigned = false,
                                             pickUpLocation = pickUpLocation,
                                         )
@@ -926,6 +884,32 @@ class HomeViewModel(
                             Log.v("HomeViewModel", "Unknown delivery status: $deliveryStatus")
                         }
                     }
+                }
+            }
+        }
+    }
+
+    fun toggleOrderInfoVisibility(){
+        _stateFlow.update { current ->
+            when (current) {
+                is HomeScreenState.HeadingToPickUp -> {
+                    current.copy(isOrderInfoVisible = !current.isOrderInfoVisible)
+                }
+
+                is HomeScreenState.HeadingToDropOff -> {
+                    current.copy(isOrderInfoVisible = !current.isOrderInfoVisible)
+                }
+                else -> {
+                    updateState(
+                        HomeScreenState.Error(
+                            Problem(
+                                type = "ToggleOrderInfoError",
+                                title = "Toggle Order Info Error",
+                                detail = "Cannot toggle order info visibility in the $current state.",
+                                status = 403
+                            )
+                        )
+                    )
                 }
             }
         }
