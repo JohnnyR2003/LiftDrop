@@ -1,15 +1,14 @@
 package pt.isel.liftdrop.register.model
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import pt.isel.liftdrop.domain.*
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.PreferencesRepository
+import pt.isel.liftdrop.register.ui.RegisterScreenState
 import pt.isel.liftdrop.services.http.Result
 
 class RegisterViewModel(
@@ -17,45 +16,31 @@ class RegisterViewModel(
     preferences: PreferencesRepository,
 ) : ViewModel() {
 
-    val userId: Flow<IOState<Int>>
-        get() = _createUserIdFlowInfo.asStateFlow()
+    private val _screenState = MutableStateFlow<RegisterScreenState>(RegisterScreenState.Idle)
+    val screenState: StateFlow<RegisterScreenState> = _screenState.asStateFlow()
 
-    private val _createUserIdFlowInfo: MutableStateFlow<IOState<Int>> =
-        MutableStateFlow(idle())
-
-    @Throws(IllegalStateException::class)
     fun register(
         username: String,
         email: String,
         password: String,
     ) {
-        if (_createUserIdFlowInfo.value !is Idle && _createUserIdFlowInfo.value !is Fail)
-            throw IllegalStateException("The view model is not in the idle state or the fail state.")
-        _createUserIdFlowInfo.value = loading()
+        if (_screenState.value !is RegisterScreenState.Idle && _screenState.value !is RegisterScreenState.Error)
+            throw IllegalStateException("O ViewModel não está em estado Idle ou Error.")
+        _screenState.value = RegisterScreenState.Register()
         viewModelScope.launch {
             val result = service.register(
                 email = email,
                 password = password,
                 username = username
             )
-            if (result is Result.Error) {
-                Log.v("Register", "Error during registration: $result")
-                _createUserIdFlowInfo.value =
-                    fail(Exception("Error during registration: ${result.problem.title} - ${result.problem.detail}"))
-            } else if(result is Result.Success) {
-                _createUserIdFlowInfo.value = loaded(kotlin.Result.success(result.data.id))
+            _screenState.value = when (result) {
+                is Result.Error -> RegisterScreenState.Error(result.problem)
+                is Result.Success -> RegisterScreenState.Register(isRegistered = true)
             }
         }
     }
 
-    /**
-     * Resets the view model to the idle state.
-     * @throws IllegalStateException If the view model is not in the loaded state or the fail state.
-     */
-    @Throws(IllegalStateException::class)
     fun resetToIdle() {
-        if (_createUserIdFlowInfo.value !is Loaded && _createUserIdFlowInfo.value !is Fail)
-            throw IllegalStateException("The view model is not in the loaded state or the fail state.")
-        _createUserIdFlowInfo.value = idle()
+        _screenState.value = RegisterScreenState.Idle
     }
 }

@@ -111,7 +111,6 @@ class AssignmentServices(
                             deferredResponse.await()
                         }
                     } catch (e: TimeoutCancellationException) {
-                        // AssignmentCoordinator.complete(requestId, false) // clean up in case it wasn't completed
                         false
                     }
 
@@ -137,7 +136,7 @@ class AssignmentServices(
             )
         } else {
             GlobalLogger.log("No couriers found. Retrying in 5 seconds...")
-            delay(10_000) // Wait for 5 seconds before retrying
+            delay(10_000) // Wait for 10 seconds before retrying
             return handleCourierAssignment(
                 pickupLat,
                 pickupLon,

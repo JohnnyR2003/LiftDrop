@@ -19,8 +19,8 @@ import pt.isel.liftdrop.login.PreferencesDataStore
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.PreferencesRepository
 import pt.isel.liftdrop.login.model.RealLoginService
-import pt.isel.liftdrop.services.LocationTrackingService
-import pt.isel.liftdrop.services.RealLocationTrackingService
+import pt.isel.liftdrop.services.location.LocationTrackingService
+import pt.isel.liftdrop.services.location.RealLocationTrackingService
 import pt.isel.liftdrop.services.http.HttpService
 import java.util.concurrent.TimeUnit
 

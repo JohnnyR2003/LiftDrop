@@ -1,4 +1,4 @@
-package pt.isel.liftdrop.services
+package pt.isel.liftdrop.services.location
 
 import android.app.Notification
 import android.app.NotificationChannel

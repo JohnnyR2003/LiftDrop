@@ -1,39 +1,10 @@
 package pt.isel.liftdrop.register.ui
 
-import pt.isel.liftdrop.domain.Fail
-import pt.isel.liftdrop.domain.IOState
-import pt.isel.liftdrop.domain.Loading
-import pt.isel.liftdrop.login.ui.LoginScreenState.Idle
+import pt.isel.liftdrop.login.model.UserInfo
+import pt.isel.liftdrop.services.http.Problem
 
-enum class RegisterScreenState {
-    Idle,
-    Loading,
-    Loaded,
-    Fail
-}
-
-/**
- * Returns true is the screen state is idle.
- */
-fun RegisterScreenState.isIdle() = this == RegisterScreenState.Idle
-
-/**
- * Returns true is the screen state is loading.
- */
-fun RegisterScreenState.isLoading() = this == RegisterScreenState.Loading
-
-/**
- * Returns true is the screen state is loaded.
- */
-fun RegisterScreenState.isLoaded() = this == RegisterScreenState.Loaded
-
-/**
- * Returns true is the screen state is failed.
- */
-fun RegisterScreenState.isFail() = this == RegisterScreenState.Fail
-
-fun IOState<Int>.toRegisterScreenState(): RegisterScreenState = when (this) {
-    is Loading -> RegisterScreenState.Loading
-    is Fail -> RegisterScreenState.Fail
-    else -> RegisterScreenState.Loaded
+sealed class RegisterScreenState {
+    data object Idle : RegisterScreenState()
+    data class Register(val isRegistered: Boolean = false) : RegisterScreenState()
+    data class Error(val problem: Problem) : RegisterScreenState()
 }

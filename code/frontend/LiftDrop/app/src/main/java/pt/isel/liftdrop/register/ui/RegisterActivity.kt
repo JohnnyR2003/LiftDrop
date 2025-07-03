@@ -11,15 +11,9 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.TAG
-import pt.isel.liftdrop.domain.Loaded
-import pt.isel.liftdrop.domain.idle
-import pt.isel.liftdrop.login.model.LoginViewModel
-import pt.isel.liftdrop.login.model.UserInfo
 import pt.isel.liftdrop.login.ui.LoginActivity
-import pt.isel.liftdrop.login.ui.LoginScreenState
 import pt.isel.liftdrop.register.model.RegisterViewModel
 import pt.isel.liftdrop.utils.viewModelInit
 
@@ -43,8 +37,8 @@ class RegisterActivity : ComponentActivity() {
         Log.v(TAG, "RegisterActivity.onCreate() on process ${Process.myPid()}")
 
         lifecycleScope.launch {
-            viewModel.userId.collect {
-                if (it is Loaded) {
+            viewModel.screenState.collect {
+                if (it is RegisterScreenState.Register && it.isRegistered) {
                     LoginActivity.navigate(this@RegisterActivity)
                     viewModel.resetToIdle()
                 }
@@ -52,9 +46,10 @@ class RegisterActivity : ComponentActivity() {
         }
 
         setContent {
-            val state = viewModel.userId.collectAsState(initial = idle()).value
+            val state = viewModel.screenState.collectAsState().value
             RegisterScreen(
-                state = state.toRegisterScreenState(),
+                isRegistering = state is RegisterScreenState.Register && !state.isRegistered,
+                screenState = state,
                 onRegisterRequest = { firstName, lastName, email, password ->
                     viewModel.register(
                         username = "$firstName $lastName",

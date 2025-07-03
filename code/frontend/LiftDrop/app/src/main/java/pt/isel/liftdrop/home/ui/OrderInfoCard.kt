@@ -11,11 +11,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import pt.isel.liftdrop.home.model.CourierRequestDetails
+import pt.isel.liftdrop.home.model.IncomingRequestDetails
 
 @Composable
 fun OrderInfoCard(
-    requestDetails: CourierRequestDetails,
+    requestDetails: IncomingRequestDetails,
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {

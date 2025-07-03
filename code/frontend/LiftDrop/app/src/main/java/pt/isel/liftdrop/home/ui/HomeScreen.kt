@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.*
 import androidx.compose.ui.platform.LocalContext
 import pt.isel.liftdrop.home.model.HomeViewModel
-import pt.isel.liftdrop.location.LocationServices
+import pt.isel.liftdrop.services.location.LocationServices
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
 import pt.isel.liftdrop.shared.ui.BottomSlideToConfirm
@@ -439,7 +439,9 @@ fun HomeScreen(
                 is HomeScreenState.Delivered -> {
                     DeliveryEarningsCard(
                         earnings = viewModel.currentRequest.value!!.deliveryEarnings,
-                        onOk = { viewModel.resetToListeningState() }
+                        onOk = {
+                            viewModel.resetToListeningState()
+                        }
                     )
                 }
 

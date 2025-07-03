@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,9 +25,8 @@ import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.TAG
 import pt.isel.liftdrop.home.model.HomeViewModel
 import pt.isel.liftdrop.login.ui.LoginActivity
-import pt.isel.liftdrop.services.LocationForegroundService
+import pt.isel.liftdrop.services.location.LocationForegroundService
 import pt.isel.liftdrop.utils.viewModelInit
-import kotlin.text.compareTo
 
 class HomeActivity : ComponentActivity() {
 
@@ -49,6 +49,7 @@ class HomeActivity : ComponentActivity() {
         fun navigate(origin: Activity) {
             val intent = Intent(origin, HomeActivity::class.java)
             origin.startActivity(intent)
+            origin.finish() // 👈 This prevents LoginActivity from staying in the back stack
         }
     }
 
@@ -61,6 +62,10 @@ class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.v(TAG, "HomeActivity.onCreate() on process ${android.os.Process.myPid()}")
+
+        onBackPressedDispatcher.addCallback(this) {
+            moveTaskToBack(true)
+        }
 
         notificationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()

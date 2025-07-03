@@ -1,4 +1,4 @@
-package pt.isel.liftdrop.location
+package pt.isel.liftdrop.services.location
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -27,7 +27,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -88,7 +87,12 @@ class LocationServices {
                     val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
                     coroutineScope.launch {
                         if (!hasZoomedToLocation || bounds == null || !bounds.contains(latLng)) {
-                            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                            cameraPositionState.animate(
+                                CameraUpdateFactory.newLatLngZoom(
+                                    latLng,
+                                    15f
+                                )
+                            )
                             hasZoomedToLocation = true
                         }
                     }
@@ -102,9 +106,9 @@ class LocationServices {
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.Companion.fillMaxSize()) {
             GoogleMap(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.Companion.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
                 properties = MapProperties(isMyLocationEnabled = true),
                 uiSettings = MapUiSettings(
@@ -123,8 +127,8 @@ class LocationServices {
             }
             if (currentLocation == null) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.Companion.fillMaxSize(),
+                    contentAlignment = Alignment.Companion.Center
                 ) {
                     Text("Fetching your location...")
                 }

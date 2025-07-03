@@ -2,8 +2,10 @@ package pt.isel.liftdrop.home.model
 
 import kotlinx.serialization.Serializable
 
+sealed interface HomeMessage
+
 @Serializable
-data class CourierRequestDetails(
+data class IncomingRequestDetails(
     val type: String = "DELIVERY_REQUEST",
     val requestId: String,
     val courierId : String,
@@ -17,4 +19,16 @@ data class CourierRequestDetails(
     val quantity: Int,
     val deliveryEarnings: String,
     val deliveryKind: String
-)
+): HomeMessage
+data class DeliveryUpdate(
+    val type : String = "DELIVERY_UPDATE",
+    val hasBeenAccepted: Boolean,
+    val hasBeenPickedUp: Boolean,
+    val pinCode: String?,
+) : HomeMessage
+data class ResultMessage(
+    val type: String,
+    val subType: String?,
+    val message: String,
+    val detail: String? = null,
+) : HomeMessage

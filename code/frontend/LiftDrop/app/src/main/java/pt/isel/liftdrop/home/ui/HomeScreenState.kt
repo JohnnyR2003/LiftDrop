@@ -1,6 +1,6 @@
 package pt.isel.liftdrop.home.ui
 
-import pt.isel.liftdrop.home.model.CourierRequestDetails
+import pt.isel.liftdrop.home.model.IncomingRequestDetails
 import pt.isel.liftdrop.home.model.LocationDTO
 import pt.isel.liftdrop.services.http.Problem
 
@@ -8,7 +8,7 @@ sealed class HomeScreenState {
     data class Listening(
         val dailyEarnings: String,
         val incomingRequest: Boolean = false,
-        val requestDetails: CourierRequestDetails?,
+        val requestDetails: IncomingRequestDetails?,
     ) : HomeScreenState()
     data class RequestAccepted(
         val deliveryStatus: String = "REQUEST_ACCEPTED",

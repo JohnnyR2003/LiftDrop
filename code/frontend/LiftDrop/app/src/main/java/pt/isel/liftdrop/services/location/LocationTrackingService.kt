@@ -1,9 +1,11 @@
-package pt.isel.liftdrop.services
+package pt.isel.liftdrop.services.location
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.os.Looper
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import com.google.android.gms.location.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,8 +39,6 @@ class RealLocationTrackingService(
     private val httpService: HttpService,
     private val context: Context
 ) : LocationTrackingService {
-
-    val apiEndpoint = "$HOST/api/courier/updateLocation"
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     private var locationCallback: LocationCallback? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
@@ -50,7 +50,6 @@ class RealLocationTrackingService(
     @OptIn(ExperimentalCoroutinesApi::class)
     @SuppressLint("MissingPermission")
     override suspend fun getCurrentLocation(): Result<Location> {
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         return suspendCancellableCoroutine { continuation ->
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
@@ -64,9 +63,8 @@ class RealLocationTrackingService(
         }
     }
 
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun startUpdating(authToken: String, courierId: String) {
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 30_000L)
             .setMinUpdateIntervalMillis(30_000L)
             .build()
