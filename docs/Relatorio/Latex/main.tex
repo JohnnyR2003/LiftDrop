@@ -1,4 +1,5 @@
 \documentclass[a4paper,twoside,11pt]{article}
+
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{subcaption}
@@ -13,10 +14,16 @@
 \usepackage[dvipsnames]{xcolor}
 \usepackage{amssymb}
 \usepackage{array}
-\usepackage{float} % in the preamble
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{setspace}
+\usepackage[hidelinks]{hyperref}
 
+\onehalfspacing
+%\doublespacing
 
-% Redefinição das margens das páginas
+% Margins
 \setlength{\textheight}{24.00cm}
 \setlength{\textwidth}{15.50cm}
 \setlength{\topmargin}{0.35cm}
@@ -26,70 +33,205 @@
 \setlength{\evensidemargin}{0.25cm}
 \setlength{\parindent}{1.5em}
 
+% Kotlin syntax highlighting
+\lstdefinelanguage{Kotlin}{
+  morekeywords={fun, val, var, if, else, return, List, Double},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
+
+\lstset{
+  language=Kotlin,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=5pt,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  captionpos=b
+}
+
 \begin{document}
 
+% -------------------
+% Cover Page (ISEL)
+% -------------------
+\begin{titlepage}
+    \thispagestyle{empty}
+    \vspace{-15mm}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=80mm]{images/logoISEL.png}
+    \end{figure}
+    \vspace{-8mm}
+    \begin{center}
+        \LARGE \textbf{LiftDrop} \\
+        \LARGE Mobile App for Deliveries \\[2cm]
 
-% Roman numeral page numbering (front matter)
-\pagenumbering{roman}
+        \large Gonçalo Morais, n.º 49502, e-mail: a49502@alunos.isel.pt, tel.: 927468061 \\
+        \vspace{1mm}
+        \large João Ramos, n.º 49424, e-mail: a49424@alunos.isel.pt, tel.: 919222551 \\[5mm]
 
-\vspace{-15mm}
-\begin{figure}[h]
-\begin{center}
-\resizebox{80mm}{!}{\includegraphics{images/logoISEL.png}}
-\end{center}
-\end{figure}
-\vspace{-8mm}
+        \large \textbf{Advisor:} Miguel Gamboa, e-mail: miguel.gamboa@isel.pt \\
+        \large \textbf{Co-Advisor:} Diogo Silva, e-mail: diogo.silva@lyzer.tech \\[1cm]
 
-% Title Section
-\begin{center}
-    \LARGE \textbf{LiftDrop} \\ % Bold title
-    \LARGE Mobile App for Deliveries \\ % Subtitle in normal weight
-    \vspace{8mm}
-    \large Gonçalo Morais, n.º 49502, e-mail: a49502@alunos.isel.pt, tel.: 927468061 \\
-    \vspace{1mm}
-    \large João Ramos, n.º 49424, e-mail: a49424@alunos.isel.pt, tel.: 919222551 \\
-    \vspace{5mm}
-    \large \textbf{Orientador:} Miguel Gamboa, e-mail: miguel.gamboa@isel.pt \\
-    \vspace{3mm}
-    \large \textbf{Co-Orientador:} Diogo Silva, e-mail: diogo.silva@lyzer.tech \\
-    \vspace{5mm}
-    \textbf{March of 2025}
-\end{center}
+        \textbf{June 2025}
+    \end{center}
+\end{titlepage}
 
+% -------------------
 % Blank Page
+% -------------------
 \newpage
+\thispagestyle{empty}
 \null
 \newpage
 
-\include{sections/Abstract}
+% -------------------
+% Official Title Page
+% -------------------
+\pagenumbering{roman}
+\setcounter{page}{1}
 
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+    \vspace*{2cm}
+
+    \Huge\textbf{LiftDrop} \\
+    \Large LiftDrop Application \\[2cm]
+
+    \Large
+    49502 Gonçalo Morais \\[0.5cm]
+    49424 João Ramos \\[1.5cm]
+
+    \Large\textbf{Advisor:} Professor Miguel Gamboa \\
+    \Large\textbf{Co-Advisor:} Engineer Diogo Silva \\[2cm]
+
+    \Large June 2025 \\[2cm]
+
+    \vfill
+    \Large Instituto Superior de Engenharia de Lisboa
+\end{titlepage}
+
+% -------------------
+% Blank Page
+% -------------------
+\newpage
+\thispagestyle{empty}
+\null
+\newpage
+
+% -------------------
+% Abstract and Acknowledgements
+% -------------------
+\include{sections/Abstract}
 \include{sections/Acknowledgements}
 
+% -------------------
 % Blank Page
+% -------------------
 \newpage
+\thispagestyle{empty}
 \null
 \newpage
 
-% Table of contents (still in Roman numerals)
+% -------------------
+% Table of Contents & Lists
+% -------------------
 \tableofcontents
 \newpage
+\listoffigures
+\newpage
+\lstlistoflistings
+\newpage
 
-% Switch to Arabic numerals and start at 1 on the Introduction page
+\include{sections/Acronyms}
+\newpage
+
+% -------------------
+% Blank Page
+% -------------------
+\newpage
+\thispagestyle{empty}
+\null
+\newpage
+
+% -------------------
+% Main Content Starts - Page 1
+% -------------------
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
 \include{sections/Introduction}
 
-\include{sections/BackgroundKnowledge}
+\newpage
 
-\include{sections/Scope}
+\include{sections/BackgroundAndScope}
 
-\include{sections/Interface Design}
-
-\include{sections/UserJourney}
-
-\include{sections/System Architecture}
+\include{sections/System Design}
 
 \include{sections/Technical Implementation Details}
+
+\include{sections/Unimplemented Features}
+
+\include{sections/Conclusion}
+
+%%%%%%%%%%%%%%%%
+%%Bibliography%%
+%%%%%%%%%%%%%%%%
+
+\begin{thebibliography}{9}
+
+\bibitem{spring}
+Spring Framework. \textit{Spring Web MVC Documentation}. Available at: \url{https://spring.io/projects/spring-framework}
+
+\bibitem{android}
+Google Developers. \textit{Android Jetpack Compose}. Available at: \url{https://developer.android.com/jetpack/compose}
+
+\bibitem{maps}
+Google Cloud. \textit{Google Maps Platform Documentation}. Available at: \url{https://developers.google.com/maps/documentation}
+
+\bibitem{postgres}
+PostgreSQL Global Development Group. \textit{PostgreSQL Documentation}. Available at: \url{https://www.postgresql.org/docs/}
+
+\bibitem{websockets}
+MDN Web Docs. \textit{WebSockets}. Available at: \url{https://developer.mozilla.org/en-US/docs/Web/API/WebSocket}
+
+\bibitem{jdbi}
+JDBI Project. \textit{JDBI Documentation}. Available at: \url{https://jdbi.org/}
+
+\bibitem{courierplatforms}
+Glovo. \textit{How It Works for Couriers}. Available at: \url{https://glovoapp.com}
+
+\bibitem{github}
+GitHub Docs. \textit{Understanding the GitHub Flow}. Available at: \url{https://docs.github.com/en/get-started/quickstart/github-flow}
+
+\end{thebibliography}
+
+% -------------------
+% Blank Page
+% -------------------
+\newpage
+\thispagestyle{empty}
+\null
+\newpage
+
+\appendix
+
+\section{EA Model}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[angle=90, width=1.0\textwidth]{images/EA-model.png}
+    \caption{EA model}
+\end{figure}
 
 \end{document}
