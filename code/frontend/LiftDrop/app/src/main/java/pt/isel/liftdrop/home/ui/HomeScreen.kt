@@ -842,7 +842,11 @@ fun HomeScreenPreviewCancellingDropOff() {
 fun HomeScreenPreviewCancellingDropOffAssigned() {
     HomeScreen(
         viewModel = FakeHomeViewModel,
-        state = HomeScreenState.CancellingDropOff(isOrderReassigned = true, pickUpLocation = null),
+        state = HomeScreenState.CancellingDropOff(isOrderReassigned = true, pickUpLocation = LocationDTO(
+            latitude = 38.7169,
+            longitude = -9.1399
+        ),
+            pickupCode = "1234"),
         dailyEarnings = "25.00"
     )
 }
