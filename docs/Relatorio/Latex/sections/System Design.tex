@@ -1,0 +1,108 @@
+\section{System Design}
+
+\input{sections/UserJourney}
+
+\vspace{2mm}
+
+\subsection{Interface Design}
+
+The LiftDrop application includes distinct UI flows that guide couriers through each stage of the delivery lifecycle. This section presents key interface screens, organized by functionality and user context.
+
+%\newpage
+
+\subsubsection{Authentication Flow}
+
+The authentication flow allows users to securely access the platform through account registration and login.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.44\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/registration.png}
+        \caption{User registration screen}
+        \label{fig:registration}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.44\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/login.png}
+        \caption{User login screen}
+        \label{fig:login}
+    \end{subfigure}
+    \caption{Authentication flow screens in LiftDrop}
+    \label{fig:auth_flow}
+\end{figure}
+
+\noindent\textbf{Registration Screen (\ref{fig:registration}):}  
+Enables users to create an account by providing their name, email, and password.
+
+\noindent\textbf{Login Screen (\ref{fig:login}):}  
+Provides a simple interface for returning users to log in with their credentials.
+
+\subsubsection{Courier Flow}
+
+The following screens illustrate the courier experience—from going online to completing a delivery.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/go_screen.png}
+        \caption{Idle status screen}
+        \label{fig:go_screen}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/waiting_screen.png}
+        \caption{Waiting for order screen}
+        \label{fig:waiting_screen}
+    \end{subfigure}
+    \caption{Courier status screens during online session}
+    \label{fig:courier_status}
+\end{figure}
+
+\noindent\textbf{Idle Screen (\ref{fig:go_screen}):}  
+Allows couriers to toggle availability and begin accepting orders.
+
+\noindent\textbf{Waiting Screen (\ref{fig:waiting_screen}):}  
+Indicates that the system is searching for nearby orders in real time.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/delivery_request.png}
+    \caption{Incoming delivery request with order summary and action buttons}
+    \label{fig:delivery_request}
+\end{figure}
+
+\noindent\textbf{Delivery Request (\ref{fig:delivery_request}):}  
+Displays order metadata such as pickup and drop-off addresses, delivery distance, and quick actions to accept or decline.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pickup_order_screen.png}
+        \caption{Pickup confirmation screen}
+        \label{fig:pickup_order}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/deliver_order_screen.png}
+        \caption{Delivery confirmation screen}
+        \label{fig:deliver_order}
+    \end{subfigure}
+    \caption{Screens for confirming pickup and delivery}
+    \label{fig:courier_pickup_deliver}
+\end{figure}
+
+\noindent\textbf{Pickup Screen (\ref{fig:pickup_order}):}  
+Guides the courier to confirm pickup, with cancelation support and verification of PIN.
+
+\noindent\textbf{Delivery Screen (\ref{fig:deliver_order}):}  
+Guides the courier to confirm delivery, with cancelation support and verification of PIN.
+
+\newpage
+
+\input{sections/System Architecture}

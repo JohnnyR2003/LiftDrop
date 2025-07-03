@@ -1,49 +1,593 @@
 \section{Technical Implementation Details}
 
-This section outlines the core technologies and tools employed in the development of the LiftDrop platform, along with key decisions regarding communication, backend logic, and security.
+This section outlines the core technologies and tools used in the development of the LiftDrop platform, along with key decisions regarding communication, backend logic, and system behavior.
 
 \subsection{Technology Stack}
+
 \begin{itemize}
-    \item \textbf{Mobile Application}: Developed using Android Jetpack Compose (Kotlin), the app enables couriers to manage order availability, accept or reject requests, and track deliveries in real time.
-    \item \textbf{Backend Server}: Built with Spring Web MVC, the server handles business logic, order assignment, and serves API endpoints for communication with the mobile application.
-    \item \textbf{Database}: PostgreSQL is utilized for the structured storage of essential data, including user profiles, orders, delivery statuses, and location history.
-    \item \textbf{Geospatial Services}: The Google Maps API is leveraged for calculating courier distances, estimating delivery times, and optimizing routes based on live traffic conditions.
-\end{itemize}
-
-\subsection{Communication Protocol}
-
-To facilitate real-time updates between the mobile application and the backend server, \textbf{WebSockets} are used. WebSockets offer several advantages over alternatives like polling and Server-Sent Events (SSE), including bidirectional communication, reduced latency, and minimized network overhead. These benefits ensure a more responsive and interactive experience for couriers, particularly when managing order updates and status changes.
-
-The courier's location is continuously updated using \textbf{Foreground Services} on Android. This approach ensures the app maintains an active connection, delivering real-time location data even when running in the background, and avoids being terminated by the operating system.
-
-\subsection{Order Assignment Logic}
-
-Orders are assigned based on the following factors:
-\begin{itemize}
-    \item \textbf{Proximity to the pickup point}
-    \item \textbf{Fair workload distribution} considering the courier’s recent delivery history
-    \item \textbf{Live traffic conditions}, using geospatial data to optimize routing
-\end{itemize}
-
-\subsection{Security and Authentication}
-
-To ensure secure user sessions and API requests:
-\begin{itemize}
-    \item \textbf{Session-Based Authentication with Cookies}: After a successful login, the server sets an HTTP-only cookie containing a session token. This token is inaccessible to JavaScript, which helps mitigate cross-site scripting (XSS) attacks.
+    \item \textbf{Mobile Application}: Developed using Android Jetpack Compose (Kotlin), the app enables couriers to manage availability, respond to order requests, and track deliveries in real time.
+    \item \textbf{Backend Server}: Built with Spring Web MVC, the server handles business logic, order assignment, session management, and serves RESTful and WebSocket endpoints.
+    \item \textbf{Database}: PostgreSQL is used for structured data storage, including user profiles, order metadata, delivery history, and courier location logs.
+    \item \textbf{Geospatial Services}: The Google Maps API is integrated to calculate distances, estimate travel times, and optimize courier-to-pickup assignment.
 \end{itemize}
 
 \subsection{Development Tools}
 
 \begin{itemize}
-    \item \textbf{Postman}: Used to test and validate REST API endpoints during backend development.
-    \item \textbf{Git and GitHub}: Employed for version control, collaboration, and managing the development workflow.
-    \item \textbf{Android Studio}: The primary IDE for building, testing, and debugging the mobile courier application.
-    \item \textbf{Intellij}: The primary IDE for building, testing, and debugging the backend.
+    \item \textbf{Postman}: Used to test and validate REST endpoints during backend development.
+    \item \textbf{Git and GitHub}: Used for version control, issue tracking, and collaborative development.
+    \item \textbf{Android Studio}: The primary IDE for building and testing the Android application.
+    \item \textbf{IntelliJ IDEA}: Used for backend development and debugging.
 \end{itemize}
 
 \subsection{Deployment Details}
 
 \begin{itemize}
-    \item \textbf{Backend Deployment}: The backend is hosted on Render, a cloud platform that streamlines deployment and scaling processes.
-    \item \textbf{Database Hosting}: PostgreSQL is managed and hosted on Render, providing a scalable, reliable environment for data storage.
+    \item \textbf{Backend Deployment}: The backend is hosted on Render, a cloud platform used for its streamlined deployment workflow and scalability.
+    \item \textbf{Database Hosting}: PostgreSQL is also hosted on Render to ensure high availability and integration with the backend services.
 \end{itemize}
+
+\subsection{Authentication and Authorization}
+
+\subsubsection{Authentication}
+
+To secure user sessions and API access, LiftDrop uses session-based authentication:
+
+\begin{itemize}
+    \item \textbf{HTTP-only Session Cookies}: Upon successful login, the backend generates a session cookie containing a signed token. The cookie is marked as HTTP-only, preventing JavaScript access and mitigating cross-site scripting (XSS) risks.
+\end{itemize}
+
+\subsubsection{Cookie Generation and Deletion}
+
+The following Kotlin snippets show how the session cookie is generated and invalidated.
+
+\begin{lstlisting}[language=Kotlin, caption={Generating the Session Cookie}]
+ResponseCookie
+    .from("auth_token", token)
+    .path("/")
+    .maxAge(Duration.ofDays(1))
+    .httpOnly(true)
+    .build()
+\end{lstlisting}
+
+\begin{lstlisting}[language=Kotlin, caption={Deleting the Session Cookie}]
+ResponseCookie
+    .from("auth_token", "")    // Clear the value
+    .path("/")                 // Match the original path
+    .maxAge(0)                 // Immediate expiry
+    .httpOnly(true)
+    .build()
+\end{lstlisting}
+
+\subsubsection{Authorization}
+
+LiftDrop uses role-based access control (RBAC) to enforce feature access policies. Each API endpoint inspects the session token to determine whether the requester is a \texttt{Client} or a \texttt{Courier}. This is handled at the controller layer using a Spring \texttt{HandlerInterceptor}:
+
+\begin{lstlisting}[language=Kotlin, caption={Condensed Kotlin-style pseudocode for AuthenticationInterceptor}]
+@Component
+class AuthenticationInterceptor(...) : HandlerInterceptor {
+    override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
+        if (handler !is HandlerMethod) return true
+
+        val authCookie = ... // extract auth cookie
+
+        // Client auth (the same is done for the courier but with the AuthenticatedCourier class)
+    if(handler.hasParameterType(AuthenticatedClient::class.java)){
+            val client = authorizationHeaderProcessor.processClientAuthorizationHeaderValue(authCookie?.value)
+            return client?.let {
+    AuthenticatedClientArgumentResolver.addClientTo(it, request)
+                true
+            } ?: unauthorized(response) // returns false with a 401 status code
+        } return true } }
+\end{lstlisting}
+
+
+This approach ensures that access is only granted to authenticated and properly authorized users based on their declared role. Unauthorized requests result in an HTTP \texttt{401 Unauthorized} response.
+
+\subsection{Courier Location Updates}
+
+Courier location tracking is implemented using Android \textbf{Foreground Services}, which allow the app to run and transmit location data even while running in the background.
+
+To ensure efficient backend communication, the app retrieves the courier’s location every \textbf{30 seconds} but only transmits it under two conditions:
+\begin{itemize}
+    \item The courier is \textbf{logged in} and authenticated;
+    \item The courier has set their status to \textbf{waiting for orders}.
+\end{itemize}
+
+Additionally, the system only sends a location update if the courier has moved more than \textbf{50 meters} since the last recorded position. This strategy minimizes unnecessary network traffic while maintaining sufficient tracking accuracy.
+
+The 50-meter threshold was chosen based on common urban delivery speeds (e.g., 30~km/h for scooters or e-bikes), allowing meaningful movement to be captured without overwhelming the server. Furthermore, a delivery can only be confirmed if the courier is within 100 meters of the drop-off point—making the location filter both efficient and functionally sound.
+
+The simplified Kotlin pseudocode below outlines the core logic used for checking movement and conditionally sending location updates:
+
+\begin{lstlisting}[language=Kotlin, caption={Condensed Kotlin-style pseudocode for Courier location updates mechanism}]
+override fun startUpdating(authToken: String, courierId: String) {
+    // Defines a high-accuracy location request every 30 seconds
+    val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 30_000L)
+        .setMinUpdateIntervalMillis(30_000L).build()
+
+    // Defines a callback to handle incoming location updates
+    locationCallback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult) {
+            val location = result.lastLocation ?: return
+
+            // Launches coroutine to evaluate whether the update should be sent or not
+            coroutineScope.launch {
+                val movedEnough = lastSentLocation?.distanceTo(location)?.let { it > MIN_DISTANCE_METERS } != false
+                if (movedEnough) {
+                // Sends updated location to backend
+                sendLocationToBackend(location.latitude, location.longitude, courierId, authToken)
+                    lastSentLocation = location
+                }
+            }
+        }
+    }
+    // Start location updates using the defined request and callback
+    fusedLocationClient.requestLocationUpdates(request, locationCallback!!, Looper.getMainLooper())
+}
+\end{lstlisting}
+
+
+
+\subsection{Communication Protocol}
+
+The LiftDrop platform establishes real-time communication between couriers and the backend using a WebSocket connection. This channel supports continuous, bidirectional message exchange without the overhead of repeated HTTP requests.
+
+Through this connection, the system manages key runtime events such as courier availability toggling, order assignment notifications, delivery status updates and cancellation handling.
+
+All communication is structured as JSON messages and routed based on courier identity and session state. The backend keeps track of active connections, ensuring that messages are delivered only to the intended recipients. This approach guarantees low-latency synchronization during time-sensitive operations.
+
+The following function demonstrates how a courier's acceptance of a delivery request is sent to the backend via WebSocket:
+
+\begin{lstlisting}[language=Kotlin, 
+  basicstyle=\ttfamily\small, 
+  lineskip=-0.1pt,
+  caption={Sending an acceptance message via WebSocket}]
+override suspend fun acceptRequest(requestId: String, token: String): Boolean {
+    val messageJson = """
+        {
+            "type": "RESPONSE",
+            "requestId": "$requestId",
+            "status": "ACCEPT"
+        }
+    """.trimIndent()
+
+    return webSocket?.send(messageJson) == true
+}
+\end{lstlisting}
+
+
+On the backend, each incoming WebSocket message is parsed and routed according to its type. The server maintains a reference to the courier’s WebSocket session and invokes the corresponding handler based on the message status content. The snippet below illustrates the message dispatch logic:
+
+\begin{lstlisting}[language=Kotlin, caption={Backend handling of incoming WebSocket messages}]
+override fun handleTextMessage(
+    session: WebSocketSession,
+    message: TextMessage,
+) {
+    val json = jacksonObjectMapper().readTree(message.payload)
+    when (json.get("type").asText()) {
+        "RESPONSE"     -> handleCourierResponse(session, json)
+        "READY", 
+        "NOT_READY"    -> toggleCourierAvailability(session)
+        else           -> println("Unknown message type")
+    }
+}
+\end{lstlisting}
+
+\subsection{Frontend State Management}
+
+\subsubsection{Message Handling and State Updates}
+
+The LiftDrop mobile application adopts a reactive UI architecture using Jetpack Compose, where screen behavior is driven by immutable state objects. To ensure consistent rendering and predictable transitions across the user journey, each screen is modeled using a dedicated sealed class that defines its possible UI states.
+
+For example, the login and registration processes are controlled by the \texttt{LoginScreenState} and \texttt{RegisterScreenState} classes, respectively. These include the following variants:
+
+\begin{description}
+    \item[LoginScreenState:] \texttt{Idle}, \texttt{Login}, \texttt{Error}
+    \item[RegisterScreenState:] \texttt{Idle}, \texttt{Register}, \texttt{Error}
+\end{description}
+
+These states allow the UI to reflect user progress during authentication, including success and failure outcomes.
+
+The Home screen follows a more complex state model, represented by the sealed class \texttt{HomeScreenState}. The listing below defines all available states, covering the full delivery lifecycle, including request reception, pickup, drop-off, cancellation, and delivery confirmation.
+
+\begin{lstlisting}[language=Kotlin, caption={HomeScreenState sealed class}]
+sealed class HomeScreenState {
+    data class Listening(
+        val dailyEarnings: String,
+        val incomingRequest: Boolean = false,
+        val requestDetails: IncomingRequestDetails?,
+    ) : HomeScreenState()
+    
+    data class RequestAccepted(
+        val deliveryStatus: String = "REQUEST_ACCEPTED",
+        val message: String
+    ) : HomeScreenState()
+    
+    data class RequestDeclined(
+        val deliveryStatus: String = "REQUEST_DECLINED",
+        val message: String
+    ) : HomeScreenState()
+    
+    data class HeadingToPickUp(
+        val isPickUpSpotValid : Boolean = false,
+        val isOrderInfoVisible : Boolean = false,
+        val deliveryStatus: String = "HEADING_TO_PICKUP",
+    ) : HomeScreenState()
+    
+    data class PickedUp(
+        val deliveryStatus: String = "PICKED_UP",
+    ) : HomeScreenState()
+    
+    data class HeadingToDropOff(
+        val isDropOffSpotValid : Boolean = false,
+        val isOrderInfoVisible : Boolean = false,
+        val deliveryStatus: String = "HEADING_TO_DROPOFF",
+    ) : HomeScreenState()
+    
+    data class Delivered(
+        val dailyEarnings: String,
+        val deliveryStatus : String = "DELIVERED",
+    ) : HomeScreenState()
+    
+    data class Idle(
+        val dailyEarnings: String,
+    ) : HomeScreenState()
+    
+    data class Error(val problem: Problem) : HomeScreenState()
+    
+    data class Logout(val isDone: Boolean = false) : HomeScreenState()
+    
+    data class CancellingOrder(val deliveryStatus: String) : HomeScreenState()
+    
+    data class CancellingPickup(val isDone : Boolean = false, ) : HomeScreenState()
+    
+    data class CancellingDropOff(
+        val isOrderReassigned: Boolean = false,
+        val isOrderPickedUp: Boolean = false,
+        val pickUpLocation: LocationDTO? = null,
+        val pickupCode: String? = null,
+    ) : HomeScreenState()
+}
+\end{lstlisting}
+
+All screen states are managed using a \texttt{StateFlow} in the ViewModel layer. When updates are received—such as real-time messages via WebSocket or local events like button presses—the corresponding ViewModel processes the input and updates the current state. These state changes automatically propagate to the composables on screen, ensuring a unidirectional data flow and clear separation of concerns.
+
+
+
+The following example illustrates how the Home screen begins listening for messages and updates its state based on the received input:
+
+\begin{lstlisting}[language=Kotlin, caption={WebSocket startListening where message handling is defined}]
+fun startListening() {
+        viewModelScope.launch {
+            val token = ... // token is obtained through DataStore preferences
+            homeService.startListening(
+                token = token,
+                onMessage = { message ->
+                    val request = parseDynamicMessage(message)
+                    when (request) {
+                        is IncomingRequestDetails -> {
+                            _stateFlow.update { 
+                            processIncomingRequest(current, request)
+                            }
+                        }
+
+                        is DeliveryUpdate -> {
+                            _stateFlow.update { 
+                            processDeliveryUpdate(current, request)
+                            }
+                        }
+
+                        is ResultMessage -> {
+                            _stateFlow.update {
+                                processResultMessage(it, request)
+                            }
+                        }
+
+                        else -> {
+                            ...
+                        }
+                    }
+                },
+                onFailure = {
+                    _stateFlow.update {
+                       ...
+                    }
+                }
+            )
+            _stateFlow.update { 
+                ...
+            }
+        }
+    }
+\end{lstlisting}
+
+\subsection{Order Assignment Logic}
+
+Order assignment is based on:
+
+\begin{itemize}
+    \item \textbf{Proximity to Pickup}: Calculated using Google Maps Distance Matrix API to ensure routing reflects real travel time, not just straight-line distance.
+    \item \textbf{Courier Rating}: Couriers with higher ratings receive slight prioritization when travel times are similar.
+\end{itemize}
+
+To rank couriers based on proximity to the pickup location, we apply a two-phase sorting approach.
+
+In the first phase, we sort couriers by their direct (as-the-crow-flies) distance to the pickup spot using PostgreSQL's PostGIS extension. This allows us to efficiently compute geographical distances between coordinates within the database. The following snippet illustrates how this is implemented:
+
+\begin{lstlisting}[language=Kotlin, caption={Ranking couriers by direct distance using PostgreSQL PostGIS extension}]
+override fun getClosestCouriersAvailable(
+        pickupLat: Double, // Pickup spot's latititude
+        pickupLng: Double, // Pickup spot's longitude
+        requestId: Int, // Request id
+        maxDistance: Double, // Max distance to be considered
+    ): List<CourierWithLocation> =
+        handle
+            .createQuery(
+                """
+            SELECT ..., -- Other courier attributes
+                ST_Distance(  -- Direct distance using PostGIS
+                    ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
+                ) AS distance_meters
+            FROM ... -- Joins Courier table with Location table where courier is available
+            AND ... -- Checks if courier has already declined this specific request
+            AND ST_Distance( -- Gets 5 closest couriers
+                    ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
+                ) < :maxDistance
+            ORDER BY distance_meters
+            LIMIT 5;
+            """,
+            ).bind(...).list()
+\end{lstlisting}
+
+\noindent Once we've filtered and sorted couriers by their direct distance, we proceed to the second phase, where we refine the ranking based on their estimated travel time.
+
+This is achieved by using the Google Maps Distance Matrix API, which takes into account real-world road data and traffic conditions to provide more accurate travel times. The snippet below shows how we perform this step:
+
+\begin{lstlisting}[language=Kotlin, caption={Ranking couriers by travel time using Google Maps API}]
+private suspend fun rankCouriersByTravelTime(
+    couriers: List<CourierWithLocation>,
+    destinationLat: Double,
+    destinationLon: Double,
+): List<CourierWithLocation> {
+    val origins = couriers.joinToString("|") { "${it.latitude},${it.longitude}" }
+    val destination = "$destinationLat,$destinationLon"
+
+    // Sends a request to the Google Maps Distance Matrix API,
+    // using courier locations as origins and the destination as the drop-off point.
+    val response = ...
+    
+    // Parses the API response to extract a list of travel times (in seconds), where each value corresponds to a courier in the original list.
+    val travelTimes = ...
+
+    // Combines each courier with their corresponding travel time,
+    // sort them in ascending order of travel time,
+    // and return a list of couriers with the estimated travel time included.
+    return couriers.zip(travelTimes)
+        .sortedBy { it.second }
+        .map { (courier, time) -> courier.copy(estimatedTravelTime = time) }
+}
+\end{lstlisting}
+
+After obtaining the estimated travel times, each courier is scored using a weighted formula that combines normalized travel time and user rating. Couriers with lower scores are ranked higher and prioritized for order assignment.
+
+\begin{lstlisting}[language=Kotlin, caption={Scoring couriers by travel time and rating}]
+fun rankCouriersByScore(couriers: List<CourierWithLocation>): List<CourierWithLocation> {
+    val minTime = couriers.minOf { it.estimatedTravelTime ?: 0L }
+    val maxTime = couriers.maxOf { it.estimatedTravelTime ?: 1L }
+    val minRating = couriers.minOf { it.rating ?: 0.0 }
+    val maxRating = couriers.maxOf { it.rating ?: 5.0 }
+
+    val alpha = 0.7 // weight for travel time
+    val beta = 0.3  // weight for rating
+
+//Faster couriers and those with higher ratings get a lower score.
+    return couriers.sortedBy { courier ->
+        val normTime = if (maxTime > minTime) {
+            ((courier.estimatedTravelTime ?: 0L) - minTime).toDouble() / (maxTime - minTime)
+        } else 0.0
+
+        val normRating = if (maxRating > minRating) {
+            ((courier.rating ?: 0.0) - minRating) / (maxRating - minRating)
+        } else 0.0
+
+        alpha * normTime + beta * (1 - normRating)
+    }
+}
+\end{lstlisting}
+
+Lastly, the centerpiece of LiftDrop’s dynamic dispatching logic is the courier assignment handler, which orchestrates several previously discussed components into a single cohesive workflow. This function initiates the process of locating available couriers within an incrementally expanding search radius, sending them real-time assignment requests, and awaiting their responses. If a courier accepts, the assignment is confirmed; if not, the system proceeds to the next available candidate. This recursive mechanism ensures robust and flexible request fulfillment. The snippet below illustrates how these interconnected elements are brought together:
+
+\newpage
+
+\begin{lstlisting}[language=Kotlin, caption={Handling Courier Assignments (Simplified Pseudocode)}]
+suspend fun handleCourierAssignment(
+    pickupLat: Double,
+    pickupLon: Double,
+    requestId: Int,
+    initialMaxDistance: Double = 1000.0,
+    maxDistanceIncrement: Double = 1000.0,
+    maxAllowedDistance: Double = 4000.0,
+    deliveryKind: String,
+): Boolean {
+    val currentMaxDistance = ...
+    val couriers = ... // fetches the couriers as discussed previouly
+    if (couriers is Either.Right) {
+        for (courier in couriers) {
+            //registers the attempt of assignment
+            val deferredResponse = AssignmentCoordinator.register(requestId)
+
+            transactionManager.run {
+            // Fetch request details from DB
+            val requestDetails = ...
+            // Estimate earnings based on distance, item price, and quantity
+            val earnings = ...
+            // Send delivery request to courier via WebSocketHandler.sendAssignmentMessageToCourier(courier.courierId, requestDetails)
+            // Wait for courier's response or timeout
+            val accepted = try {
+                withTimeout(20_000) { deferredResponse.await() }
+            } catch (e: TimeoutCancellationException) {
+                false
+            }
+
+            if (accepted) return true
+            else WebSocketHandler.handleDecline(courier.courierId, requestId)
+        }  }
+        // Retry with extended distance if no courier accepted
+        return handleCourierAssignment(
+            ...
+            initialMaxDistance + maxDistanceIncrement,
+            ...
+        ) }
+     else {
+        // Retry after delay if no couriers found
+        delay(10_000)
+        return handleCourierAssignment(
+            ...
+            initialMaxDistance + maxDistanceIncrement,
+            ...
+        )}}
+\end{lstlisting}
+
+To facilitate asynchronous communication between the backend and couriers during the assignment process, the system leverages a dedicated coordination component named AssignmentCoordinator. This object maintains an in-memory registry that maps each delivery request ID to a corresponding \texttt{CompletableDeferred<Boolean>} instance. When a courier assignment is initiated, the request is registered and a deferred response is created. This deferred serves as a synchronization point, allowing the backend to suspend execution while awaiting the courier’s response. Once the courier accepts or declines the assignment, the complete function is invoked to resolve the deferred and resume the assignment logic accordingly. This mechanism enables non-blocking, thread-safe handling of real-time interactions in the courier dispatch workflow.
+
+\vspace{5mm}
+
+\begin{lstlisting}[language=Kotlin, caption={Assignment Coordination}]
+object AssignmentCoordinator {
+    private val pendingResponses = ConcurrentHashMap<Int, CompletableDeferred<Boolean>>()
+
+    fun register(requestId: Int): CompletableDeferred<Boolean> {
+        val deferred = CompletableDeferred<Boolean>()
+        pendingResponses[requestId] = deferred
+        return deferred
+    }
+
+    fun complete(
+        requestId: Int,
+        accepted: Boolean,
+    ) {
+        pendingResponses.remove(requestId)?.complete(accepted) ?: log("Already completed or missing")
+    }
+}
+\end{lstlisting}
+
+\newpage
+
+\subsection{Canceling Orders}
+
+Order cancellations were designed to be seamless. If a courier cancels before pickup, the system treats the order as unassigned and assigns it to nearby couriers. If cancellation occurs after pickup, the order is re-assigned using the courier’s last known location as the new pickup point. This design ensures minimal disruption to the overall system.
+The following sketch illustrates the two possible user journeys when a courier cancels an order.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.56\textwidth]{images/CourierCancelJourney.png}
+    \caption{Courier Order Canceling Journey}
+\end{figure}
+
+\newpage
+
+Before reassigning a canceled request, the system determines the appropriate pickup coordinates and pin code based on the current delivery status. If the request was canceled after pickup, a message is sent to the canceling courier to retrieve the pin code. This pin code is then passed along to the newly assigned courier to ensure the delivery can still be completed securely.
+
+\begin{lstlisting}[language=Kotlin, caption={Reassignment of a cancelled request}]
+fun handleRequestReassignment(
+        requestId: Int,
+        courierId: Int,
+        deliveryStatus: DeliveryStatus,
+        pickupLocationDTO: LocationDTO?,
+    ): Boolean {
+        return transactionManager.run {
+            ... // pickupLat, pickupLon and pickupPin are determined according to the delivery status
+
+            CoroutineScope(Dispatchers.Default).launch {
+                if (handleCourierAssignment(
+                        pickupLat = pickupLat,
+                        pickupLon = pickupLon,
+                        requestId = requestId,
+                        deliveryKind = deliveryStatus.toDeliveryKind().name,
+                    )
+                ) {
+                    if (deliveryStatus == DeliveryStatus.HEADING_TO_DROPOFF) {
+                        courierWebSocketHandler.sendMessageToCourier(
+                            courierId = courierId,
+                            message =
+                                DeliveryUpdateMessage(
+                                    hasBeenAccepted = true,
+                                    pinCode = pickupPin ?: "",
+                                ),
+                        )
+                    } else {
+                        GlobalLogger.log("Courier $courierId reassigned to request $requestId")
+                    }
+                }
+            }
+            return@run true
+        }
+    }
+\end{lstlisting}
+
+
+\subsection{Courier Earnings}
+
+LiftDrop calculates courier earnings using a mix of fixed and dynamic components:
+
+\begin{itemize}
+    \item \textbf{Base Fee}: A flat fee for completing any order.
+    \item \textbf{Distance Fee}: A per-kilometer rate based on travel distance from courier to pickup.
+    \item \textbf{Item Value Multiplier}: A bonus based on order value to reflect risk or effort for higher-priced deliveries.
+    \item \textbf{Quantity}: All components are scaled by the number of items in the delivery.
+\end{itemize}
+
+\noindent The Kotlin function below shows the earnings calculation:
+
+\begin{lstlisting}[language=Kotlin, caption={Calculation of Courier Earnings}]
+fun estimateCourierEarnings(
+        distanceKm: Double,
+        itemValue: Double,
+        quantity: Int,
+        baseFee: Double = 2.0,
+        perKmRate: Double = 0.5,
+        valueRate: Double = 0.005,
+    ): Double = quantity * (baseFee + (distanceKm * perKmRate) + (itemValue * valueRate))
+\end{lstlisting}
+
+\subsection{Database Access}
+
+The LiftDrop backend interacts with the PostgreSQL database through a transactional abstraction based on JDBI. The design separates transaction management from repository implementation, ensuring consistency and maintainability across all database operations.
+
+The following Kotlin class handles transactional execution using JDBI:
+
+\begin{lstlisting}[language=Kotlin, caption={JDBI Transaction Manager}]
+@Component
+class JdbiTransactionManager(
+    private val jdbi: Jdbi,
+) : TransactionManager {
+    override fun <R> run(block: (Transaction) -> R): R =
+        jdbi.inTransaction<R, Exception> { handle ->
+            val transaction = JdbiTransaction(handle)
+            block(transaction)
+        }
+}
+\end{lstlisting}
+
+The `JdbiTransaction` class exposes repository instances tied to the same underlying handle, allowing atomic operations across multiple tables:
+
+\begin{lstlisting}[language=Kotlin, caption={JDBI Transaction with Repository Bindings}]
+class JdbiTransaction(
+    private val handle: Handle,
+) : Transaction {
+    override val usersRepository = JdbiUserRepository(handle)
+    override val clientRepository = JdbiClientRepository(handle)
+    override val requestRepository = JdbiRequestRepository(handle)
+    override val courierRepository = JdbiCourierRepository(handle)
+    override val deliveryRepository = JdbiDeliveryRepository(handle)
+    override val locationRepository = JdbiLocationRepository(handle)
+}
+\end{lstlisting}
+
+This architecture enables consistent, testable, and atomic data operations while maintaining separation of concerns between business logic and persistence logic.
+
+\input{sections/Tests}
+

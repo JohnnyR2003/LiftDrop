@@ -1,0 +1,30 @@
+\subsection{Tests}
+
+The LiftDrop platform was tested through both manual and automated approaches to ensure correctness, reliability, and performance. Testing focused on backend behavior, including API functionality, business logic, and role-based access control.
+
+\subsubsection{Manual Tests}
+
+Manual tests were primarily used to verify API behavior and end-to-end interactions between clients and couriers. These tests were executed using \textbf{Postman}, allowing us to simulate real HTTP requests and observe responses in real time.
+
+Key scenarios tested manually included:
+\begin{itemize}
+    \item User registration and authentication
+    \item Order creation and assignment
+    \item Role-based access restrictions
+    \item Session persistence via cookies
+    \item Order cancellation and reassignment
+\end{itemize}
+
+\subsubsection{Automated Tests}
+
+Automatic tests were written using the \textbf{JUnit} testing framework to validate the backend’s core business logic. These tests were executed during development to catch regressions and verify key modules in isolation.
+
+Test coverage included:
+\begin{itemize}
+    \item Unit tests for repositories and services
+    \item Validation of order assignment logic
+    \item Verification of courier scoring algorithms
+    \item Authentication and authorization checks
+\end{itemize}
+
+In future iterations, these tests can be extended with integration and UI testing using tools like Espresso or Retrofit mock services.

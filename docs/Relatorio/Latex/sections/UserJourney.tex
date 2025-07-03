@@ -1,11 +1,31 @@
-\section{User Journey Diagram}
+\subsection{User Journeys}
+
+\subsubsection{Client Journey}
+
+\bigskip
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\textwidth]{images/UserJourney.png} % adjust path & width if needed
-    \caption{Order journey diagram showing success and failure paths}
-    \label{fig:user_journey}
+    \includegraphics[width=0.2\textwidth]{images/ClientJourney.png} % adjust path & width if needed
+    \caption{Client journey flowchart showing from the beginning}
+    \label{fig:client_journey}
 \end{figure}
 
-This diagram illustrates the typical order journey from a user's perspective, covering both successful and failed outcomes. It captures the interactions between clients, couriers, and the platform across different stages: order placement, courier acceptance, delivery progress, and resolution in case of errors or cancellations. The flow ensures that edge cases—such as order rejection or delivery failure—are considered during system design.
+This flowchart (\ref{fig:client_journey}) illustrates the sequential steps a client undergoes when placing an order through the LiftDrop platform. The process begins with the client initiating an order, followed by a waiting period for the order to be processed and accepted by a courier. Once the order is received, the client provides a unique confirmation code to the courier, marking a secure handoff. Finally, the process concludes with the client rating the delivery experience.
 
+\newpage
+
+\subsubsection{Courier Journey}
+
+\bigskip
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.37\textwidth]{images/CourierJourney.png} % adjust path & width if needed
+    \caption{Courier journey flowchart showing from the beginning}
+    \label{fig:courier_journey}
+\end{figure}
+
+This flowchart (\ref{fig:courier_journey}) outlines the step-by-step decision-making process a courier follows while managing delivery requests on the LiftDrop platform. It begins with the courier awaiting an incoming order, which can either be accepted or rejected. Upon accepting a request, the courier proceeds to the pickup location, with the option to cancel if necessary. After pickup, the courier advances to the delivery phase. If the courier successfully reaches the destination, the delivery is confirmed. If the destination is not reached, the system prompts reevaluation or cancellation.
+
+\newpage

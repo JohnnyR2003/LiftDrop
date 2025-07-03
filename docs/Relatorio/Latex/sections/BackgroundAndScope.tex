@@ -1,6 +1,27 @@
-\section{Scope}
+\section{Background and Project Scope}
+\subsection{Background}
 
-This section defines the functional and technical boundaries of the LiftDrop platform. It outlines the key features available to clients and couriers, the strategies for real-time data communication, order assignment, and safety. It also clarifies what the system is designed to accomplish and what lies outside the current scope of the project.
+The rise of the gig economy has led to the widespread adoption of mobile platforms for urban logistics, enabling flexible, on-demand delivery through services like Uber Eats, Glovo, and Deliveo. These applications rely on real-time geolocation, cloud-based infrastructure, and efficient routing to connect couriers and clients in fast-paced environments.
+
+In developing \textbf{LiftDrop}, we sought to build on these foundational ideas by prioritizing clarity, responsiveness, and user autonomy. Our goal is to design a system that supports couriers through timely communication, real-time updates, and context-aware feedback.
+
+\vspace{2mm}
+
+\subsection*{Technical Inspirations}
+
+LiftDrop incorporates several key technologies and design principles:
+
+\begin{itemize}
+    \item Real-time geolocation and distance-based filtering via the Google Maps API
+    \item Bidirectional communication between couriers and the server using WebSockets
+    \item A modular backend architecture that supports role-based access for clients and couriers.
+\end{itemize}
+
+\vspace{2mm}
+
+\subsection{Project Scope}
+
+This section defines the functional and technical boundaries of the LiftDrop platform. It outlines the key features available to clients and couriers, the strategies for real-time data communication and order assignment. It also clarifies what the system is designed to accomplish and what lies outside the current scope of the project.
 
 \subsection{Platform Features}
 
