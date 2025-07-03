@@ -3,6 +3,7 @@ package pt.isel.liftdrop.home.ui
 import DeliveryEarningsCard
 import OrderInfoCard
 import android.annotation.SuppressLint
+import android.location.Location
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -34,6 +35,21 @@ import pt.isel.liftdrop.shared.ui.BottomSlideToConfirm
 import pt.isel.liftdrop.shared.ui.ErrorCard
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Badge
+import androidx.compose.ui.tooling.preview.Preview
+import pt.isel.liftdrop.home.model.HomeService
+import pt.isel.liftdrop.home.model.IncomingRequestDetails
+import pt.isel.liftdrop.home.model.LocationDTO
+import pt.isel.liftdrop.home.ui.FakeHomeService
+import pt.isel.liftdrop.home.ui.FakeLocationServices
+import pt.isel.liftdrop.login.model.LoginService
+import pt.isel.liftdrop.login.model.PreferencesRepository
+import pt.isel.liftdrop.login.model.UserInfo
+import pt.isel.liftdrop.login.model.output.GetCourierIdOutputModel
+import pt.isel.liftdrop.login.model.output.LogoutOutputModel
+import pt.isel.liftdrop.login.model.output.RegisterOutputModel
+import pt.isel.liftdrop.services.http.Problem
+import pt.isel.liftdrop.services.http.Result
+import pt.isel.liftdrop.services.location.LocationTrackingService
 import pt.isel.liftdrop.shared.ui.FadingStatusCard
 import pt.isel.liftdrop.shared.ui.PinInsertionCard
 
@@ -676,53 +692,249 @@ fun HomeScreen(
     }
 }
 
-/*val httpService = HttpService(
-    baseUrl = "https://liftdrop-api.isel.pt",
-    client = OkHttpClient(),
-    gson = GsonBuilder().create()
-)
-val mockJson = GsonBuilder()
-    .create()
-val mockHttpClient: OkHttpClient = OkHttpClient()
-val homeService = RealHomeService(mockHttpClient, mockJson)
-val loginService = RealLoginService(httpService)
-
-
-@SuppressLint("ViewModelConstructorInComposable")
 @RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Idle")
 @Composable
-fun HomeScreenPreview() {
-    val mockLocationService = RealLocationTrackingService(mockHttpClient, courierService = homeService, mockJson, context = LocalContext.current)
+fun HomeScreenPreviewIdle() {
     HomeScreen(
-        viewModel = HomeViewModel( homeService,
-            loginService = loginService,
-            preferences = UserInfoSharedPrefs(LocalContext.current),
-        ),
-        state = HomeScreenState(
-            dailyEarnings = "12.50",
-            isUserLoggedIn = true,
-            isListening = false,
-            incomingRequest = false,
-            requestDetails = CourierRequestDetails(
-                requestId = "1",
-                courierId = "1",
-                pickupAddress = "123 Main St",
-                dropoffAddress = "456 Elm St",
-                pickupLatitude = 40.7128,
-                pickupLongitude = -74.0060,
-                dropoffLatitude = 40.7306,
-                dropoffLongitude = -73.9352,
-                price = "12.50",
-            ),
-        ),
-        onMenuClick = {},
-        onNotificationClick = {},
-        onStartClick = {},
-        onLogoutClick = {},
-        userToken = "mockToken"
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.Idle(dailyEarnings = "25.00"),
+        dailyEarnings = "25.00"
     )
 }
-*/
 
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "Listening")
+@Composable
+fun HomeScreenPreviewListening() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.Listening(dailyEarnings = "30.00", incomingRequest = false, requestDetails = null),
+        dailyEarnings = "30.00"
+    )
+}
 
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "IncomingRequestCard")
+@Composable
+fun HomeScreenIncomingRequestCardPreview() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.Listening(
+            dailyEarnings = "30.00",
+            incomingRequest = true,
+            requestDetails = IncomingRequestDetails(
+                requestId = "123",
+                courierId = "456",
+                pickupLatitude = 38.7169,
+                pickupLongitude = -9.1399,
+                pickupAddress = "Rua de Exemplo, 123",
+                dropoffAddress = "Rua de Exemplo, 456",
+                dropoffLatitude = 38.7169,
+                dropoffLongitude = -9.1399,
+                item = "Pizza",
+                quantity = 1,
+                deliveryKind = "Standard",
+                deliveryEarnings = "5.37"
+            )
+        ),
+        dailyEarnings = "30.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "HeadingToPickUp")
+@Composable
+fun HomeScreenPreviewHeadingToPickUp() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.HeadingToPickUp(isPickUpSpotValid = false, isOrderInfoVisible = false),
+        dailyEarnings = "40.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "PickedUp")
+@Composable
+fun HomeScreenPreviewPickedUp() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.PickedUp(),
+        dailyEarnings = "50.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "HeadingToDropOff")
+@Composable
+fun HomeScreenPreviewHeadingToDropOff() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.HeadingToDropOff(isDropOffSpotValid = false, isOrderInfoVisible = false),
+        dailyEarnings = "60.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "Delivered")
+@Composable
+fun HomeScreenPreviewDelivered() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.Delivered(dailyEarnings = "25.00"),
+        dailyEarnings = "25.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "Error")
+@Composable
+fun HomeScreenPreviewError() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.Error(problem = Problem(
+            type = "problem-type",
+            title = "Courier Not Near Drop Off",
+            detail = "You're not near the drop-off location.",
+            status = 500
+        )
+        ),
+        dailyEarnings = "25.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "CancellingOrder")
+@Composable
+fun HomeScreenPreviewCancellingOrder() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.CancellingOrder(deliveryStatus = "HEADING_TO_PICKUP"),
+        dailyEarnings = "25.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "CancellingPickup")
+@Composable
+fun HomeScreenPreviewCancellingPickup() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.CancellingPickup(),
+        dailyEarnings = "25.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "CancellingDropOff")
+@Composable
+fun HomeScreenPreviewCancellingDropOff() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.CancellingDropOff(isOrderReassigned = false, pickUpLocation = null),
+        dailyEarnings = "25.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "CancellingDropOffReassigned")
+@Composable
+fun HomeScreenPreviewCancellingDropOffAssigned() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.CancellingDropOff(isOrderReassigned = true, pickUpLocation = null),
+        dailyEarnings = "25.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "CancellingDropOffPickedUp")
+@Composable
+fun HomeScreenPreviewCancellingDropOffPickedUp() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.CancellingDropOff(isOrderReassigned = true, isOrderPickedUp = true, pickUpLocation = null),
+        dailyEarnings = "25.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "RequestAccepted")
+@Composable
+fun HomeScreenPreviewRequestAccepted() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.RequestAccepted(message = "Request accepted!"),
+        dailyEarnings = "25.00"
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, name = "RequestDeclined")
+@Composable
+fun HomeScreenPreviewRequestDeclined() {
+    HomeScreen(
+        viewModel = FakeHomeViewModel,
+        state = HomeScreenState.RequestDeclined(message = "Request declined!"),
+        dailyEarnings = "25.00"
+    )
+}
+
+val FakeHomeViewModel = HomeViewModel(
+    homeService = FakeHomeService(),
+    loginService = FakeLoginService(),
+    locationServices = FakeLocationServices(),
+    preferences = FakePreferencesRepository()
+)
+
+class FakeHomeService : HomeService {
+    override suspend fun startListening(token: String, onMessage: (String) -> Unit, onFailure: (Throwable) -> Unit) {}
+    override suspend fun stopListening() {}
+    override suspend fun acceptRequest(requestId: String, token: String): Boolean = true
+    override suspend fun declineRequest(requestId: String): Boolean = true
+    override suspend fun validatePickup(requestId: String, courierId: String, token: String): Result<Boolean> = Result.Success(true)
+    override suspend fun pickupOrder(requestId: String, courierId: String, pickUpPin: String, deliveryKind: String, token: String): Result<Boolean> = Result.Success(true)
+    override suspend fun validateDropOff(requestId: String, courierId: String, token: String): Result<Boolean> = Result.Success(true)
+    override suspend fun deliverOrder(requestId: String, courierId: String, dropOffPin: String, deliveryEarnings: Double, token: String): Result<Boolean> =  Result.Success(true)
+    override suspend fun cancelDelivery(courierId: String, requestId: String, deliveryStatus: String, pickUpLocation: LocationDTO?, token: String): Result<Boolean> = Result.Success(true)
+    override suspend fun getDailyEarnings(courierId: String, token: String): Result<Double> = Result.Success(100.0)
+    override suspend fun getCourierIdByToken(token: String): Result<Int> = Result.Success(1)
+}
+
+class FakeLocationServices : LocationTrackingService{
+    override suspend fun getCurrentLocation(): Result<Location> =
+        Result.Success(Location("FakeProvider").apply {
+            latitude = 38.7169
+            longitude = -9.1399
+        })
+
+    override fun startUpdating(authToken: String, courierId: String) = Unit
+
+    override fun stopUpdating() = Unit
+
+    override suspend fun sendLocationToBackend(
+        lat: Double,
+        lon: Double,
+        courierId: String,
+        authToken: String
+    ): Result<Boolean> = Result.Success(true)
+
+}
+
+class FakeLoginService : LoginService {
+    override suspend fun register(email: String, password: String, username: String): Result<RegisterOutputModel> = Result.Success(RegisterOutputModel(1))
+    override suspend fun login(username: String, password: String): Result<UserInfo> = Result.Success(UserInfo(1, "token", "username", "email"))
+    override suspend fun logout(token: String, courierId: String): Result<LogoutOutputModel> = Result.Success(LogoutOutputModel(false))
+    override suspend fun getCourierIdByToken(token: String): Result<GetCourierIdOutputModel> = Result.Success(GetCourierIdOutputModel("1"))
+}
+
+class FakePreferencesRepository : PreferencesRepository {
+    override suspend fun isLoggedIn(): Boolean = true
+
+    override suspend fun getUserInfo(): UserInfo? = UserInfo(1, "token", "username", "email")
+
+    override suspend fun setUserInfo(userInfo: UserInfo) = Unit
+
+    override suspend fun clearUserInfo(userInfo: UserInfo) = Unit
+
+}

@@ -77,7 +77,7 @@ class LocationServices {
         val coroutineScope = rememberCoroutineScope()
         var hasZoomedToLocation by remember { mutableStateOf(false) }
 
-        DisposableEffect(Unit) {
+        DisposableEffect(Unit)  {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             val locationCallback = object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult) {
