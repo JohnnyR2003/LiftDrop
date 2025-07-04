@@ -95,9 +95,9 @@ class RealHomeService(
 
         val messageJson = """
     {
-        "type": "RESPONSE",
+        "type": "DECISION",
         "requestId": "$requestId",
-        "status": "ACCEPT"
+        "decision": "ACCEPT"
     }
 """.trimIndent()
 
@@ -107,9 +107,9 @@ class RealHomeService(
     override suspend fun declineRequest(requestId: String): Boolean {
         val messageJson = """
     {
-        "type": "RESPONSE",
+        "type": "DECISION",
         "requestId": "$requestId",
-        "status": "DECLINE"
+        "decision": "DECLINE"
     }
 """.trimIndent()
 

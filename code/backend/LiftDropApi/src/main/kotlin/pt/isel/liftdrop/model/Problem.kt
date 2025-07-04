@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
 private const val MEDIA_TYPE = "application/problem+json"
-private const val PROBLEM_URI_PATH = "https://github.com/isel-sw-projects/2025-lift-drop/tree/main/docs/liftdrop/problems"
 
 data class Problem(
     val type: String?,
@@ -21,7 +20,7 @@ data class Problem(
 
     companion object {
         private const val PROBLEM_URI_PATH =
-            "https://github.com/isel-sw-projects/2025-lift-drop/tree/main/docs/liftdrop/problems"
+            "https://github.com/isel-sw-projects/2025-lift-drop/tree/main/docs/problems"
 
         fun internalServerError(): Problem =
             Problem(
@@ -29,14 +28,6 @@ data class Problem(
                 title = "Internal Server Error",
                 status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 detail = "An unexpected error occurred on the server.",
-            )
-
-        fun invalidRequest(detail: String): Problem =
-            Problem(
-                type = "$PROBLEM_URI_PATH/invalid-request",
-                title = "Invalid Request",
-                status = HttpStatus.BAD_REQUEST.value(),
-                detail = detail,
             )
 
         fun requestNotFound(): Problem =
@@ -87,14 +78,6 @@ data class Problem(
                 detail = "The requested courier could not be found.",
             )
 
-        fun courierAlreadyListening(): Problem =
-            Problem(
-                type = "$PROBLEM_URI_PATH/courier-already-listening",
-                title = "Courier Already Listening",
-                status = HttpStatus.CONFLICT.value(),
-                detail = "The courier is already listening for requests.",
-            )
-
         fun passwordIsIncorrect(): Problem =
             Problem(
                 type = "$PROBLEM_URI_PATH/password-is-incorrect",
@@ -117,14 +100,6 @@ data class Problem(
                 title = "Drop Off Code Is Incorrect",
                 status = HttpStatus.UNAUTHORIZED.value(),
                 detail = "The provided drop-off code is incorrect.",
-            )
-
-        fun packageAlreadyPickedUp(): Problem =
-            Problem(
-                type = "$PROBLEM_URI_PATH/package-already-picked-up",
-                title = "Package Already Picked Up",
-                status = HttpStatus.CONFLICT.value(),
-                detail = "The package has already been picked up.",
             )
 
         fun packageAlreadyDelivered(): Problem =

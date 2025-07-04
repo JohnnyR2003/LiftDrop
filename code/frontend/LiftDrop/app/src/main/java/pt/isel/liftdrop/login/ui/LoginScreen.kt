@@ -112,15 +112,6 @@ fun LoginScreen(
                     }
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(forgotPasswordText),
-                    fontSize = 14.sp,
-                    color = Color(0xFF384259),
-                    modifier = Modifier.align(Alignment.End)
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(enabled = Email.isValid(email.value.trim()) &&

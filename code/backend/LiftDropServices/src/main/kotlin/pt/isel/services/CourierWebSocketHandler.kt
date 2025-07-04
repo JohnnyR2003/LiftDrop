@@ -43,7 +43,7 @@ class CourierWebSocketHandler(
     ) {
         val json = jacksonObjectMapper().readTree(message.payload)
         when (json.get("type").asText()) {
-            "RESPONSE" -> handleCourierResponse(session, json)
+            "DECISION" -> handleCourierDecision(session, json)
             "READY", "NOT_READY" -> toggleCourierAvailability(session)
             else -> println("Unknown message type")
         }
@@ -56,12 +56,12 @@ class CourierWebSocketHandler(
         }
     }
 
-    private fun handleCourierResponse(
+    private fun handleCourierDecision(
         session: WebSocketSession,
         json: JsonNode,
     ) {
         val requestId = json.get("requestId").asInt()
-        val status = json.get("status").asText()
+        val status = json.get("decision").asText()
         val courierId = getCourierIdBySession(session)
 
         if (courierId != null) {
