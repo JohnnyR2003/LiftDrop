@@ -109,8 +109,13 @@ fun IncomingRequestCard(
                         color = Color(0xFF384259),
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
+                    Text(
+                        text = "Ganhos estimados",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
-
                     // Endereços
                     // Substitua o bloco de endereços por:
                     Column(

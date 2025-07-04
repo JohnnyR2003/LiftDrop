@@ -868,7 +868,7 @@ fun HomeScreenPreviewCancellingDropOffPickedUp() {
 fun HomeScreenPreviewRequestAccepted() {
     HomeScreen(
         viewModel = FakeHomeViewModel,
-        state = HomeScreenState.RequestAccepted(message = "Request accepted!"),
+        state = HomeScreenState.RequestAccepted(message = "Request accepted successfully!"),
         dailyEarnings = "25.00"
     )
 }
