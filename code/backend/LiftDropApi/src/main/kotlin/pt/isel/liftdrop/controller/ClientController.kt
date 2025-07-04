@@ -29,78 +29,63 @@ class ClientController(
     fun makeRequest(
         user: AuthenticatedClient,
         @RequestBody order: RequestInputModel,
-    ): ResponseEntity<Any> =
-        when (
-            val requestCreationResult =
-                clientService.makeRequest(
-                    client = Client(user.client.user),
-                    description = order.itemDesignation,
-                    restaurantName = order.restaurantName,
-                    quantity = order.quantity,
-                    dropOffAddress = order.dropOffAddress?.toAddress(),
-                )
-        ) {
+    ): ResponseEntity<Any> {
+        val requestCreationResult =
+            clientService.makeRequest(
+                client = Client(user.client.user),
+                description = order.itemDesignation,
+                restaurantName = order.restaurantName,
+                quantity = order.quantity,
+                dropOffAddress = order.dropOffAddress?.toAddress(),
+            )
+
+        return when (requestCreationResult) {
             is Success -> {
                 val result = requestCreationResult.value
                 GlobalLogger.log("Order created successfully with ID: $result")
                 ResponseEntity.ok(result)
             }
-
             is Failure -> {
-                // Handle order creation error
                 GlobalLogger.log("Failed to create order: ${requestCreationResult.value}")
-                when (requestCreationResult.value) {
-                    is RequestCreationError.RestaurantNotFound -> {
-                        Problem
-                            .restaurantNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-
-                    is RequestCreationError.ItemNotFound -> {
-                        Problem
-                            .itemNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-
-                    is RequestCreationError.ClientNotFound -> {
-                        Problem
-                            .userNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-
-                    is RequestCreationError.ClientAddressNotFound -> {
-                        Problem
-                            .clientAddressNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-
-                    else ->
-                        Problem
-                            .internalServerError()
-                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
-                }
+                val errorResponseMap =
+                    mapOf(
+                        RequestCreationError.RestaurantNotFound::class to {
+                            Problem.restaurantNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                        RequestCreationError.ItemNotFound::class to {
+                            Problem.itemNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                        RequestCreationError.ClientNotFound::class to {
+                            Problem.userNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                        RequestCreationError.ClientAddressNotFound::class to {
+                            Problem.clientAddressNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                    )
+                errorResponseMap[requestCreationResult.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
+    }
 
     @PostMapping(Uris.Client.REGISTER)
     fun registerClient(
         @RequestBody registerInput: RegisterClientInputModel,
     ): ResponseEntity<Any> {
         val clientCreationResult =
-            clientService
-                .registerClient(
-                    registerInput.email,
-                    registerInput.password,
-                    registerInput.name,
-                    Address(
-                        registerInput.address.country,
-                        registerInput.address.city,
-                        registerInput.address.street,
-                        registerInput.address.streetNumber,
-                        registerInput.address.floor,
-                        registerInput.address.zipcode,
-                    ),
-                )
+            clientService.registerClient(
+                registerInput.email,
+                registerInput.password,
+                registerInput.name,
+                Address(
+                    registerInput.address.country,
+                    registerInput.address.city,
+                    registerInput.address.street,
+                    registerInput.address.streetNumber,
+                    registerInput.address.floor,
+                    registerInput.address.zipcode,
+                ),
+            )
 
         return when (clientCreationResult) {
             is Success -> {
@@ -113,33 +98,21 @@ class ClientController(
                     ),
                 )
             }
-
             is Failure -> {
-                when (clientCreationResult.value) {
-                    is ClientCreationError.UserAlreadyExists -> {
-                        Problem
-                            .userAlreadyExists()
-                            .response(HttpStatus.CONFLICT)
-                    }
-
-                    is ClientCreationError.InvalidAddress -> {
-                        Problem
-                            .invalidAddress()
-                            .response(HttpStatus.BAD_REQUEST)
-                    }
-
-                    is ClientCreationError.InvalidLocation -> {
-                        Problem
-                            .invalidLocation()
-                            .response(HttpStatus.BAD_REQUEST)
-                    }
-
-                    else -> {
-                        Problem
-                            .internalServerError()
-                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        ClientCreationError.UserAlreadyExists::class to {
+                            Problem.userAlreadyExists().response(HttpStatus.CONFLICT)
+                        },
+                        ClientCreationError.InvalidAddress::class to {
+                            Problem.invalidAddress().response(HttpStatus.BAD_REQUEST)
+                        },
+                        ClientCreationError.InvalidLocation::class to {
+                            Problem.invalidLocation().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[clientCreationResult.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -148,12 +121,7 @@ class ClientController(
     fun login(
         @RequestBody input: LoginInputModel,
     ): ResponseEntity<Any> {
-        val clientLoginResult =
-            clientService
-                .loginClient(
-                    input.email,
-                    input.password,
-                )
+        val clientLoginResult = clientService.loginClient(input.email, input.password)
         return when (clientLoginResult) {
             is Success -> {
                 GlobalLogger.log("Client logged in successfully with token: ${clientLoginResult.value}")
@@ -161,59 +129,38 @@ class ClientController(
                 val cookie =
                     ResponseCookie
                         .from("auth_token", token)
-                        .path("/") // Path for which the cookie is valid
-                        .maxAge(3600 * 12) // Cookie expiration time
+                        .path("/")
+                        .maxAge(3600 * 12)
                         .build()
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
                     .body(ClientLoginOutputModel(token = token))
             }
-
             is Failure -> {
-                when (clientLoginResult.value) {
-                    is ClientLoginError.ClientNotFound -> {
-                        Problem
-                            .userNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-
-                    is ClientLoginError.InvalidEmailOrPassword -> {
-                        Problem
-                            .invalidRequestContent("Invalid email or password")
-                            .response(HttpStatus.BAD_REQUEST)
-                    }
-
-                    is ClientLoginError.BlankEmailOrPassword -> {
-                        Problem
-                            .invalidRequestContent("Email and password cannot be blank")
-                            .response(HttpStatus.BAD_REQUEST)
-                    }
-
-                    is ClientLoginError.WrongPassword -> {
-                        Problem
-                            .passwordIsIncorrect()
-                            .response(HttpStatus.UNAUTHORIZED)
-                    }
-
-                    is ClientLoginError.ClientLoginEmailAlreadyExists -> {
-                        Problem
-                            .userAlreadyExists()
-                            .response(HttpStatus.CONFLICT)
-                    }
-
-                    is ClientLoginError.InvalidAddress -> {
-                        Problem
-                            .invalidAddress()
-                            .response(HttpStatus.BAD_REQUEST)
-                    }
-
-                    else -> {
-                        Problem
-                            .internalServerError()
-                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        ClientLoginError.ClientNotFound::class to {
+                            Problem.userNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                        ClientLoginError.InvalidEmailOrPassword::class to {
+                            Problem.invalidRequestContent("Invalid email or password").response(HttpStatus.BAD_REQUEST)
+                        },
+                        ClientLoginError.BlankEmailOrPassword::class to {
+                            Problem.invalidRequestContent("Email and password cannot be blank").response(HttpStatus.BAD_REQUEST)
+                        },
+                        ClientLoginError.WrongPassword::class to {
+                            Problem.passwordIsIncorrect().response(HttpStatus.UNAUTHORIZED)
+                        },
+                        ClientLoginError.ClientLoginEmailAlreadyExists::class to {
+                            Problem.userAlreadyExists().response(HttpStatus.CONFLICT)
+                        },
+                        ClientLoginError.InvalidAddress::class to {
+                            Problem.invalidAddress().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[clientLoginResult.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -226,28 +173,22 @@ class ClientController(
                     ResponseCookie
                         .from("auth_token", "")
                         .path("/")
-                        .maxAge(0) // Expire immediately
+                        .maxAge(0)
                         .build()
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
                     .body("Logout successful")
             }
-
             is Failure -> {
-                when (clientLogoutResult.value) {
-                    is ClientLogoutError.SessionNotFound -> {
-                        Problem
-                            .sessionNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-
-                    else -> {
-                        Problem
-                            .internalServerError()
-                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        ClientLogoutError.SessionNotFound::class to {
+                            Problem.sessionNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                    )
+                errorResponseMap[clientLogoutResult.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
 
@@ -257,45 +198,34 @@ class ClientController(
         @RequestBody address: AddressInputModel,
     ): ResponseEntity<Any> {
         val result =
-            clientService
-                .addDropOffLocation(
-                    client.client.user.id,
-                    Address(
-                        address.country,
-                        address.city,
-                        address.street,
-                        address.streetNumber,
-                        address.floor,
-                        address.zipcode,
-                    ),
-                )
-
+            clientService.addDropOffLocation(
+                client.client.user.id,
+                Address(
+                    address.country,
+                    address.city,
+                    address.street,
+                    address.streetNumber,
+                    address.floor,
+                    address.zipcode,
+                ),
+            )
         return when (result) {
             is Success -> {
                 println("Drop-off location added successfully with ID: ${result.value}")
                 ResponseEntity.ok(result.value)
             }
-
             is Failure -> {
-                when (result.value) {
-                    is DropOffCreationError.ClientNotFound -> {
-                        Problem
-                            .userNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-
-                    is DropOffCreationError.InvalidAddress -> {
-                        Problem
-                            .invalidAddress()
-                            .response(HttpStatus.BAD_REQUEST)
-                    }
-
-                    else -> {
-                        Problem
-                            .internalServerError()
-                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        DropOffCreationError.ClientNotFound::class to {
+                            Problem.userNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                        DropOffCreationError.InvalidAddress::class to {
+                            Problem.invalidAddress().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[result.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -305,31 +235,17 @@ class ClientController(
         client: AuthenticatedClient,
         @PathVariable requestId: Int,
     ): ResponseEntity<Any> =
-        when (
-            val result =
-                clientService.getRequestStatus(
-                    client.client.user.id,
-                    requestId,
-                )
-        ) {
-            is Success -> {
-                ResponseEntity.ok(result.value)
-            }
-
+        when (val result = clientService.getRequestStatus(client.client.user.id, requestId)) {
+            is Success -> ResponseEntity.ok(result.value)
             is Failure -> {
-                when (result.value) {
-                    is ClientGetRequestStatusError.RequestNotFound -> {
-                        Problem
-                            .requestNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-
-                    else -> {
-                        Problem
-                            .internalServerError()
-                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        ClientGetRequestStatusError.RequestNotFound::class to {
+                            Problem.requestNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                    )
+                errorResponseMap[result.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
 
@@ -339,37 +255,27 @@ class ClientController(
         @RequestBody classification: ClassificationInputModel,
     ): ResponseEntity<Any> {
         val result =
-            clientService
-                .giveRating(
-                    client.client.user.id,
-                    classification.rating,
-                )
-
+            clientService.giveRating(
+                client.client.user.id,
+                classification.rating,
+            )
         return when (result) {
             is Success -> {
                 println("Classification given successfully")
                 ResponseEntity.ok("Classification given successfully")
             }
-
             is Failure -> {
-                when (result.value) {
-                    is ClientRatingError.RequestNotFound -> {
-                        Problem
-                            .requestNotFound()
-                            .response(HttpStatus.NOT_FOUND)
-                    }
-                    is ClientRatingError.RatingAlreadyDone -> {
-                        Problem
-                            .ratingAlreadyDone()
-                            .response(HttpStatus.BAD_REQUEST)
-                    }
-
-                    else -> {
-                        Problem
-                            .internalServerError()
-                            .response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        ClientRatingError.RequestNotFound::class to {
+                            Problem.requestNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                        ClientRatingError.RatingAlreadyDone::class to {
+                            Problem.ratingAlreadyDone().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[result.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }

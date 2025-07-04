@@ -36,27 +36,22 @@ class CourierController(
         @RequestBody registerInput: RegisterCourierInputModel,
     ): ResponseEntity<Any> {
         val courierCreationResult =
-            courierService
-                .registerCourier(
-                    email = registerInput.email,
-                    password = registerInput.password,
-                    name = registerInput.name,
-                )
-
+            courierService.registerCourier(
+                email = registerInput.email,
+                password = registerInput.password,
+                name = registerInput.name,
+            )
         return when (courierCreationResult) {
-            is Success -> {
-                ResponseEntity.ok(RegisterCourierOutputModel(courierCreationResult.value))
-            }
-
+            is Success -> ResponseEntity.ok(RegisterCourierOutputModel(courierCreationResult.value))
             is Failure -> {
-                when (courierCreationResult.value) {
-                    is CourierCreationError.CourierEmailAlreadyExists -> {
-                        Problem.courierAlreadyExists().response(HttpStatus.CONFLICT)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierCreationError.CourierEmailAlreadyExists::class to {
+                            Problem.courierAlreadyExists().response(HttpStatus.CONFLICT)
+                        },
+                    )
+                errorResponseMap[courierCreationResult.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -65,13 +60,7 @@ class CourierController(
     fun login(
         @RequestBody input: LoginInputModel,
     ): ResponseEntity<Any> {
-        val courierLoginResult =
-            courierService
-                .loginCourier(
-                    input.email,
-                    input.password,
-                )
-
+        val courierLoginResult = courierService.loginCourier(input.email, input.password)
         return when (courierLoginResult) {
             is Success -> {
                 GlobalLogger.log("Client logged in successfully with token: ${courierLoginResult.value}")
@@ -95,23 +84,23 @@ class CourierController(
                     )
             }
             is Failure -> {
-                when (courierLoginResult.value) {
-                    is CourierLoginError.BlankEmailOrPassword -> {
-                        Problem.invalidRequestContent("Email and Password must not be blank").response(HttpStatus.BAD_REQUEST)
-                    }
-                    is CourierLoginError.CourierNotFound -> {
-                        Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
-                    }
-                    is CourierLoginError.InvalidEmailOrPassword -> {
-                        Problem.passwordIsIncorrect().response(HttpStatus.UNAUTHORIZED)
-                    }
-                    is CourierLoginError.WrongPassword -> {
-                        Problem.passwordIsIncorrect().response(HttpStatus.UNAUTHORIZED)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierLoginError.BlankEmailOrPassword::class to {
+                            Problem.invalidRequestContent("Email and Password must not be blank").response(HttpStatus.BAD_REQUEST)
+                        },
+                        CourierLoginError.CourierNotFound::class to {
+                            Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                        CourierLoginError.InvalidEmailOrPassword::class to {
+                            Problem.passwordIsIncorrect().response(HttpStatus.UNAUTHORIZED)
+                        },
+                        CourierLoginError.WrongPassword::class to {
+                            Problem.passwordIsIncorrect().response(HttpStatus.UNAUTHORIZED)
+                        },
+                    )
+                errorResponseMap[courierLoginResult.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -130,19 +119,20 @@ class CourierController(
                         .path("/")
                         .maxAge(0)
                         .build()
-
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
                     .body(LogoutOutputModel(isLoggedOut = true))
             }
             is Either.Left -> {
-                when (courierLogoutResult.value) {
-                    is CourierLogoutError.SessionNotFound ->
-                        Problem.sessionNotFound().response(HttpStatus.NOT_FOUND)
-                    else ->
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierLogoutError.SessionNotFound::class to {
+                            Problem.sessionNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                    )
+                errorResponseMap[courierLogoutResult.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -164,57 +154,53 @@ class CourierController(
                         input.newLocation,
                         address.value,
                     )
-
                 when (updateLocationResult) {
                     is Success -> {
                         GlobalLogger.log("Courier location updated successfully")
                         ResponseEntity.ok(true)
                     }
-                    is Failure ->
-                        when (updateLocationResult.value) {
-                            is LocationUpdateError.CourierNotFound ->
-                                Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
-                            else ->
-                                Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                        }
+                    is Failure -> {
+                        val errorResponseMap =
+                            mapOf(
+                                LocationUpdateError.CourierNotFound::class to {
+                                    Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
+                                },
+                            )
+                        errorResponseMap[updateLocationResult.value::class]?.invoke()
+                            ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
+                    }
                 }
             }
             is Failure -> {
-                when (address.value) {
-                    is LocationUpdateError.InvalidCoordinates ->
-                        Problem.invalidCoordinates().response(HttpStatus.BAD_REQUEST)
-                    else ->
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                }
+                val errorResponseMap =
+                    mapOf(
+                        LocationUpdateError.InvalidCoordinates::class to {
+                            Problem.invalidCoordinates().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[address.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
 
-    /**
-     * Sets the courier status to waiting for orders.
-     */
     @PostMapping(Uris.Courier.WAITING_ORDERS)
     fun startListening(input: StartListeningInputModel): ResponseEntity<Any> {
-        val request =
-            courierService.stopListening(
-                input.courierId,
-            )
-
+        val request = courierService.stopListening(input.courierId)
         return when (request) {
             is Success -> {
-                // Handle successful order acceptance
                 println("Courier is now available for orders")
                 ResponseEntity.ok("Courier is now available for orders")
             }
             is Failure -> {
-                when (request.value) {
-                    is StateUpdateError.CourierWasAlreadyListening -> {
-                        Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        StateUpdateError.CourierWasAlreadyListening::class to {
+                            Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                    )
+                errorResponseMap[request.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -228,29 +214,24 @@ class CourierController(
                 requestId = input.requestId,
                 courierId = input.courierId,
             )
-
         return when (request) {
             is Success -> {
-                // Handle successful pickup spot validation
                 println("Pickup spot is valid")
                 ResponseEntity.ok(true)
             }
             is Failure -> {
-                when (request.value) {
-                    is CourierPickupError.CourierNotNearPickup -> {
-                        Problem.courierNotNearPickup().response(HttpStatus.BAD_REQUEST)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierPickupError.CourierNotNearPickup::class to {
+                            Problem.courierNotNearPickup().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[request.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
 
-    /**
-     * Marks an order as picked up, indicating that the courier has collected it from the sender.
-     */
     @PostMapping(Uris.Courier.PICKED_UP_ORDER)
     fun pickUpOrder(
         @RequestBody input: PickupOrderInputModel,
@@ -262,34 +243,29 @@ class CourierController(
                 courierId = input.courierId,
                 pickupPin = input.pickupCode,
             )
-
         val deliveryKind = DeliveryKind.fromString(input.deliveryKind)
         return when (request) {
             is Success -> {
                 when (deliveryKind) {
-                    DeliveryKind.DEFAULT -> {
-                        ResponseEntity.ok(true)
-                    }
+                    DeliveryKind.DEFAULT -> ResponseEntity.ok(true)
                     DeliveryKind.RELAY -> {
-                        assignmentServices.completeReassignment(
-                            input.requestId,
-                        )
+                        assignmentServices.completeReassignment(input.requestId)
                         ResponseEntity.ok(true)
                     }
                 }
             }
             is Failure -> {
-                when (request.value) {
-                    is CourierPickupError.PickupPINMismatch -> {
-                        Problem.pickupCodeIsIncorrect().response(HttpStatus.UNAUTHORIZED)
-                    }
-                    is CourierPickupError.CourierNotNearPickup -> {
-                        Problem.courierNotNearPickup().response(HttpStatus.BAD_REQUEST)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierPickupError.PickupPINMismatch::class to {
+                            Problem.pickupCodeIsIncorrect().response(HttpStatus.UNAUTHORIZED)
+                        },
+                        CourierPickupError.CourierNotNearPickup::class to {
+                            Problem.courierNotNearPickup().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[request.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -303,29 +279,24 @@ class CourierController(
                 requestId = input.requestId,
                 courierId = input.courierId,
             )
-
         return when (request) {
             is Success -> {
-                // Handle successful drop-off spot validation
                 println("Drop-off spot is valid")
                 ResponseEntity.ok(true)
             }
             is Failure -> {
-                when (request.value) {
-                    is CourierDeliveryError.CourierNotNearDropOff -> {
-                        Problem.courierNotNearDropOff().response(HttpStatus.BAD_REQUEST)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierDeliveryError.CourierNotNearDropOff::class to {
+                            Problem.courierNotNearDropOff().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[request.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
 
-    /**
-     * Marks an order as delivered, indicating that the courier has successfully handed it to the recipient.
-     */
     @PostMapping(Uris.Courier.DELIVERED_ORDER)
     fun deliverOrder(
         @RequestBody input: DeliverOrderInputModel,
@@ -337,25 +308,23 @@ class CourierController(
                 dropOffPin = input.dropoffCode,
                 deliveryEarnings = input.deliveryEarnings,
             )
-
         return when (request) {
             is Success -> {
-                // Handle successful order delivery
                 println("Order delivered successfully")
                 ResponseEntity.ok(true)
             }
             is Failure -> {
-                when (request.value) {
-                    is CourierDeliveryError.PickupPINMismatch -> {
-                        Problem.dropOffCodeIsIncorrect().response(HttpStatus.UNAUTHORIZED)
-                    }
-                    is CourierDeliveryError.CourierNotNearDropOff -> {
-                        Problem.courierNotNearDropOff().response(HttpStatus.BAD_REQUEST)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierDeliveryError.PickupPINMismatch::class to {
+                            Problem.dropOffCodeIsIncorrect().response(HttpStatus.UNAUTHORIZED)
+                        },
+                        CourierDeliveryError.CourierNotNearDropOff::class to {
+                            Problem.courierNotNearDropOff().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[request.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -369,13 +338,10 @@ class CourierController(
                 requestId = input.requestId,
                 courierId = input.courierId,
             )
-
         val deliveryStatus = DeliveryStatus.fromString(input.deliveryStatus)
-
         return when (request) {
             is Success -> {
                 GlobalLogger.log("Courier cancelled delivery while heading to dropoff")
-                // Handle successful order cancellation and try reassigning it
                 val reassignResult =
                     assignmentServices.handleRequestReassignment(
                         input.requestId,
@@ -383,7 +349,6 @@ class CourierController(
                         deliveryStatus,
                         input.pickupLocationDTO,
                     )
-
                 if (!reassignResult) {
                     GlobalLogger.log("Failed to reassign request ${input.requestId}")
                     Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -393,14 +358,14 @@ class CourierController(
                 }
             }
             is Failure -> {
-                when (request.value) {
-                    is CourierCancelDeliveryError.PackageAlreadyDelivered -> {
-                        Problem.packageAlreadyDelivered().response(HttpStatus.BAD_REQUEST)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierCancelDeliveryError.PackageAlreadyDelivered::class to {
+                            Problem.packageAlreadyDelivered().response(HttpStatus.BAD_REQUEST)
+                        },
+                    )
+                errorResponseMap[request.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
     }
@@ -410,24 +375,19 @@ class CourierController(
         @PathVariable courierId: Int,
     ): ResponseEntity<Any> =
         when (val request = courierService.fetchDailyEarnings(courierId)) {
-            is Either.Right -> {
-                ResponseEntity.ok(request.value)
-            }
+            is Either.Right -> ResponseEntity.ok(request.value)
             is Either.Left -> {
-                when (request.value) {
-                    is CourierEarningsError.CourierNotFound -> {
-                        Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
-                    }
-                    else -> {
-                        Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-                    }
-                }
+                val errorResponseMap =
+                    mapOf(
+                        CourierEarningsError.CourierNotFound::class to {
+                            Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
+                        },
+                    )
+                errorResponseMap[request.value::class]?.invoke()
+                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
 
-    /**
-     * Completes an order, performing any necessary final operations (e.g., updating records or notifying the system).
-     */
     @PostMapping(Uris.Courier.COMPLETE_ORDER)
     fun completeOrder() {
         TODO()
