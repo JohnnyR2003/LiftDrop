@@ -27,8 +27,8 @@ data class DeliveryUpdate(
     val pinCode: String?,
 ) : HomeMessage
 data class ResultMessage(
-    val type: String,
-    val subType: String?,
+    val type: ResultType,
+    val subType: ResultSubType = ResultSubType.UNKNOWN,
     val message: String,
-    val detail: String? = null,
+    val detail: String? = null
 ) : HomeMessage

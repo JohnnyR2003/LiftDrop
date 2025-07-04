@@ -750,9 +750,9 @@ class HomeViewModel(
 
     fun processResultMessage(state: HomeScreenState, result: ResultMessage): HomeScreenState {
         return when (result.type) {
-            "SUCCESS" -> {
+            ResultType.SUCCESS -> {
                 when (result.subType) {
-                    "ACCEPT" -> {
+                    ResultSubType.ACCEPT -> {
                         when (state) {
                             is HomeScreenState.Listening -> {
                                 _currentRequest.value = state.requestDetails
@@ -793,26 +793,14 @@ class HomeViewModel(
                 }
             }
 
-            "ERROR" -> {
+            ResultType.ERROR -> {
                 Log.e("HomeViewModel", "Received error message: ${result.message}")
                 HomeScreenState.Error(
                     Problem(
-                        type = result.subType ?: "UnknownError",
+                        type = result.subType.name,
                         title = result.message,
                         detail = result.detail ?: "An error occurred",
                         status = 500
-                    )
-                )
-            }
-
-            else -> {
-                Log.w("HomeViewModel", "Unhandled type: ${result.type}")
-                HomeScreenState.Error(
-                    Problem(
-                        type = "UnhandledType",
-                        title = "Unhandled Type",
-                        detail = "Received an unhandled type: ${result.type}",
-                        status = 400
                     )
                 )
             }
