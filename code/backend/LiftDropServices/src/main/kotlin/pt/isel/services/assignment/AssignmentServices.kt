@@ -116,11 +116,6 @@ class AssignmentServices(
 
                 if (accepted) {
                     return true
-                } else {
-                    courierWebSocketHandler.handleDeclineRequest(
-                        courier.courierId,
-                        requestId,
-                    )
                 }
             }
 
