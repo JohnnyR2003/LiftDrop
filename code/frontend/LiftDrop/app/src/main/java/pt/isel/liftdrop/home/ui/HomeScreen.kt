@@ -489,7 +489,7 @@ fun HomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    "Cancel Ongoing Delivery?",
+                                    "Cancelar entrega em curso?",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp,
                                     color = Color(0xFF384259)
@@ -506,14 +506,14 @@ fun HomeScreen(
                                         },
                                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                                     ) {
-                                        Text("Cancel", color = Color.White)
+                                        Text("Cancelar", color = Color.White)
                                     }
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Button(
                                         onClick = { viewModel.dismissError() },
                                         colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
                                     ) {
-                                        Text("Back", color = Color.White)
+                                        Text("Voltar", color = Color.White)
                                     }
                                 }
                             }
@@ -538,7 +538,7 @@ fun HomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    "Delivery cancelled successfully!",
+                                    "Entrega cancelada com sucesso!",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp,
                                     color = Color(0xFF384259)
@@ -578,7 +578,7 @@ fun HomeScreen(
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Text(
-                                            "Delivery cancelled successfully!",
+                                            "Entrega cancelada com sucesso!",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 20.sp,
                                             color = Color(0xFF384259)
@@ -615,7 +615,7 @@ fun HomeScreen(
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Text(
-                                            "Provide the following code to the new courier:",
+                                            "Forneça o seguinte código ao novo estafeta:",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 20.sp,
                                             color = Color(0xFF384259)
@@ -654,7 +654,7 @@ fun HomeScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        "Waiting for the order to be reassigned...",
+                                        "A aguardar pela reatribuição da encomenda...",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp,
                                         color = Color(0xFF384259)
