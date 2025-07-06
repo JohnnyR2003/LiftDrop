@@ -492,8 +492,8 @@ class JdbiCourierRepository(
                 l.longitude,
                 c.rating,
                 liftdrop.ST_Distance(
-                    liftdrop.ST_SetSRID(liftdrop.ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
-                    liftdrop.ST_SetSRID(liftdrop.ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
+                    liftdrop.ST_SetSRID(liftdrop.ST_MakePoint(l.longitude, l.latitude), 4326)::liftdrop.geography,
+                    liftdrop.ST_SetSRID(liftdrop.ST_MakePoint(:pickupLon, :pickupLat), 4326)::liftdrop.geography
                 ) AS distance_meters
             FROM liftdrop.courier c
             JOIN liftdrop.location l ON c.current_location = l.location_id
@@ -505,8 +505,8 @@ class JdbiCourierRepository(
                 AND rd.request_id = :requestId
             )
             AND liftdrop.ST_Distance(
-                    liftdrop.ST_SetSRID(liftdrop.ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
-                    liftdrop.ST_SetSRID(liftdrop.ST_MakePoint(:pickupLon, :pickupLat), 4326)::geography
+                    liftdrop.ST_SetSRID(liftdrop.ST_MakePoint(l.longitude, l.latitude), 4326)::liftdrop.geography,
+                    liftdrop.ST_SetSRID(liftdrop.ST_MakePoint(:pickupLon, :pickupLat), 4326)::liftdrop.geography
                 ) < :maxDistance
             ORDER BY distance_meters
             LIMIT 5;
