@@ -92,7 +92,7 @@ class JdbiLocationRepository(
         JOIN liftdrop.item i ON l.location_id = i.establishment_location
         JOIN liftdrop.location cl ON cl.location_id = :clientLocationId
         WHERE i.establishment ILIKE :restaurant_name
-        ORDER BY ST_DistanceSphere(
+        ORDER BY liftdrop.ST_DistanceSphere(
         liftdrop.ST_MakePoint(cl.longitude, cl.latitude),
         liftdrop.ST_MakePoint(l.longitude, l.latitude)
      )
@@ -150,7 +150,7 @@ class JdbiLocationRepository(
                     JOIN liftdrop.location cl ON c.current_location = cl.location_id
                     JOIN liftdrop.location rl ON rd.dropoff_location = rl.location_id
                     WHERE c.courier_id = :courierId AND r.request_id = :requestId
-                    AND ST_DistanceSphere(
+                    AND liftdrop.ST_DistanceSphere(
                         liftdrop.ST_MakePoint(cl.longitude, cl.latitude),
                         liftdrop.ST_MakePoint(rl.longitude, rl.latitude)
                     ) <= 100 -- within 100 meters
