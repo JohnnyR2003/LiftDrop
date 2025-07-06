@@ -41,8 +41,8 @@ VALUES (1, 1),
 INSERT INTO liftdrop."courier" (courier_id, current_location, rating, daily_earnings, is_available)
 VALUES (4, 1, 1.0, 0.00, true),
        (5, 2, 1.0, 0.00, false),
-       (6, 3, 1.0, 0.00, false),
-       (7, 4, 1.0, 0.00, false),
+       (6, 3, 1.0, 0.00, true),
+       (7, 4, 1.0, 0.00, true),
        (8, 5, 1.0, 0.00, true),
        (9, 6, 1.0, 0.00, false),
        (10, 4, 1.0, 0.00, false);

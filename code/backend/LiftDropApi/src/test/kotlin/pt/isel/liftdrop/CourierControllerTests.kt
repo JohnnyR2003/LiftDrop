@@ -74,7 +74,7 @@ class CourierControllerTests {
                 .exchange()
                 .expectStatus()
                 .isOk
-        val responseBody = response.expectBody(String::class.java).returnResult().responseBody
+        response.expectBody(String::class.java).returnResult().responseBody
     }
 
     @Test
@@ -102,14 +102,13 @@ class CourierControllerTests {
                 password = "randomPassword",
             )
 
-        val response =
-            courier
-                .post()
-                .uri("/login")
-                .bodyValue(loginCourier)
-                .exchange()
-                .expectStatus()
-                .isOk
+        courier
+            .post()
+            .uri("/login")
+            .bodyValue(loginCourier)
+            .exchange()
+            .expectStatus()
+            .isOk
     }
 
     @Test
@@ -120,7 +119,7 @@ class CourierControllerTests {
 
         // Connect to the WebSocket endpoint
         val uri = "ws://localhost:$port/ws/courier"
-        val session = webSocketClient.execute(webSocketHandler, uri).get()
+        webSocketClient.execute(webSocketHandler, uri).get()
 
         val courier = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
         val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api").build()
@@ -165,7 +164,7 @@ class CourierControllerTests {
                     ),
             )
         // Register a new client
-        createClient(client, registerClient)
+        createClient(registerClient)
 
         val token = clientService.loginClient(registerClient.email, registerClient.password)
         assertIs<Success<String>>(token)
@@ -192,29 +191,25 @@ class CourierControllerTests {
 //            .expectStatus()
 //            .isOk
 
-        val response =
-            client
-                .post()
-                .uri("/client/makeOrder")
-                .cookie("auth_token", token.value)
-                .bodyValue(
-                    RequestInputModel(
-                        restaurantName = "restaurantName",
-                        itemDesignation = "item",
-                    ),
-                ).exchange()
-                .expectStatus()
-                .isOk
+        client
+            .post()
+            .uri("/client/makeOrder")
+            .cookie("auth_token", token.value)
+            .bodyValue(
+                RequestInputModel(
+                    restaurantName = "restaurantName",
+                    itemDesignation = "item",
+                ),
+            ).exchange()
+            .expectStatus()
+            .isOk
 
 //        // Wait and verify message reception
 //        assertTrue(webSocketHandler.waitForMessage(5000))  // Wait up to 5 seconds
 //        assertNotNull(webSocketHandler.lastMessage)        // Verify message content
     }
 
-    private fun createClient(
-        client: WebTestClient,
-        registerClient: RegisterClientInputModel,
-    ) {
+    private fun createClient(registerClient: RegisterClientInputModel) {
         trxManager.run {
             val userId =
                 it.usersRepository.createUser(

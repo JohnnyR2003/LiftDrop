@@ -29,14 +29,15 @@ class CourierServiceTests {
             val testEmail = newTestEmail()
             val testPassword = newTestPassword()
             val testUserName = newTestUserName()
-            val testAddress = Address(
-                street = "R. Mário Moreira",
-                city = "Odivelas",
-                zipCode = "2675-669",
-                country = "Portugal",
-                streetNumber = "15b",
-                floor = "1",
-            )
+            val testAddress =
+                Address(
+                    street = "R. Mário Moreira",
+                    city = "Odivelas",
+                    zipCode = "2675-669",
+                    country = "Portugal",
+                    streetNumber = "15b",
+                    floor = "1",
+                )
 
             val clientCreation =
                 clientService.registerClient(
@@ -159,11 +160,22 @@ class CourierServiceTests {
 
         if (courierRegistration is Either.Left) fail("Unexpected error")
 
+        val courierId = (courierRegistration as Either.Right).value
+
+        // Courier starts listening for requests
+
+        val listeningResult =
+            courierService.startListening(
+                courierId,
+            )
+
+        assertTrue(listeningResult is Either.Right)
+
         val requestId = 4 // Assuming you have a valid request ID to accept
 
         val acceptRequestResult =
             courierService.acceptRequest(
-                (courierRegistration as Either.Right).value,
+                courierId,
                 requestId,
             )
 

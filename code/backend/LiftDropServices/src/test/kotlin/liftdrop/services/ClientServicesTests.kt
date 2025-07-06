@@ -136,7 +136,7 @@ class ClientServiceTest {
                 testAddress,
             )
         assertIs<Success<Int>>(clientId)
-        val client = clientService.getClientById(clientId.value)!!
+        val client = clientService.getClientById(clientId.value)
 
         assertIs<Either.Right<Client>>(client)
 

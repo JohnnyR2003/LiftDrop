@@ -23,7 +23,7 @@ class JdbiDeliveryRepositoryTests {
             val deliveryId = 1
             val newStatus =
                 RequestStatus(
-                    status = Status.PICKING_UP,
+                    status = Status.IN_PROGRESS,
                     orderETA = null,
                 )
 

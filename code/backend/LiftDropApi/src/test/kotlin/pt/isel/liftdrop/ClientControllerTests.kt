@@ -101,7 +101,7 @@ class ClientControllerTests {
                     ),
             )
         // Register a new client
-        createClient(client, registerClient)
+        createClient(registerClient)
 
         // Test successful login
         val validLogin = LoginInputModel(email = "a@gmail.com", password = "password")
@@ -151,7 +151,7 @@ class ClientControllerTests {
                     ),
             )
         // Register a new client
-        createClient(client, registerClient)
+        createClient(registerClient)
 
         val dropOffLocation =
             AddressInputModel(
@@ -199,7 +199,7 @@ class ClientControllerTests {
                     ),
             )
         // Register a new client
-        createClient(client, registerClient)
+        createClient(registerClient)
 
         val token = clientService.loginClient(registerClient.email, registerClient.password)
         assertIs<Success<String>>(token)
@@ -234,10 +234,7 @@ class ClientControllerTests {
             .isOk
     }
 
-    private fun createClient(
-        client: WebTestClient,
-        registerClient: RegisterClientInputModel,
-    ) {
+    private fun createClient(registerClient: RegisterClientInputModel) {
         trxManager.run {
             val userId =
                 it.usersRepository.createUser(

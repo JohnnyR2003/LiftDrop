@@ -7,22 +7,18 @@ data class RequestStatus(
 
 enum class Status {
     PENDING,
-    ACCEPTED,
-    PICKING_UP,
+    IN_PROGRESS,
     PICKED_UP,
-    DELIVERING,
-    DELIVERED,
+    DROPPED_OFF,
     CANCELLED,
 }
 
 fun String.parseStatus(): Status? {
     when (this.uppercase()) {
         "PENDING" -> return Status.PENDING
-        "ACCEPTED" -> return Status.ACCEPTED
-        "PICKING_UP" -> return Status.PICKING_UP
+        "IN_PROGRESS" -> return Status.IN_PROGRESS
         "PICKED_UP" -> return Status.PICKED_UP
-        "DELIVERING" -> return Status.DELIVERING
-        "DELIVERED" -> return Status.DELIVERED
+        "DROPPED_OFF" -> return Status.DROPPED_OFF
         "CANCELLED" -> return Status.CANCELLED
     }
     return null

@@ -185,19 +185,28 @@ class JdbiCourierRepositoryTests {
             assert(loggedInClientId?.first == courierId) { "Logged in client ID should match" }
 
             // Given: a request ID associated with a delivery to be completed
-            val requestId = 2 // Replace with an actual request ID from your database
+            val requestId = 2
 
             // When: accepting the request to create a delivery
             val isAccepted = courierRepository.acceptRequest(requestId, courierId)
             // Then: the request should be accepted successfully
             assert(isAccepted) { "Request should be accepted" }
 
-            val isPickedUp = courierRepository.pickupDelivery(requestId, courierId)
+            // Given: a pickup pin for the delivery
+            val pickupPin = "789012"
+
+            val isPickedUp = courierRepository.pickupDelivery(requestId, courierId, pickupPin)
             // Then: the delivery should be picked up successfully
             assert(isPickedUp) { "Delivery should be picked up" }
 
+            // Given: a drop-off pin for the delivery
+            val dropOffPin = "210987"
+
+            // Given: delivery earnings for the completed delivery
+            val deliveryEarnings = 5.0 // Example earnings for the delivery
+
             // When: completing the delivery
-            val isCompleted = courierRepository.completeDelivery(requestId, courierId)
+            val isCompleted = courierRepository.completeDelivery(requestId, courierId, dropOffPin, deliveryEarnings)
 
             // Then: the delivery should be completed successfully
             assert(isCompleted) { "Delivery should be completed" }
@@ -212,7 +221,7 @@ class JdbiCourierRepositoryTests {
             val userRepository = JdbiUserRepository(handle)
 
             // Given: an already created courier
-            val courierId = 6
+            val courierId = 9
 
             // Given: the courier's email and password
             val user = userRepository.findUserById(courierId) ?: throw Exception("User should be created")

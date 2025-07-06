@@ -1,6 +1,6 @@
 package liftdrop.services
 
-import liftdrop.services.ServicesTestUtils.createGeocodingService
+import liftdrop.services.ServicesTestUtils.createAssignmentService
 import pt.isel.liftdrop.CourierWithLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 class CourierAssignmentTest {
     @Test
     fun `rankCouriersByScore should rank couriers by combined travel time and rating`() {
-        val geocodingServices = createGeocodingService()
+        val assignmentService = createAssignmentService()
 
         val couriers =
             listOf(
@@ -38,7 +38,7 @@ class CourierAssignmentTest {
                 ),
             )
 
-        val rankedCouriers = geocodingServices.rankCouriersByScore(couriers)
+        val rankedCouriers = assignmentService.rankCouriersByScore(couriers)
 
         assertEquals(3, rankedCouriers[0].courierId) // Best score: high rating, low travel time
         assertEquals(1, rankedCouriers[1].courierId)
