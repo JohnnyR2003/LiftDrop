@@ -93,14 +93,14 @@ class JdbiLocationRepository(
         JOIN liftdrop.location cl ON cl.location_id = :clientLocationId
         WHERE i.establishment ILIKE :restaurant_name
         ORDER BY ST_DistanceSphere(
-        ST_MakePoint(cl.longitude, cl.latitude),
-        ST_MakePoint(l.longitude, l.latitude)
+        liftdrop.ST_MakePoint(cl.longitude, cl.latitude),
+        liftdrop.ST_MakePoint(l.longitude, l.latitude)
      )
         LIMIT 1
         """,
             ).bind("restaurant_name", normalizedRestaurantName) // improved partial match
             .bind("clientLocationId", clientLocationId)
-            .map<Pair<Int, LocationDTO>?> { rs, _ ->
+            .map { rs, _ ->
                 val address = rs.getInt("location_id")
                 val location =
                     LocationDTO(
@@ -126,8 +126,8 @@ class JdbiLocationRepository(
                     JOIN liftdrop.location rl ON rd.pickup_location = rl.location_id
                     WHERE c.courier_id = :courierId AND r.request_id = :requestId
                     AND ST_DistanceSphere(
-                        ST_MakePoint(cl.longitude, cl.latitude),
-                        ST_MakePoint(rl.longitude, rl.latitude)
+                        liftdrop.ST_MakePoint(cl.longitude, cl.latitude),
+                        liftdrop.ST_MakePoint(rl.longitude, rl.latitude)
                     ) <= 100 -- within 100 meters
                 )
                 """,
@@ -151,8 +151,8 @@ class JdbiLocationRepository(
                     JOIN liftdrop.location rl ON rd.dropoff_location = rl.location_id
                     WHERE c.courier_id = :courierId AND r.request_id = :requestId
                     AND ST_DistanceSphere(
-                        ST_MakePoint(cl.longitude, cl.latitude),
-                        ST_MakePoint(rl.longitude, rl.latitude)
+                        liftdrop.ST_MakePoint(cl.longitude, cl.latitude),
+                        liftdrop.ST_MakePoint(rl.longitude, rl.latitude)
                     ) <= 100 -- within 100 meters
                 )
                 """,

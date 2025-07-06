@@ -1,8 +1,8 @@
 DROP SCHEMA IF EXISTS liftdrop CASCADE;
 CREATE SCHEMA liftdrop;
 SET search_path TO liftdrop;
-
 -- Now create the extensions
+CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS cube;
 CREATE EXTENSION IF NOT EXISTS earthdistance;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
