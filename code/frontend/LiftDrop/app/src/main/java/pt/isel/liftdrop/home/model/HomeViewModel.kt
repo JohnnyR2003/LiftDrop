@@ -203,7 +203,7 @@ class HomeViewModel(
                 },
                 onFailure = {
                     _stateFlow.update { current ->
-                        processFailure(current)
+                        resetToIdleState()
                     }
                 }
             )
@@ -828,24 +828,6 @@ class HomeViewModel(
                             title = "Listening Error",
                             detail = "Cannot receive updates in the $request state.",
                             status = 403
-                        )
-                    )
-                )
-            }
-        }
-    }
-
-    fun processFailure(state: HomeScreenState): HomeScreenState {
-        return when (state) {
-            is HomeScreenState.Listening -> resetToIdleState()
-            else -> {
-                updateState(
-                    HomeScreenState.Error(
-                        Problem(
-                            type = "ListeningError",
-                            title = "Listening Error",
-                            detail = "Failed to start listening: $state",
-                            status = 500
                         )
                     )
                 )

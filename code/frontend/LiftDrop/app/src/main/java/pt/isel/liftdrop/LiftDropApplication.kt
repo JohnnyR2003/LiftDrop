@@ -13,8 +13,6 @@ import pt.isel.liftdrop.about.model.AboutService
 import pt.isel.liftdrop.about.model.RealAboutService
 import pt.isel.liftdrop.home.model.HomeService
 import pt.isel.liftdrop.home.model.RealHomeService
-import pt.isel.liftdrop.location.LocationRepository
-import pt.isel.liftdrop.location.LocationRepositoryImpl
 import pt.isel.liftdrop.login.PreferencesDataStore
 import pt.isel.liftdrop.login.model.LoginService
 import pt.isel.liftdrop.login.model.PreferencesRepository
@@ -41,7 +39,6 @@ interface DependenciesContainer {
     val homeService: HomeService
     val preferencesRepository: PreferencesRepository
     val locationTrackingService: LocationTrackingService
-    val locationRepo: LocationRepository
 }
 class LiftDropApplication : DependenciesContainer, Application() {
 
@@ -88,9 +85,6 @@ class LiftDropApplication : DependenciesContainer, Application() {
 
     override val locationTrackingService: LocationTrackingService
         get() = RealLocationTrackingService(httpService, this)
-
-    override val locationRepo: LocationRepository
-        get() = LocationRepositoryImpl(this)
 
     override fun onCreate() {
         super.onCreate()

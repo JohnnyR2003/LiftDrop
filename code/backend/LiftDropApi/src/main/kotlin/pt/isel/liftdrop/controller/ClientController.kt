@@ -236,7 +236,7 @@ class ClientController(
         @PathVariable requestId: Int,
     ): ResponseEntity<Any> =
         when (val result = clientService.getRequestStatus(client.client.user.id, requestId)) {
-            is Success -> ResponseEntity.ok(result.value)
+            is Success -> ResponseEntity.ok(mapOf("ETA" to result.value.first, "status" to result.value.second))
             is Failure -> {
                 val errorResponseMap =
                     mapOf(

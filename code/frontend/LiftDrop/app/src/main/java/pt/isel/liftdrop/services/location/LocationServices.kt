@@ -117,14 +117,7 @@ class LocationServices {
                     mapToolbarEnabled = true,
                     zoomControlsEnabled = false
                 )
-            ) {
-                currentLocation?.let { loc ->
-                    Marker(
-                        state = rememberMarkerState(position = loc),
-                        title = "You're here"
-                    )
-                }
-            }
+            )
             if (currentLocation == null) {
                 Box(
                     modifier = Modifier.Companion.fillMaxSize(),
