@@ -229,14 +229,16 @@ class ClientService(
                 clientRepository.getRequestStatus(clientId, requestId)
                     ?: return@run failure(ClientGetRequestStatusError.RequestNotFound)
 
-            // Handle case where ETA is 0
+            if (status.second == "PENDING" || status.second == "PENDING_REASSIGNMENT") {
+                return@run success(Pair("N/A", status.second))
+            } else {
+                // Convert eta from seconds to minutes and seconds
+                val etaMinutes = status.first.toInt() / 60
+                val etaSeconds = status.first.toInt() % 60
+                val formattedEta = String.format("%02d:%02d", etaMinutes, etaSeconds)
 
-            // Convert eta from seconds to minutes and seconds
-            val etaMinutes = status.first / 60
-            val etaSeconds = status.first % 60
-            val formattedEta = String.format("%02d:%02d", etaMinutes, etaSeconds)
-
-            return@run success(Pair(formattedEta, status.second))
+                return@run success(Pair(formattedEta, status.second))
+            }
         }
 
     fun giveRating(

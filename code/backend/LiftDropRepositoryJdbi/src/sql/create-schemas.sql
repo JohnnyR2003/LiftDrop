@@ -56,7 +56,7 @@ CREATE TABLE liftdrop.request (
                                   courier_id      INT,
                                   created_at      BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
                                   request_status  TEXT CHECK (request_status IN ('PENDING','HEADING_TO_PICKUP', 'HEADING_TO_DROPOFF', 'DELIVERED', 'PENDING_REASSIGNMENT')),
-                                  ETA             BIGINT,
+                                  ETA             BIGINT DEFAULT NULL,
                                   pickup_code     TEXT,
                                   dropoff_code    TEXT,
                                   FOREIGN KEY (client_id) REFERENCES liftdrop.client(client_id) ON DELETE CASCADE,

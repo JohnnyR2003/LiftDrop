@@ -34,7 +34,7 @@ class JdbiRequestRepository(
                 """
         INSERT INTO liftdrop.request (client_id, courier_id, created_at, request_status, eta, pickup_code, dropoff_code)
         
-        VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, EXTRACT(EPOCH FROM NOW()) + :eta, :pickup_code, :dropoff_code)
+        VALUES (:client_id, NULL, EXTRACT(EPOCH FROM NOW()), :request_status, :eta, :pickup_code, :dropoff_code)
         """,
             ).bind("client_id", clientId)
             .bind("request_status", "PENDING")

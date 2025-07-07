@@ -26,7 +26,7 @@ interface ClientRepository {
     fun getRequestStatus(
         clientId: Int,
         requestId: Int,
-    ): Pair<Int, String>?
+    ): Pair<String, String>?
 
     fun clear()
 }

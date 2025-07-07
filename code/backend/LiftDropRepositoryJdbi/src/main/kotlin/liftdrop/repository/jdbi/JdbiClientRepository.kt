@@ -142,7 +142,7 @@ class JdbiClientRepository(
     override fun getRequestStatus(
         clientId: Int,
         requestId: Int,
-    ): Pair<Int, String>? =
+    ): Pair<String, String>? =
         handle
             .createQuery(
                 """
@@ -157,8 +157,9 @@ class JdbiClientRepository(
             ).bind("clientId", clientId)
             .bind("requestId", requestId)
             .map { rs, _ ->
-                val currentEta = rs.getInt("current_eta")
                 val status = rs.getString("status")
+                val currentEta = rs.getInt("current_eta").toString()
+
                 Pair(currentEta, status)
             }.singleOrNull()
 
