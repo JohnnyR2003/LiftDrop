@@ -266,13 +266,13 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            "It's rush hour!",
+                            "Hora de ponta!",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = Color(0xFF384259)
                         )
                         Text(
-                            "Start listening for orders to earn more!",
+                            "Comece a receber pedidos",
                             fontSize = 14.sp,
                             color = Color(0xFF384259),
                             modifier = Modifier.padding(bottom = 20.dp)
@@ -359,7 +359,7 @@ fun HomeScreen(
                                 )
                             }
                             BottomSlideToConfirm(
-                                text = "Slide to Pick Up",
+                                text = "Deslize para recolher",
                                 onConfirmed = {
                                     viewModel.validatePickup(
                                         viewModel.currentRequest.value!!.requestId,
@@ -416,7 +416,7 @@ fun HomeScreen(
                             )
                         }
                         BottomSlideToConfirm(
-                            text = "Slide to Drop Off",
+                            text = "Deslize para entregar",
                             onConfirmed = {
                                 viewModel.validateDropOff(
                                     viewModel.currentRequest.value!!.requestId,
