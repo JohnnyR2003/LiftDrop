@@ -1,0 +1,91 @@
+\subsection{Error Handling}
+
+To ensure robustness and clarity in the face of runtime failures, LiftDrop adopts a layered error-handling strategy. This architecture supports clear diagnostics, consistent logging, user-oriented feedback, and modular server behavior—principles influenced by best practices studied in the DAW course.
+
+\subsubsection{Result Modeling with \texttt{Either}}
+
+Internally, success and failure outcomes are represented using a functional-style result type:
+
+\begin{lstlisting}[language=Kotlin, caption={Functional Result Modeling with Either}]
+sealed class Either<out L, out R> {
+    data class Left<out L>(val value: L) : Either<L, Nothing>()
+    data class Right<out R>(val value: R) : Either<Nothing, R>()
+}
+
+fun <R> success(value: R) = Either.Right(value)
+fun <L> failure(error: L) = Either.Left(error)
+\end{lstlisting}
+
+This model ensures that failure handling is explicit and composable, improving testability and reducing reliance on exceptions.
+
+\newpage
+
+\subsubsection{Standardized API Errors with Problem Details}
+
+For all HTTP interactions, the backend follows the \textbf{RFC 7807 Problem Details for HTTP APIs} specification. This standard defines a JSON structure for expressing errors in a machine-readable way:
+
+\begin{lstlisting}[language=Kotlin, caption={Problem Details Model}]
+data class Problem(
+    val type: String?,
+    val title: String?,
+    val status: Int?,
+    val detail: String?,
+    val instance: String? = null
+)
+\end{lstlisting}
+
+Responses use the \texttt{application/problem+json} media type and include fields such as \texttt{status}, \texttt{title}, and \texttt{detail} to clearly describe what went wrong.
+
+A centralized factory exposes named constructors like:
+\begin{itemize}
+  \item \texttt{courierNotNearPickup()}
+  \item \texttt{ratingAlreadyDone()}
+  \item \texttt{userAlreadyExists()}
+  \item \texttt{invalidRequestContent()}
+\end{itemize}
+
+Each problem type links to documentation hosted at:
+
+\texttt{https://github.com/isel-sw-projects/2025-lift-drop/tree/main/docs/problems}
+
+\subsubsection{Global Exception Handling}
+
+All errors not handled by business logic are intercepted by a custom Spring \texttt{@ControllerAdvice}, shown below:
+
+\begin{lstlisting}[language=Kotlin, caption={Global Exception Handler}]
+@ControllerAdvice
+class CustomExceptionHandler : ResponseEntityExceptionHandler() {
+
+    override fun handleMethodArgumentNotValid(...) =
+        Problem.invalidRequestContent("Argument received is not valid")
+               .response(HttpStatus.BAD_REQUEST)
+
+    override fun handleTypeMismatch(...) =
+        Problem.invalidRequestContent("There is a type mismatch")
+               .response(HttpStatus.BAD_REQUEST)
+
+
+    
+    override fun handleHttpMessageNotReadable(...) =
+        Problem.invalidRequestContent("Http message is not readable")
+               .response(HttpStatus.BAD_REQUEST)
+
+    @ExceptionHandler(Exception::class)
+    fun handleAllExceptions(ex: Exception, request: WebRequest): ResponseEntity<String> {
+        GlobalLogger.log("Http.CustomExceptionHandler AllExceptions: $ex")
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                             .body("Internal Server Error")
+    }
+}
+\end{lstlisting}
+
+This handler ensures:
+\begin{itemize}
+    \item Graceful fallback for unexpected issues.
+    \item Logged diagnostics.
+    \item Consistent error responses for clients.
+\end{itemize}
+
+\subsubsection{Frontend Feedback Integration}
+
+Errors returned in \texttt{Problem} format are parsed and used in the Android application to display appropriate UI feedback (e.g., invalid login, wrong pickup code, courier not near drop-off).

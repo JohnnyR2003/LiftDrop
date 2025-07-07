@@ -1,12 +1,12 @@
 \subsection{System Architecture and Data Model}
 
-This section presents different architectural perspectives of the LiftDrop system, including component-level interactions and data model relationships. Each view emphasizes a specific aspect of the system's behavior, from geolocation handling to user roles and delivery lifecycle.
+This section presents multiple architectural views of the LiftDrop platform, highlighting how its components interact and how its data model is structured. Each diagram focuses on a different conceptual layer of the system, from user roles and sessions to request fulfillment and geolocation modeling.
 
 \subsubsection{High-Level System Architecture}
 
-Figure~\ref{fig:high-level-Overview} illustrates the top-level architecture of the LiftDrop platform. It shows how the Android mobile application communicates with backend services responsible for order management, user interaction, real-time communication, and location processing.
+Figure~\ref{fig:high-level-Overview} shows the overall system architecture. It illustrates the interaction between the Android mobile application and backend services responsible for order assignment, real-time messaging, authentication, and location tracking.
 
-\vspace{8mm}
+\vspace{5mm}
 
 \begin{figure}[H]
     \centering
@@ -17,46 +17,40 @@ Figure~\ref{fig:high-level-Overview} illustrates the top-level architecture of t
 
 \newpage
 
-\subsubsection{Location Model Overview}
+\subsubsection{User and Role Hierarchy}
 
-This view isolates the system's handling of geospatial information. The \texttt{Location} class acts as a base abstraction for different types of spots used during a delivery. Specialized entities like \texttt{PickupSpot} and \texttt{DropOffSpot} inherit from \texttt{Location}, allowing consistent treatment of position data. A pickup spot can contain multiple \texttt{Item} entries, each identified by a unique designation.
+This diagram illustrates how the abstract \texttt{User} entity is specialized into the \texttt{Client} and \texttt{Courier} roles. It also shows how sessions are managed on a per-user basis for secure authentication.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.44\textwidth]{images/LocationDiagram.png}
-    \caption{Location Model Structure}
+    \includegraphics[width=0.60\textwidth]{images/classDiagrams/user_role_hierarchy.png}
+    \caption{User roles and session relationships}
 \end{figure}
 
 \newpage
 
-\subsubsection{User Role and Interaction Model}
+\subsubsection{Request and Delivery Lifecycle}
 
-This simplified diagram captures user roles and their interaction with delivery workflows. A \texttt{Client} can place multiple \texttt{Request}s, and a \texttt{Courier} can fulfill many of them. Each request is linked to a corresponding \texttt{Delivery}, forming a one-to-one mapping between a request and its fulfillment.
-  
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.40\textwidth]{images/UserClientCourierDiagram.png}
-    \caption{User and Role Relationships}
-\end{figure}
-
-\subsubsection{Request and Delivery Lifecycle View}
-
-This view focuses on how a request progresses through the system. Each \texttt{Request} includes additional metadata encapsulated in a \texttt{RequestDetails} object and is associated with a single \texttt{Delivery}. This structure supports clear traceability and separation of concerns between request creation and execution.
+This model depicts the lifecycle of a delivery—from creation of a request by a client, through courier assignment, to delivery completion and rating. It reflects how entities such as \texttt{Request}, \texttt{Delivery}, and \texttt{CourierRating} are interlinked throughout the delivery flow.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.44\textwidth]{images/UserSessions.png}
-    \caption{Request and Fulfillment Architecture}
+    \includegraphics[width=0.65\textwidth]{images/classDiagrams/request_lifecycle.png}
+    \caption{Request and Delivery lifecycle}
 \end{figure}
 
 \newpage
 
-\subsubsection{Comprehensive System Model}
+\subsubsection{Location and Address Modeling}
 
-The complete data model integrates all key domain entities: \texttt{User}, \texttt{Address}, \texttt{Location}, \texttt{Item}, \texttt{Request}, \texttt{Delivery}, and \texttt{Session}. It captures how users interact with the system, how orders are structured and routed, and how real-time delivery coordination is maintained through geolocation and session-aware tracking.
+This view focuses on how real-world geographic data is modeled within the platform. It shows the relationship between generalized \texttt{Location} entities and their specializations—\texttt{PickupSpot} and \texttt{DropOffSpot}—as well as how these relate to physical addresses.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/FullDiagram.png}
-    \caption{Full System Data Model}
+    \includegraphics[width=0.45\textwidth]{images/classDiagrams/location_address_model.png}
+    \caption{Location and Address structure}
 \end{figure}
+
+\bigskip
+
+\noindent For a complete view of the system’s data model, including all class relationships and fields, refer to the full class diagram provided in Appendix~\ref{appendix:full-class-diagram}.
