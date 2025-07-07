@@ -1,33 +1,15 @@
 \section{Limitations and Future Work}
 
-While LiftDrop delivers a functional prototype focused on real-time delivery coordination and transparent courier interaction, several ideas and features were considered but not implemented due to time constraints or project scope boundaries.
-
-\subsection{Unimplemented Features}
-
-\begin{itemize}
-    \item \textbf{Client Application Interface}: The current system includes a simulated client API for testing, but no dedicated client-facing mobile application was developed.
-    
-    \item \textbf{Administrative Dashboard}: A management panel for monitoring orders and courier activity.
-    
-    \item \textbf{Push Notifications}: All real-time updates currently rely on WebSockets; platform-native push notifications could enhance user engagement and reliability.
-
-    \item \textbf{WebSocket Reconnection Support}: The WebSocket implementation currently lacks fault-tolerance mechanisms for automatic reconnection in case of network disruptions. This may affect delivery request communication stability on unreliable connections.
-    
-    \item \textbf{Courier Wait Time Compensation}: The current earnings model does not factor in courier wait time at pickup locations. Including this would ensure fairer compensation for delays caused by clients or merchants.
-\end{itemize}
+While LiftDrop successfully demonstrates the core mechanics of real-time courier assignment, delivery tracking, and state-driven UI logic, some features were intentionally left out due to time constraints. This section outlines key areas where the system could be expanded or improved in future iterations.
 
 \subsection{Future Improvements}
 
 \begin{itemize}
-    \item \textbf{Internationalization (i18n)}: Support for multiple languages to make the app more inclusive for international users.
+    \item \textbf{Client Application Interface}: The current system includes a simulated client API for testing, but no dedicated client-facing mobile application was developed.
 
-    \item \textbf{Resilient Real-Time Communication}: Replace or enhance WebSocket infrastructure with support for automatic reconnection and state synchronization to improve robustness in unstable network environments.
-
+    \item \textbf{WebSocket Reconnection Support}: The WebSocket implementation currently lacks fault-tolerance mechanisms for automatic reconnection in case of network disruptions. This may affect delivery request communication stability on unreliable connections.
+    
     \item \textbf{Enhanced Earnings Model}: Extend the current earnings calculation to include compensation for time spent waiting at pickup locations, in addition to distance and item value.
 
-    \item \textbf{Courier Performance Analytics}: Introduce metrics for tracking delivery efficiency, response times, and reliability.
-    
-    \item \textbf{Scalability Testing}: The platform could benefit from stress testing under simulated high-traffic scenarios to identify performance bottlenecks.
+     \item \textbf{Internationalization (i18n)}: Support for multiple languages to improve accessibility and usability for international users.
 \end{itemize}
-
-This list reflects the balance between development priorities and available resources and serves as a guide for future iterations of the LiftDrop platform.

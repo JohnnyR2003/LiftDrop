@@ -22,10 +22,23 @@ This section outlines the core technologies and tools used in the development of
 
 \subsection{Deployment Details}
 
-\begin{itemize}
-    \item \textbf{Backend Deployment}: The backend is hosted on Render, a cloud platform used for its streamlined deployment workflow and scalability.
-    \item \textbf{Database Hosting}: PostgreSQL is also hosted on Render to ensure high availability and integration with the backend services.
-\end{itemize}
+\subsubsection{Backend Deployment}
+The backend is hosted on Render, which automates building and deploying from a GitHub repository. On each push to the main branch, the application is rebuilt and restarted. Render manages horizontal scaling, environment variables, and secure HTTPS access.
+
+\subsubsection{Database Hosting}
+PostgreSQL is also managed by Render. Data is persisted in a cloud PostgreSQL instance, with automated backups enabled and access limited to the backend service.
+
+\subsubsection{Environment Configuration}
+Environment variables (e.g., API keys, DB connection URLs) are configured via the Render dashboard and injected during deployment.
+
+\subsubsection{Security Considerations}
+- HTTPS is enforced automatically by Render.
+- Session cookies are marked HTTP-only and Secure.
+- CORS is configured to restrict frontend access.
+
+\subsubsection{Continuous Deployment}
+Each push to the GitHub repository triggers an automatic build and deployment, ensuring that the most recent changes are reflected without manual intervention.
+
 
 \subsection{Authentication and Authorization}
 
@@ -68,9 +81,7 @@ LiftDrop uses role-based access control (RBAC) to enforce feature access policie
 class AuthenticationInterceptor(...) : HandlerInterceptor {
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         if (handler !is HandlerMethod) return true
-
         val authCookie = ... // extract auth cookie
-
         // Client auth (the same is done for the courier but with the AuthenticatedCourier class)
     if(handler.hasParameterType(AuthenticatedClient::class.java)){
             val client = authorizationHeaderProcessor.processClientAuthorizationHeaderValue(authCookie?.value)
@@ -81,8 +92,7 @@ class AuthenticationInterceptor(...) : HandlerInterceptor {
         } return true } }
 \end{lstlisting}
 
-
-This approach ensures that access is only granted to authenticated and properly authorized users based on their declared role. Unauthorized requests result in an HTTP \texttt{401 Unauthorized} response.
+This approach ensures that access is only granted to authenticated and properly authorized users based on their declared role. Unauthorized requests result in an HTTP \texttt{401 Unauthorized} response. It was made based on what was learned in the DAW course.
 
 \subsection{Courier Location Updates}
 
@@ -91,12 +101,14 @@ Courier location tracking is implemented using Android \textbf{Foreground Servic
 To ensure efficient backend communication, the app retrieves the courier’s location every \textbf{30 seconds} but only transmits it under two conditions:
 \begin{itemize}
     \item The courier is \textbf{logged in} and authenticated;
-    \item The courier has set their status to \textbf{waiting for orders}.
+    %\item The courier has set their status to %\textbf{waiting for orders}.
 \end{itemize}
 
 Additionally, the system only sends a location update if the courier has moved more than \textbf{50 meters} since the last recorded position. This strategy minimizes unnecessary network traffic while maintaining sufficient tracking accuracy.
 
 The 50-meter threshold was chosen based on common urban delivery speeds (e.g., 30~km/h for scooters or e-bikes), allowing meaningful movement to be captured without overwhelming the server. Furthermore, a delivery can only be confirmed if the courier is within 100 meters of the drop-off point—making the location filter both efficient and functionally sound.
+
+\newpage
 
 The simplified Kotlin pseudocode below outlines the core logic used for checking movement and conditionally sending location updates:
 
@@ -139,6 +151,8 @@ All communication is structured as JSON messages and routed based on courier ide
 
 The following function demonstrates how a courier's acceptance of a delivery request is sent to the backend via WebSocket:
 
+\vspace{5.0mm}
+
 \begin{lstlisting}[language=Kotlin, 
   basicstyle=\ttfamily\small, 
   lineskip=-0.1pt,
@@ -146,9 +160,9 @@ The following function demonstrates how a courier's acceptance of a delivery req
 override suspend fun acceptRequest(requestId: String, token: String): Boolean {
     val messageJson = """
         {
-            "type": "RESPONSE",
+            "type": "DECISION",
             "requestId": "$requestId",
-            "status": "ACCEPT"
+            "decision": "ACCEPT"
         }
     """.trimIndent()
 
@@ -156,8 +170,11 @@ override suspend fun acceptRequest(requestId: String, token: String): Boolean {
 }
 \end{lstlisting}
 
+\vspace{5.0mm}
 
 On the backend, each incoming WebSocket message is parsed and routed according to its type. The server maintains a reference to the courier’s WebSocket session and invokes the corresponding handler based on the message status content. The snippet below illustrates the message dispatch logic:
+
+\vspace{5.0mm}
 
 \begin{lstlisting}[language=Kotlin, caption={Backend handling of incoming WebSocket messages}]
 override fun handleTextMessage(
@@ -166,7 +183,7 @@ override fun handleTextMessage(
 ) {
     val json = jacksonObjectMapper().readTree(message.payload)
     when (json.get("type").asText()) {
-        "RESPONSE"     -> handleCourierResponse(session, json)
+        "DECISION"     -> handleCourierResponse(session, json)
         "READY", 
         "NOT_READY"    -> toggleCourierAvailability(session)
         else           -> println("Unknown message type")
@@ -174,11 +191,39 @@ override fun handleTextMessage(
 }
 \end{lstlisting}
 
+\subsubsection{WebSocket Configuration and Lifecycle}
+
+LiftDrop uses Spring’s WebSocket support to manage real-time courier communication.
+
+\textbf{Endpoint Registration:}  
+The WebSocket endpoint is registered at \texttt{/ws/courier} via a configuration class \texttt{CourierWebSocketConfig}, which implements \texttt{WebSocketConfigurer}. The handler \texttt{CourierWebSocketHandler} is injected via constructor and manages all courier sessions. CORS is set to allow all origins for development (\texttt{setAllowedOrigins("*")}).
+
+\newpage
+
+\textbf{Handler Role:}  
+\texttt{CourierWebSocketHandler} extends \texttt{TextWebSocketHandler} and is responsible for:
+\begin{itemize}
+    \item Maintaining active courier sessions.
+    \item Routing messages like \texttt{READY}, \texttt{DECISION}, and cancellations.
+    \item Broadcasting updates to relevant connected users.
+\end{itemize}
+
+\textbf{Use Cases:}
+\begin{itemize}
+    \item Order assignment and courier responses.
+    \item Availability toggling.
+    \item Live updates on delivery status.
+\end{itemize}
+
+\input{sections/Error Handling}
+
+\newpage
+
 \subsection{Frontend State Management}
 
 \subsubsection{Message Handling and State Updates}
 
-The LiftDrop mobile application adopts a reactive UI architecture using Jetpack Compose, where screen behavior is driven by immutable state objects. To ensure consistent rendering and predictable transitions across the user journey, each screen is modeled using a dedicated sealed class that defines its possible UI states.
+The LiftDrop mobile application adopts a reactive UI architecture using Jetpack Compose, where screen behavior is driven by immutable state objects. This approach ensures consistent rendering and predictable transitions throughout the user experience. Each screen is modeled using a dedicated sealed class that encapsulates its possible UI states. The use of state-driven design and reactive patterns in the development of the application was informed by concepts learned in the PDM course.
 
 For example, the login and registration processes are controlled by the \texttt{LoginScreenState} and \texttt{RegisterScreenState} classes, respectively. These include the following variants:
 
@@ -189,117 +234,258 @@ For example, the login and registration processes are controlled by the \texttt{
 
 These states allow the UI to reflect user progress during authentication, including success and failure outcomes.
 
-The Home screen follows a more complex state model, represented by the sealed class \texttt{HomeScreenState}. The listing below defines all available states, covering the full delivery lifecycle, including request reception, pickup, drop-off, cancellation, and delivery confirmation.
+The Home screen follows a more complex state model, represented by the sealed class \texttt{HomeScreenState}. The simplified listing below outlines all defined UI states used throughout the delivery lifecycle—including request reception, pickup, drop-off, cancellation, and confirmation.
 
-\begin{lstlisting}[language=Kotlin, caption={HomeScreenState sealed class}]
+\begin{lstlisting}[language=Kotlin, caption={Simplified HomeScreenState sealed class}]
 sealed class HomeScreenState {
-    data class Listening(
-        val dailyEarnings: String,
-        val incomingRequest: Boolean = false,
-        val requestDetails: IncomingRequestDetails?,
-    ) : HomeScreenState()
-    
-    data class RequestAccepted(
-        val deliveryStatus: String = "REQUEST_ACCEPTED",
-        val message: String
-    ) : HomeScreenState()
-    
-    data class RequestDeclined(
-        val deliveryStatus: String = "REQUEST_DECLINED",
-        val message: String
-    ) : HomeScreenState()
-    
-    data class HeadingToPickUp(
-        val isPickUpSpotValid : Boolean = false,
-        val isOrderInfoVisible : Boolean = false,
-        val deliveryStatus: String = "HEADING_TO_PICKUP",
-    ) : HomeScreenState()
-    
-    data class PickedUp(
-        val deliveryStatus: String = "PICKED_UP",
-    ) : HomeScreenState()
-    
-    data class HeadingToDropOff(
-        val isDropOffSpotValid : Boolean = false,
-        val isOrderInfoVisible : Boolean = false,
-        val deliveryStatus: String = "HEADING_TO_DROPOFF",
-    ) : HomeScreenState()
-    
-    data class Delivered(
-        val dailyEarnings: String,
-        val deliveryStatus : String = "DELIVERED",
-    ) : HomeScreenState()
-    
-    data class Idle(
-        val dailyEarnings: String,
-    ) : HomeScreenState()
-    
-    data class Error(val problem: Problem) : HomeScreenState()
-    
-    data class Logout(val isDone: Boolean = false) : HomeScreenState()
-    
-    data class CancellingOrder(val deliveryStatus: String) : HomeScreenState()
-    
-    data class CancellingPickup(val isDone : Boolean = false, ) : HomeScreenState()
-    
-    data class CancellingDropOff(
-        val isOrderReassigned: Boolean = false,
-        val isOrderPickedUp: Boolean = false,
-        val pickUpLocation: LocationDTO? = null,
-        val pickupCode: String? = null,
-    ) : HomeScreenState()
+    data class Listening(...) : HomeScreenState()
+    data class RequestAccepted(...) : HomeScreenState()
+    data class RequestDeclined(...) : HomeScreenState()
+    data class HeadingToPickUp(...) : HomeScreenState()
+    data class PickedUp(...) : HomeScreenState()
+    data class HeadingToDropOff(...) : HomeScreenState()
+    data class Delivered(...) : HomeScreenState()
+    data class Idle(...) : HomeScreenState()
+    data class Error(...) : HomeScreenState()
+    data class Logout(...) : HomeScreenState()
+    data class CancellingOrder(...) : HomeScreenState()
+    data class CancellingPickup(...) : HomeScreenState()
+    data class CancellingDropOff(...) : HomeScreenState()
 }
 \end{lstlisting}
 
-All screen states are managed using a \texttt{StateFlow} in the ViewModel layer. When updates are received—such as real-time messages via WebSocket or local events like button presses—the corresponding ViewModel processes the input and updates the current state. These state changes automatically propagate to the composables on screen, ensuring a unidirectional data flow and clear separation of concerns.
+All screen states are managed using a \texttt{StateFlow} in the ViewModel layer. When updates are received—either from real-time WebSocket messages or local UI interactions— the corresponding ViewModel processes the event and updates the screen state accordingly. These updates propagate automatically to composables, ensuring reactive rendering and a consistent, unidirectional data flow throughout the application.
 
+Error handling is also integrated into the state model. Whenever an unexpected event occurs—such as receiving a malformed message or encountering a failure while listening for updates—the ViewModel updates the state to \texttt{HomeScreenState.Error}. The UI reacts accordingly, displaying contextual information to the user, such as the problem title and message, to clearly indicate what went wrong.
+To better illustrate how the error state appears in practice, Figure 11 shows the application’s response when a delivery fails mid-process.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.44\textwidth]{images/ErrorScreenState.png}
+    \caption{Error screen state when delivering order}
+    \label{fig:incoming-request-screen}
+\end{figure}
+
+\newpage
 
 The following example illustrates how the Home screen begins listening for messages and updates its state based on the received input:
 
-\begin{lstlisting}[language=Kotlin, caption={WebSocket startListening where message handling is defined}]
+\begin{lstlisting}[language=Kotlin, caption={Simplified WebSocket message handling in startListening}]
 fun startListening() {
-        viewModelScope.launch {
-            val token = ... // token is obtained through DataStore preferences
-            homeService.startListening(
-                token = token,
-                onMessage = { message ->
-                    val request = parseDynamicMessage(message)
-                    when (request) {
-                        is IncomingRequestDetails -> {
-                            _stateFlow.update { 
-                            processIncomingRequest(current, request)
-                            }
-                        }
-
-                        is DeliveryUpdate -> {
-                            _stateFlow.update { 
-                            processDeliveryUpdate(current, request)
-                            }
-                        }
-
-                        is ResultMessage -> {
-                            _stateFlow.update {
-                                processResultMessage(it, request)
-                            }
-                        }
-
-                        else -> {
-                            ...
-                        }
-                    }
-                },
-                onFailure = {
-                    _stateFlow.update {
-                       ...
-                    }
+    viewModelScope.launch {
+        val token = ... // Retrieved from DataStore
+        homeService.startListening(
+            token = token,
+            onMessage = { msg ->
+                when (val req = parseDynamicMessage(msg)) {
+                    is IncomingRequestDetails -> _stateFlow.update { processIncomingRequest(it, req) }
+                    is DeliveryUpdate         -> _stateFlow.update { processDeliveryUpdate(it, req) }
+                    is ResultMessage          -> _stateFlow.update { processResultMessage(it, req) }
+                    else                      -> ...
                 }
-            )
-            _stateFlow.update { 
-                ...
-            }
-        }
+            },
+            onFailure = { _stateFlow.update { ... } }
+        )
+        _stateFlow.update { ... } // Initialize to Listening state
     }
+}
+\end{lstlisting}
+
+
+Incoming WebSocket messages are sent in a unified JSON format and differentiated by a \texttt{type} field. The \texttt{parseDynamicMessage} function reads this field and dynamically maps the message to its corresponding class using Jackson. This pattern supports extensibility and ensures that each message type is handled appropriately in the ViewModel:
+
+\begin{lstlisting}[language=Kotlin, caption={Dynamically parsing incoming WebSocket messages}]
+fun parseDynamicMessage(message: String): HomeMessage {
+    val mapper = jacksonObjectMapper()
+    val root: JsonNode = mapper.readTree(message)
+    val typeValue = root.get("type")?.asText() 
+        ?: throw IllegalArgumentException("Missing type field")
+
+    val type = MessageType.fromValue(typeValue) 
+        ?: throw IllegalArgumentException("Unknown message type: $typeValue")
+
+    return when (type) {
+        MessageType.DELIVERY_REQUEST -> 
+            mapper.treeToValue(root, IncomingRequestDetails::class.java)
+        MessageType.DELIVERY_UPDATE -> 
+            mapper.treeToValue(root, DeliveryUpdate::class.java)
+        MessageType.SUCCESS, MessageType.ERROR -> 
+            mapper.treeToValue(root, ResultMessage::class.java)
+    }
+}
+\end{lstlisting}
+
+The following diagram provides a high-level overview of a complete delivery request assignment cycle, illustrating how messages are exchanged between the backend and the courier application via WebSocket. It captures the progression from the initial assignment message to the courier's decision and the backend's final acknowledgment, all of which contribute to state transitions within the application.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/MessageExchangeExample.png}
+    \caption{Message exchange between backend and frontend during a delivery request cycle}
+    \label{fig:message-sequence}
+\end{figure}
+
+Before heading to either the pickup or drop-off location, couriers are prompted to choose their preferred navigation application. Instead of enforcing a default, LiftDrop uses Android's intent system to display a list of compatible apps installed on the device—such as Google Maps, Waze, or other mapping tools. Once the courier selects an app, it is launched with the appropriate destination coordinates already filled in.
+
+\newpage
+
+The user interface mirrors this flow as illustrated below:
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/IncomingRequest.jpeg}
+        \caption{Pickup confirmation screen}
+        \label{fig:incoming_request}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/RequestAccepted.jpeg}
+        \caption{Delivery confirmation screen}
+        \label{fig:request_accepted}
+    \end{subfigure}
+    
+    \vspace{0.5cm} % Slightly less space between rows
+    
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/ChooseNavigationTool.png}
+        \caption{Choose Navigation Tool}
+        \label{fig:navigation_tool}
+    \end{subfigure}
+    \caption{Screens for confirming pickup, delivery and preferred navigation application choice }
+    \label{fig:courier_request_accepted}
+\end{figure}
+
+\newpage
+
+\subsubsection{Pickup and Drop-off Code Validation}
+
+As part of the delivery confirmation flow, LiftDrop includes a code-based verification step to ensure that orders are only picked up or delivered by the correct courier. When a courier reaches the pickup or drop-off location, they can slide to pickup or dropoff the order.
+
+This verification screen is shown only when the courier is sufficiently near the designated location (within 100 meters). If the provided code matches the one stored in the backend for that delivery, the delivery status proceeds to the next phase. Otherwise, an error state is triggered, and the user is prompted to retry.
+
+\begin{figure}[H]
+    \begin{subfigure}[b]{0.43\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pickup_pin_screen.jpeg}
+        \caption{Code entry screen for validating pickup or drop-off}
+    \label{fig:code-verification}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.43\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/delivery_finished.jpeg}
+        \caption{Delivery confirmation screen}
+        \label{fig:delivery-finished}
+    \end{subfigure}
+\end{figure}
+
+\newpage
+
+\subsubsection{State Recovery and Rollback Mechanism}
+
+To improve user experience and reduce friction after transient failures, the application implements a rollback strategy using a dedicated \texttt{previousState} flow. Before transitioning to an \texttt{Error} state, the ViewModel stores the current screen state in \texttt{previousState}.
+
+If the user dismisses the error the app can safely restore the previous state by re-emitting its value into the main \texttt{stateFlow}. This ensures that the user returns to their previous workflow without losing context.
+
+The mechanism is encapsulated in a small utility function responsible for managing both state transitions and error-aware rollbacks. We initially considered using this function for all state transitions to ensure consistent tracking of previous states across the application. However, this strategy proved unreliable in practice. Due to asynchronous coroutine scheduling and recomposition timing within the ViewModel scope, the function occasionally recorded stale or incorrect state values—particularly when multiple updates occurred in quick succession. 
+To avoid introducing inconsistencies, we chose to restrict its use to fallback branches and error-handling paths (such as \texttt{else} clauses), where the current state is more stable and less likely to conflict with concurrent updates.
+
+The helper function used for this purpose is shown below:
+
+\begin{lstlisting}[language=Kotlin, caption={Safely updating screen state with rollback support}]
+fun updateState(newState: HomeScreenState): HomeScreenState {
+        // Salva o estado anterior
+        _previousState.value = _stateFlow.value
+        // Atualiza o estado atual
+        _stateFlow.value = newState 
+        return newState 
+    }
+\end{lstlisting}
+
+
+\subsubsection{Persistent Local Storage with DataStore}
+
+To persist authentication and user-specific data across sessions, LiftDrop uses Jetpack's \texttt{PreferencesDataStore}, a modern, coroutine-based alternative to \texttt{SharedPreferences}. It provides a lightweight and lifecycle-aware solution for storing key-value data such as the courier's ID, username, email, and bearer token.
+
+These values are required to initiate authenticated requests and resume background services like location tracking. By storing them locally, the application can restore the session on cold start, reducing user friction and enabling seamless continuity.
+The snippet below illustrates how the stored data is retrieved and reconstructed into a \texttt{UserInfo} object:
+
+
+\begin{lstlisting}[language=Kotlin, caption={Retrieving stored user data from PreferencesDataStore}]
+class PreferencesDataStore(
+    private val store: DataStore<Preferences>
+) : PreferencesRepository {
+override suspend fun getUserInfo(): UserInfo? {
+
+    val preferences = store.data.first()
+    val username = preferences[nameKey]
+    val courierId = preferences[idKey]
+    val token = preferences[tokenKey]
+    val email = preferences[emailKey]
+    
+    return if (username != null && courierId != null && token != null && email != null) {
+        UserInfo(
+            id = courierId,
+            username = username,
+            email = email,
+            bearer = token,
+        )
+    } else null
+} }
+\end{lstlisting}
+
+The \texttt{PreferencesRepository} interface is injected into the application through a central \texttt{DependenciesContainer}, as shown below. This allows the ViewModel and service layers to access user preferences in a decoupled and testable way.
+
+
+\begin{lstlisting}[language=Kotlin, caption={Injecting PreferencesDataStore via DependenciesContainer}]
+interface DependenciesContainer {
+    val preferencesRepository: PreferencesRepository
+    // Other services...
+}
+
+override val preferencesRepository: PreferencesRepository
+    get() = PreferencesDataStore(dataStore)
+\end{lstlisting}
+
+\subsubsection{Frontend HTTP Service Abstraction}
+
+While WebSocket communication powers real-time interactions between the courier and backend, the LiftDrop mobile application also relies on traditional HTTP requests for several operations, including authentication, data retrieval, and user profile updates.
+
+To manage these requests consistently, a custom \texttt{HttpService} abstraction was implemented. This service is built on top of the \texttt{OkHttpClient} library, which provides a robust and efficient way to perform network operations on Android.
+
+The \texttt{HttpService} encapsulates the logic for performing \texttt{GET}, \texttt{POST}, and \texttt{DELETE} requests, including header configuration, exception handling, and response parsing using Gson. Each method returns a unified result wrapper, allowing higher layers of the application to react appropriately to both successful and failed operations.
+
+This design helps enforce separation of concerns while providing coroutine-compatible, type-safe methods for backend communication.
+
+The following snippet shows the main structure of the \texttt{HttpService} class:
+
+\begin{lstlisting}[language=Kotlin, caption={Frontend HttpService class for coroutine-based requests}]
+class HttpService(
+    val baseUrl: String,
+    val client: OkHttpClient,
+    val gson: Gson
+) {
+    suspend inline fun <reified T> get(url: String, token: String): Result<T> { ... }
+
+    suspend inline fun <reified T, reified R> post(url: String, data: T, token: String): Result<R> { ... }
+
+    suspend inline fun <reified T> delete(url: String, token: String): Result<T> { ... }
+}
+\end{lstlisting}
+
+Each HTTP method in \texttt{HttpService} returns a sealed \texttt{Result} type, which standardizes how success and error outcomes are represented across the application. This abstraction allows ViewModels to process backend responses in a consistent and type-safe manner.
+
+The definition of the \texttt{Result} class is shown below:
+
+\begin{lstlisting}[language=Kotlin, caption={Sealed Result class used for HTTP responses}]
+sealed class Result<out T> {
+    data class Success<out T>(val data: T) : Result<T>()
+    data class Error(val problem: Problem) : Result<Nothing>()
+}
 \end{lstlisting}
 
 \subsection{Order Assignment Logic}
@@ -322,9 +508,7 @@ override fun getClosestCouriersAvailable(
         requestId: Int, // Request id
         maxDistance: Double, // Max distance to be considered
     ): List<CourierWithLocation> =
-        handle
-            .createQuery(
-                """
+        handle.createQuery("""
             SELECT ..., -- Other courier attributes
                 ST_Distance(  -- Direct distance using PostGIS
                     ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)::geography,
@@ -354,6 +538,7 @@ private suspend fun rankCouriersByTravelTime(
 ): List<CourierWithLocation> {
     val origins = couriers.joinToString("|") { "${it.latitude},${it.longitude}" }
     val destination = "$destinationLat,$destinationLon"
+    
 
     // Sends a request to the Google Maps Distance Matrix API,
     // using courier locations as origins and the destination as the drop-off point.
@@ -400,60 +585,57 @@ fun rankCouriersByScore(couriers: List<CourierWithLocation>): List<CourierWithLo
 
 Lastly, the centerpiece of LiftDrop’s dynamic dispatching logic is the courier assignment handler, which orchestrates several previously discussed components into a single cohesive workflow. This function initiates the process of locating available couriers within an incrementally expanding search radius, sending them real-time assignment requests, and awaiting their responses. If a courier accepts, the assignment is confirmed; if not, the system proceeds to the next available candidate. This recursive mechanism ensures robust and flexible request fulfillment. The snippet below illustrates how these interconnected elements are brought together:
 
-\newpage
 
 \begin{lstlisting}[language=Kotlin, caption={Handling Courier Assignments (Simplified Pseudocode)}]
 suspend fun handleCourierAssignment(
     pickupLat: Double,
     pickupLon: Double,
     requestId: Int,
-    initialMaxDistance: Double = 1000.0,
+    currentMaxDistance: Double = 1000.0,
     maxDistanceIncrement: Double = 1000.0,
     maxAllowedDistance: Double = 4000.0,
-    deliveryKind: String,
+    deliveryKind: String
 ): Boolean {
-    val currentMaxDistance = ...
-    val couriers = ... // fetches the couriers as discussed previouly
-    if (couriers is Either.Right) {
-        for (courier in couriers) {
-            //registers the attempt of assignment
-            val deferredResponse = AssignmentCoordinator.register(requestId)
 
-            transactionManager.run {
-            // Fetch request details from DB
-            val requestDetails = ...
-            // Estimate earnings based on distance, item price, and quantity
-            val earnings = ...
-            // Send delivery request to courier via WebSocketHandler.sendAssignmentMessageToCourier(courier.courierId, requestDetails)
-            // Wait for courier's response or timeout
-            val accepted = try {
-                withTimeout(20_000) { deferredResponse.await() }
-            } catch (e: TimeoutCancellationException) {
-                false
+    if (currentMaxDistance > maxAllowedDistance) return false
+
+    val couriers = fetchAvailableCouriers(pickupLat, pickupLon, currentMaxDistance, deliveryKind)
+
+    if (couriers is Either.Right) {
+        for (courier in couriers.value) {
+            val response = AssignmentCoordinator.register(requestId)
+            val accepted = transactionManager.run {
+                val details = getRequestDetails(requestId)
+                val earnings = estimateEarnings(details)
+                WebSocketHandler.sendAssignmentMessageToCourier(courier.courierId, details)
+
+                try {
+                    withTimeout(20_000) { response.await() }
+                } catch (_: TimeoutCancellationException) { false }
             }
 
             if (accepted) return true
             else WebSocketHandler.handleDecline(courier.courierId, requestId)
-        }  }
-        // Retry with extended distance if no courier accepted
-        return handleCourierAssignment(
-            ...
-            initialMaxDistance + maxDistanceIncrement,
-            ...
-        ) }
-     else {
-        // Retry after delay if no couriers found
-        delay(10_000)
-        return handleCourierAssignment(
-            ...
-            initialMaxDistance + maxDistanceIncrement,
-            ...
-        )}}
+        }
+    }
+
+    delay(10_000)
+    return handleCourierAssignment(
+        pickupLat, pickupLon, requestId,
+        currentMaxDistance + maxDistanceIncrement,
+        maxDistanceIncrement,
+        maxAllowedDistance,
+        deliveryKind
+    )
+}
+
 \end{lstlisting}
+
+
 
 To facilitate asynchronous communication between the backend and couriers during the assignment process, the system leverages a dedicated coordination component named AssignmentCoordinator. This object maintains an in-memory registry that maps each delivery request ID to a corresponding \texttt{CompletableDeferred<Boolean>} instance. When a courier assignment is initiated, the request is registered and a deferred response is created. This deferred serves as a synchronization point, allowing the backend to suspend execution while awaiting the courier’s response. Once the courier accepts or declines the assignment, the complete function is invoked to resolve the deferred and resume the assignment logic accordingly. This mechanism enables non-blocking, thread-safe handling of real-time interactions in the courier dispatch workflow.
 
-\vspace{5mm}
+\vspace{5.0mm}
 
 \begin{lstlisting}[language=Kotlin, caption={Assignment Coordination}]
 object AssignmentCoordinator {
@@ -515,7 +697,7 @@ fun handleRequestReassignment(
                             message =
                                 DeliveryUpdateMessage(
                                     hasBeenAccepted = true,
-                                    pinCode = pickupPin ?: "",
+                                    pinCode = pickupPin
                                 ),
                         )
                     } else {
@@ -528,6 +710,49 @@ fun handleRequestReassignment(
     }
 \end{lstlisting}
 
+\vspace{5mm}
+
+The following can be observed when that happens in the following figures:
+
+\begin{figure}[H]
+    \centering
+    % First row
+    \begin{subfigure}[b]{0.47\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/CancelConfirmation.jpeg}
+        \caption{Cancel confirmation screen}
+        \label{fig:cancel_confirmation}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.47\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/CancelReassignment.jpeg}
+        \caption{Reassignment in progress screen}
+        \label{fig:cancel_reassignment}
+    \end{subfigure}
+    
+    \vspace{0.3cm} % Slightly less space between rows
+
+    % Second row
+    \begin{subfigure}[b]{0.47\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/CodeReassignment.jpeg}
+        \caption{Pickup code for reassigned courier}
+        \label{fig:code_reassignment}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.47\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/CancelSuccess.jpeg}
+        \caption{Successful cancellation confirmation}
+        \label{fig:cancel_success}
+    \end{subfigure}
+
+    \caption{UI states for order cancellation and reassignment flow}
+    \label{fig:cancel_and_reassign_flow}
+\end{figure}
+
+\newpage
 
 \subsection{Courier Earnings}
 
