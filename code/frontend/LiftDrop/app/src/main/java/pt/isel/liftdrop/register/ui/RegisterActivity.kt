@@ -15,6 +15,8 @@ import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.TAG
 import pt.isel.liftdrop.login.ui.LoginActivity
 import pt.isel.liftdrop.register.model.RegisterViewModel
+import pt.isel.liftdrop.register.ui.screens.RegisterScreen
+import pt.isel.liftdrop.register.ui.screens.RegisterScreenState
 import pt.isel.liftdrop.utils.viewModelInit
 
 class RegisterActivity : ComponentActivity() {

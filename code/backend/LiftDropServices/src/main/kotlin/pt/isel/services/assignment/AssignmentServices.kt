@@ -25,6 +25,10 @@ import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.courier.CourierError
 import java.util.*
 
+const val INITIAL_DISTANCE = 1000.0 // Initial max distance in meters
+const val MAX_DISTANCE_INCREMENT = 1000.0 // Incremental distance in meters
+const val MAX_ALLOWED_DISTANCE = 4000.0 // Maximum allowed distance in meters
+
 @Named("AssignmentServices")
 class AssignmentServices(
     private val transactionManager: TransactionManager,
@@ -51,9 +55,9 @@ class AssignmentServices(
         pickupLat: Double,
         pickupLon: Double,
         requestId: Int,
-        initialMaxDistance: Double = 1000.0,
-        maxDistanceIncrement: Double = 1000.0,
-        maxAllowedDistance: Double = 4000.0,
+        initialMaxDistance: Double = INITIAL_DISTANCE,
+        maxDistanceIncrement: Double = MAX_DISTANCE_INCREMENT,
+        maxAllowedDistance: Double = MAX_ALLOWED_DISTANCE,
         deliveryKind: String,
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)

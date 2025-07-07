@@ -1,12 +1,11 @@
 package pt.isel.liftdrop.login.model
 
-import okhttp3.*
-import pt.isel.liftdrop.login.model.input.RegisterCourierInputModel
-import pt.isel.liftdrop.login.model.output.GetCourierIdOutputModel
-import pt.isel.liftdrop.login.model.input.LoginInputModel
-import pt.isel.liftdrop.login.model.output.LoginOutputModel
-import pt.isel.liftdrop.login.model.output.LogoutOutputModel
-import pt.isel.liftdrop.login.model.output.RegisterOutputModel
+import pt.isel.liftdrop.domain.UserInfo
+import pt.isel.liftdrop.login.model.dto.RegisterCourierInputModel
+import pt.isel.liftdrop.login.model.dto.GetCourierIdOutputModel
+import pt.isel.liftdrop.login.model.dto.LoginInputModel
+import pt.isel.liftdrop.login.model.dto.LogoutOutputModel
+import pt.isel.liftdrop.login.model.dto.RegisterOutputModel
 import pt.isel.liftdrop.services.http.Result
 import pt.isel.liftdrop.services.http.HttpService
 import pt.isel.liftdrop.shared.model.Uris

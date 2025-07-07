@@ -20,6 +20,5 @@ object Uris {
         const val PICKED_UP_ORDER = "$BASE/pickedUpOrder"
         const val DELIVERED_ORDER = "$BASE/deliveredOrder"
         const val FETCH_DAILY_EARNINGS = "$BASE/fetchDailyEarnings/{courierId}"
-        const val COMPLETE_ORDER = "$BASE/completeOrder"
     }
 }

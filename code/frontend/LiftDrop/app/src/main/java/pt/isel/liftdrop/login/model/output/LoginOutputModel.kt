@@ -1,9 +1,0 @@
-package pt.isel.liftdrop.login.model.output
-
-import pt.isel.liftdrop.login.model.UserInfo
-
-data class LoginOutputModel(
-    val id: Int,
-    val username: String,
-    val email: String,
-    val token: String)

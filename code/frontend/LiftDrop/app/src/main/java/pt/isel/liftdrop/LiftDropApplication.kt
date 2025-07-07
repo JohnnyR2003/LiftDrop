@@ -9,13 +9,11 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import pt.isel.liftdrop.about.model.AboutService
-import pt.isel.liftdrop.about.model.RealAboutService
 import pt.isel.liftdrop.home.model.HomeService
 import pt.isel.liftdrop.home.model.RealHomeService
-import pt.isel.liftdrop.login.PreferencesDataStore
+import pt.isel.liftdrop.login.preferences.PreferencesDataStore
 import pt.isel.liftdrop.login.model.LoginService
-import pt.isel.liftdrop.login.model.PreferencesRepository
+import pt.isel.liftdrop.login.preferences.PreferencesRepository
 import pt.isel.liftdrop.login.model.RealLoginService
 import pt.isel.liftdrop.services.location.LocationTrackingService
 import pt.isel.liftdrop.services.location.RealLocationTrackingService
@@ -24,8 +22,8 @@ import java.util.concurrent.TimeUnit
 
 
 const val TAG = "LiftDropApp"
-const val HOST = "https://two025-lift-drop.onrender.com"
-//const val HOST = "https://new-evolving-piranha.ngrok-free.app"
+//const val HOST = "https://two025-lift-drop.onrender.com"
+const val HOST = "https://new-evolving-piranha.ngrok-free.app"
 val ApplicationJsonType = "application/json".toMediaType()
 
 
@@ -35,7 +33,6 @@ val ApplicationJsonType = "application/json".toMediaType()
 interface DependenciesContainer {
     val httpService: HttpService
     val loginService : LoginService
-    val aboutService: AboutService
     val homeService: HomeService
     val preferencesRepository: PreferencesRepository
     val locationTrackingService: LocationTrackingService
@@ -76,9 +73,6 @@ class LiftDropApplication : DependenciesContainer, Application() {
 
     override val loginService: LoginService
         get() = RealLoginService(httpService)
-
-    override val aboutService: AboutService
-        get() = RealAboutService(httpService)
 
     override val homeService: HomeService
         get() = RealHomeService(httpService)

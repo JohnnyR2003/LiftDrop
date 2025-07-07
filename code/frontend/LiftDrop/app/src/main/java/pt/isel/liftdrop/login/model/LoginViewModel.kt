@@ -9,8 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import pt.isel.liftdrop.login.ui.LoginScreen
-import pt.isel.liftdrop.login.ui.LoginScreenState
+import pt.isel.liftdrop.domain.UserInfo
+import pt.isel.liftdrop.login.preferences.PreferencesRepository
+import pt.isel.liftdrop.login.ui.screens.LoginScreenState
 import pt.isel.liftdrop.services.http.Result
 
 class LoginViewModel(

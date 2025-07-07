@@ -7,8 +7,13 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import pt.isel.liftdrop.HOST
+import pt.isel.liftdrop.home.model.dto.CancelDeliveryInputModel
+import pt.isel.liftdrop.home.model.dto.DeliverOrderInputModel
+import pt.isel.liftdrop.home.model.dto.LocationDTO
+import pt.isel.liftdrop.home.model.dto.PickupOrderInputModel
+import pt.isel.liftdrop.home.model.dto.ValidateDropOffInputModel
+import pt.isel.liftdrop.home.model.dto.ValidatePickupInputModel
 import pt.isel.liftdrop.services.http.HttpService
-import pt.isel.liftdrop.services.http.Problem
 import pt.isel.liftdrop.shared.model.Uris
 
 interface HomeService {

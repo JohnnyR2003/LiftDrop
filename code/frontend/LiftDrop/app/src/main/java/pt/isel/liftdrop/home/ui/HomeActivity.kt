@@ -24,6 +24,8 @@ import kotlinx.coroutines.launch
 import pt.isel.liftdrop.DependenciesContainer
 import pt.isel.liftdrop.TAG
 import pt.isel.liftdrop.home.model.HomeViewModel
+import pt.isel.liftdrop.home.ui.screens.HomeScreen
+import pt.isel.liftdrop.home.ui.screens.HomeScreenState
 import pt.isel.liftdrop.login.ui.LoginActivity
 import pt.isel.liftdrop.services.location.LocationForegroundService
 import pt.isel.liftdrop.utils.viewModelInit
@@ -80,7 +82,6 @@ class HomeActivity : ComponentActivity() {
                 startLocationService(this, authToken, courierId)
                 Log.i(TAG, "Permission granted. Starting location service with token: $authToken and courierId: $courierId")
             }
-            // Agora peça a permissão de notificação, se necessário
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermissionGranted) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else {
@@ -121,7 +122,7 @@ class HomeActivity : ComponentActivity() {
                         if (user != null) {
                             if (state is HomeScreenState.Listening) {
                                 viewModel.stopListening()
-                            } else if(state is HomeScreenState.Idle) {
+                            } else if (state is HomeScreenState.Idle) {
                                 viewModel.startListening()
                             }
                         }

@@ -14,10 +14,9 @@ import kotlinx.coroutines.launch
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
-import pt.isel.liftdrop.HOST
 import pt.isel.liftdrop.TAG
-import pt.isel.liftdrop.home.model.LocationDTO
-import pt.isel.liftdrop.home.model.LocationUpdateInputModel
+import pt.isel.liftdrop.home.model.dto.LocationDTO
+import pt.isel.liftdrop.home.model.dto.LocationUpdateInputModel
 import pt.isel.liftdrop.services.http.HttpService
 import kotlin.coroutines.resumeWithException
 import pt.isel.liftdrop.services.http.Result

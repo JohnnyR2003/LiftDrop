@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pt.isel.liftdrop.login.model.LoginService
-import pt.isel.liftdrop.login.model.PreferencesRepository
-import pt.isel.liftdrop.register.ui.RegisterScreenState
+import pt.isel.liftdrop.login.preferences.PreferencesRepository
+import pt.isel.liftdrop.register.ui.screens.RegisterScreenState
 import pt.isel.liftdrop.services.http.Result
 
 class RegisterViewModel(
