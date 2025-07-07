@@ -45,13 +45,13 @@ class HomeActivity : ComponentActivity() {
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
 
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
-    private var notificationPermissionGranted = false
+    private var  notificationPermissionGranted = false
 
     companion object {
         fun navigate(origin: Activity) {
             val intent = Intent(origin, HomeActivity::class.java)
             origin.startActivity(intent)
-            origin.finish() // 👈 This prevents LoginActivity from staying in the back stack
+            origin.finish()
         }
     }
 
@@ -98,20 +98,8 @@ class HomeActivity : ComponentActivity() {
                 val userInfo = repo.preferencesRepository.getUserInfo()
                 if (userInfo != null && userInfo.id != 0 && !viewModel.serviceStarted.value) {
                     viewModel.fetchDailyEarnings(userInfo.id.toString(), userInfo.bearer)
-                    if (hasLocationPermissions()) {
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || notificationPermissionGranted) {
-                            startLocationService(this@HomeActivity, userInfo.bearer, userInfo.id.toString())
-                            Log.i(TAG, "Starting location service with token: ${userInfo.bearer} and courierId: ${userInfo.id}")
-                            viewModel._serviceStarted.value = true
-                        } else {
-                            requestAllPermissions()
-                        }
-                    } else {
-                        requestAllPermissions()
-                    }
                 }
             }
-
 
             HomeScreen(
                 viewModel = viewModel,
@@ -123,11 +111,23 @@ class HomeActivity : ComponentActivity() {
                             if (state is HomeScreenState.Listening) {
                                 viewModel.stopListening()
                             } else if (state is HomeScreenState.Idle) {
+                                if (hasLocationPermissions()) {
+                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || notificationPermissionGranted) {
+                                        startLocationService(this@HomeActivity, user.bearer, user.id.toString())
+                                        viewModel._serviceStarted.value = true
+                                    } else {
+                                        requestAllPermissions()
+                                    }
+                                } else {
+                                    requestAllPermissions()
+                                }
+
                                 viewModel.startListening()
                             }
                         }
                     }
-                },
+                }
+                ,
                 onLogoutClick = {
                     viewModel.logout()
                     CoroutineScope(Dispatchers.IO).launch {
