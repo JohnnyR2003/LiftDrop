@@ -23,8 +23,6 @@ class AuthenticationInterceptor(
             }
         ) {
             val authCookie = request.cookies?.find { it.name == "auth_token" }
-            println("[0]I'm here")
-            println("authCookie: $authCookie")
 
             // Check for AuthorizedClient
             if (handler.methodParameters.any {

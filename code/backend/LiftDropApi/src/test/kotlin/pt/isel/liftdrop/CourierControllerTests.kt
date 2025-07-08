@@ -2,29 +2,28 @@ package pt.isel.liftdrop
 
 import com.example.utils.Success
 import liftdrop.repository.TransactionManager
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.http.HttpHeaders
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.web.socket.CloseStatus
-import org.springframework.web.socket.WebSocketHandler
-import org.springframework.web.socket.WebSocketMessage
-import org.springframework.web.socket.WebSocketSession
+import org.springframework.web.socket.*
 import org.springframework.web.socket.client.standard.StandardWebSocketClient
-import pt.isel.liftdrop.model.AddressInputModel
-import pt.isel.liftdrop.model.LoginInputModel
-import pt.isel.liftdrop.model.RegisterClientInputModel
-import pt.isel.liftdrop.model.RegisterCourierInputModel
-import pt.isel.liftdrop.model.RequestInputModel
+import pt.isel.liftdrop.model.*
 import pt.isel.services.LocationServices
 import pt.isel.services.client.ClientService
 import pt.isel.services.courier.CourierService
 import pt.isel.services.utils.Codify.encodePassword
+import java.net.URI
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import org.springframework.web.socket.WebSocketHttpHeaders
+import pt.isel.services.courier.UserDetails
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CourierControllerTests {
@@ -112,102 +111,107 @@ class CourierControllerTests {
     }
 
     @Test
-    fun `test web socket`() {
-        // Set up a WebSocket client
-        val webSocketClient = StandardWebSocketClient()
-        val webSocketHandler = TestWebSocketHandler()
+    fun `test WebSocket order dispatch flow`() {
+        val courierWebTest = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
+        val clientWebTest = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/client").build()
 
-        // Connect to the WebSocket endpoint
-        val uri = "ws://localhost:$port/ws/courier"
-        webSocketClient.execute(webSocketHandler, uri).get()
-
-        val courier = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
-        val client = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api").build()
-
-        val registerCourier =
-            RegisterCourierInputModel(
-                name = "b",
-                email = "courier@gmail.com",
-                password = "randomPassword",
-            )
-
-        courier
+        // Step 1: Register and login a courier
+        val registerCourier = RegisterCourierInputModel(
+            name = "b",
+            email = "courier@gmail.com",
+            password = "randomPassword"
+        )
+        courierWebTest
             .post()
             .uri("/register")
             .bodyValue(registerCourier)
             .exchange()
-            .expectStatus()
-            .isOk
+            .expectStatus().isOk
 
-        val loginCourier =
-            LoginInputModel(
-                email = "courier@gmail.com",
-                password = "randomPassword",
+        val loginCourier = LoginInputModel(email = "courier@gmail.com", password = "randomPassword")
+        val courierTokenResult = courierService.loginCourier(loginCourier.email, loginCourier.password)
+        assertIs<Success<UserDetails>>(courierTokenResult)
+        val courierToken = courierTokenResult.value
+
+        // Step 2: Establish WebSocket connection with Authorization header
+        val handler = TestWebSocketHandler() // single instance used for listening & assertions
+        val webSocketClient = StandardWebSocketClient()
+
+        val headers = WebSocketHttpHeaders()
+        headers.add("Authorization", "Bearer $courierToken")
+
+        val uri = URI("ws://localhost:$port/ws/courier")
+
+        webSocketClient.execute(handler, headers, uri).get()
+
+        // Step 4: Register a client and place an order
+        val registerClient = RegisterClientInputModel(
+            name = "a",
+            email = "a@gmail.com",
+            password = "password",
+            address = AddressInputModel(
+                street = "R. Bernardim Ribeiro",
+                city = "Odivelas",
+                country = "Portugal",
+                zipcode = "2620-266",
+                streetNumber = "5",
+                floor = null
             )
-
-        val courierToken = courierService.loginCourier(loginCourier.email, loginCourier.password)
-        assertIs<Success<String>>(courierToken)
-
-        val registerClient =
-            RegisterClientInputModel(
-                name = "a",
-                email = "a@gmail.com",
-                password = "password",
-                address =
-                    AddressInputModel(
-                        street = "R. Bernardim Ribeiro",
-                        city = "Odivelas",
-                        country = "Portugal",
-                        zipcode = "2620-266",
-                        streetNumber = "5",
-                        floor = null,
-                    ),
-            )
-        // Register a new client
+        )
         createClient(registerClient)
 
-        val token = clientService.loginClient(registerClient.email, registerClient.password)
-        assertIs<Success<String>>(token)
-//      Av. Dom João II 2, 1990-156 Lisboa, Portugal
-        locationServices.addPickUpLocation(
-            Address(
-                country = "Portugal",
-                city = "Lisboa",
-                street = "Av. Dom João II",
-                streetNumber = "2",
-                floor = null,
-                zipCode = "1990-156",
-            ),
-            "item",
-            "restaurantName",
-            10.0,
-            10L,
-        )
+        val clientTokenResult = clientService.loginClient(registerClient.email, registerClient.password)
+        assertIs<Success<String>>(clientTokenResult)
+        val clientToken = clientTokenResult.value
 
-//        courier.post()
-//            .uri("/waitingOrders")
-//            .bodyValue(StartListeningInputModel(2))
-//            .exchange()
-//            .expectStatus()
-//            .isOk
-
-        client
+        courierWebTest
             .post()
-            .uri("/client/makeOrder")
-            .cookie("auth_token", token.value)
+            .uri("/updateLocation")
+            .cookie("auth_token", courierToken.token)
             .bodyValue(
-                RequestInputModel(
-                    restaurantName = "restaurantName",
-                    itemDesignation = "item",
-                ),
-            ).exchange()
-            .expectStatus()
-            .isOk
+                LocationUpdateInputModel(
+                    courierTokenResult.value.courierId,
+                    LocationDTO(38.73538,-9.145238), // Example coordinates
+                )
+            )
+            .exchange()
+            .expectStatus().isOk
 
-//        // Wait and verify message reception
-//        assertTrue(webSocketHandler.waitForMessage(5000))  // Wait up to 5 seconds
-//        assertNotNull(webSocketHandler.lastMessage)        // Verify message content
+        println("Courier location updated")
+
+        //Create a pickup location
+        locationServices
+            .addPickUpLocation(
+                Address(
+                    country = "PORTUGAL",
+                    city = "Lisbon",
+                    street = "Avenida da República",
+                    streetNumber = "12",
+                    floor = null,
+                    zipCode = "1050-191"
+                ),
+                "Big Mac",
+                "MC DONALDS Saldanha",
+                price = 10.0,
+                eta = 15L
+            )
+
+        clientWebTest
+            .post()
+            .uri("/makeOrder")
+            .cookie("auth_token", clientToken)
+            .bodyValue(RequestInputModel("MC DONALDS Saldanha", "Big Mac"))
+            .exchange()
+            .expectStatus().isOk
+
+        println("Order placed successfully")
+
+        // Step 5: Wait for the message sent to the courier via WebSocket
+        assertTrue(handler.waitForMessage(5000))
+//        assertNotNull(handler.lastMessage)
+        println("WebSocket received: ${handler.lastMessage}")
     }
+
 
     private fun createClient(registerClient: RegisterClientInputModel) {
         trxManager.run {
@@ -262,6 +266,7 @@ class TestWebSocketHandler : WebSocketHandler {
         session: WebSocketSession,
         message: WebSocketMessage<*>,
     ) {
+        println("WebSocket message received: ${message.payload}")
         lastMessage = message.payload.toString()
         messageReceived.countDown()
     }

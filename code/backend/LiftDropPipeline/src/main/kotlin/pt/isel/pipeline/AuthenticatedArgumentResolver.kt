@@ -53,7 +53,6 @@ class AuthenticatedClientArgumentResolver : HandlerMethodArgumentResolver {
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?,
     ): Any {
-        println("[2]I'm here")
         val request =
             webRequest.getNativeRequest(HttpServletRequest::class.java)
                 ?: throw IllegalStateException("Does not have a HttpServletRequest")

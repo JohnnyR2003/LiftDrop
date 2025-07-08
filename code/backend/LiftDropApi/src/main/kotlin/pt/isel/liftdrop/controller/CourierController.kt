@@ -387,9 +387,4 @@ class CourierController(
                     ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
             }
         }
-
-    @PostMapping(Uris.Courier.COMPLETE_ORDER)
-    fun completeOrder() {
-        TODO()
-    }
 }
