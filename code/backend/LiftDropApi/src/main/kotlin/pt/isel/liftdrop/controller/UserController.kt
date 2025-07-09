@@ -20,7 +20,6 @@ class UserController(
         @RequestHeader("Authorization") authHeader: String,
     ): ResponseEntity<Any> {
         val token = authHeader.removePrefix("Bearer ").trim()
-
         return when (val result = userService.getCourierIdByToken(token)) {
             is Success -> ResponseEntity.ok(GetCourierIdOutputModel(result.value.toString()))
             is Failure -> Problem.courierNotFound().response(HttpStatus.NOT_FOUND)

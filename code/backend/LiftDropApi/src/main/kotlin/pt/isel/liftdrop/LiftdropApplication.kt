@@ -38,6 +38,7 @@ class LiftDropApplication {
         private val courierWebSocketHandler: CourierWebSocketHandler,
     ) : WebSocketConfigurer {
         override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
+            println("⚡ Registering WebSocket at /ws/courier") // Add this
             registry
                 .addHandler(courierWebSocketHandler, "/ws/courier")
                 .setAllowedOrigins("*") // Adjust if needed

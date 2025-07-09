@@ -30,7 +30,6 @@ class ClientController(
         user: AuthenticatedClient,
         @RequestBody order: RequestInputModel,
     ): ResponseEntity<Any> {
-        println("[1] Received order request: $order")
         val requestCreationResult =
             clientService.makeRequest(
                 client = Client(user.client.user),
