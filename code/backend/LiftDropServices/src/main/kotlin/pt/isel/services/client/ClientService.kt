@@ -11,6 +11,7 @@ import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.LocationDTO
+import pt.isel.liftdrop.MakeRequestReturn
 import pt.isel.liftdrop.UserRole
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.assignment.AssignmentServices
@@ -125,7 +126,7 @@ class ClientService(
         quantity: Int,
         restaurantName: String,
         dropOffAddress: Address?,
-    ): Either<RequestCreationError, Int> =
+    ): Either<RequestCreationError, MakeRequestReturn> =
         transactionManager.run {
             val requestRepository = it.requestRepository
             val locationRepository = it.locationRepository
@@ -153,12 +154,15 @@ class ClientService(
                 locationRepository.itemExistsAtRestaurant(description, restaurantName)
                     ?: return@run failure(RequestCreationError.ItemNotFound)
 
+            val pickupCode = generateRandomCode(6)
+            val dropOffCode = generateRandomCode(6)
+
             val requestId =
                 requestRepository.createRequest(
                     clientId = client.user.id,
                     eta = itemETA,
-                    pickupCode = generateRandomCode(6),
-                    dropoffCode = generateRandomCode(6),
+                    pickupCode = pickupCode,
+                    dropoffCode = dropOffCode,
                 ) ?: return@run failure(RequestCreationError.ClientNotFound)
 
             val pickupLocationId = restaurantLocation.first
@@ -186,7 +190,7 @@ class ClientService(
                 )
             }
 
-            return@run success(requestId)
+            return@run success(MakeRequestReturn(requestId, pickupCode, dropOffCode))
         }
 
     fun logoutClient(token: String): Either<ClientLogoutError, Boolean> =

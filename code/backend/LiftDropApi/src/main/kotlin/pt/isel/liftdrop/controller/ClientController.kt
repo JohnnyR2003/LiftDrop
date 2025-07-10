@@ -43,7 +43,7 @@ class ClientController(
             is Success -> {
                 val result = requestCreationResult.value
                 GlobalLogger.log("Order created successfully with ID: $result")
-                ResponseEntity.ok(result)
+                ResponseEntity.ok(result.requestId)
             }
             is Failure -> {
                 GlobalLogger.log("Failed to create order: ${requestCreationResult.value}")

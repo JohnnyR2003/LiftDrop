@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.postgresql.ds.PGSimpleDataSource
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.Client
+import pt.isel.liftdrop.MakeRequestReturn
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
 import pt.isel.services.CourierWebSocketHandler
@@ -143,7 +144,7 @@ class ClientServiceTest {
         transactionManager.run {
             val requestRepo = it.requestRepository
 
-            val requestId =
+            val request =
                 runBlocking {
                     clientService.makeRequest(
                         client = client.value,
@@ -154,13 +155,13 @@ class ClientServiceTest {
                     )
                 }
 
-            assertIs<Success<Int>>(requestId)
+            assertIs<Success<MakeRequestReturn>>(request)
 
             // Validate request
             val allRequests = requestRepo.getAllRequestsForClient(clientId.value)
-            assertTrue(allRequests.any { it.id == requestId.value })
+            assertTrue(allRequests.any { it.id == request.value.requestId })
 
-            val createdRequest = requestRepo.getRequestById(requestId.value)
+            val createdRequest = requestRepo.getRequestById(request.value.requestId)
             assertNotNull(createdRequest)
             assertEquals(clientId.value, createdRequest.clientId)
             assertEquals("PENDING", createdRequest.requestStatus.status.name)
