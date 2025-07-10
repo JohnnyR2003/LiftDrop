@@ -263,11 +263,35 @@ class CourierControllerTests {
 
         courierWebTest
             .post()
-            .uri("/pickupOrder")
+            .uri("/pickedUpOrder")
             .cookie("auth_token", courierInfo.token)
             .bodyValue(
-                PickupOrderInputModel(request.value.requestId, courierInfo.courierId, request.value.pickupCode, "PICKUP")
+                PickupOrderInputModel(request.value.requestId, courierInfo.courierId, request.value.pickupCode, "DEFAULT")
             )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 11: Update courier location to drop-off
+        // ─────────────────────────────────────────────────────────────
+
+        courierWebTest.post()
+            .uri("/updateLocation")
+            .cookie("auth_token", courierInfo.token)
+            .bodyValue(
+                LocationUpdateInputModel(
+                    courierInfo.courierId,
+                    LocationDTO(38.725985,-9.143897)
+                )
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 12: Simulate drop-off
+        // ─────────────────────────────────────────────────────────────
 
 
 
