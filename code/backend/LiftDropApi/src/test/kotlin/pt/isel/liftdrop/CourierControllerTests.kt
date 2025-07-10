@@ -2,7 +2,6 @@ package pt.isel.liftdrop
 
 import com.example.utils.Either
 import com.example.utils.Success
-import kotlinx.coroutines.runBlocking
 import liftdrop.repository.TransactionManager
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.web.socket.*
 import org.springframework.web.socket.client.standard.StandardWebSocketClient
 import pt.isel.liftdrop.model.*
@@ -25,7 +23,6 @@ import kotlin.test.Test
 import kotlin.test.assertIs
 import org.springframework.web.socket.WebSocketHttpHeaders
 import pt.isel.services.courier.UserDetails
-import kotlin.test.DefaultAsserter.assertNotNull
 import kotlin.test.assertNotNull
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -117,7 +114,6 @@ class CourierControllerTests {
     fun `test WebSocket pickup and dropOff`() {
         // Setup WebTestClients
         val courierWebTest = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
-        val clientWebTest = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/client").build()
 
         // ─────────────────────────────────────────────────────────────
         // STEP 1: Register and login courier
@@ -135,9 +131,9 @@ class CourierControllerTests {
             .expectStatus().isOk
 
         val loginCourier = LoginInputModel(email = "courier@gmail.com", password = "randomPassword")
-        val courierTokenResult = courierService.loginCourier(loginCourier.email, loginCourier.password)
-        assertIs<Success<UserDetails>>(courierTokenResult)
-        val courierInfo = courierTokenResult.value
+        val courier = courierService.loginCourier(loginCourier.email, loginCourier.password)
+        assertIs<Success<UserDetails>>(courier)
+        val courierInfo = courier.value
 
         // ─────────────────────────────────────────────────────────────
         // STEP 2: Connect courier to WebSocket
@@ -170,7 +166,6 @@ class CourierControllerTests {
 
         val clientTokenResult = clientService.loginClient(registerClient.email, registerClient.password)
         assertIs<Success<String>>(clientTokenResult)
-        val clientToken = clientTokenResult.value
 
         // ─────────────────────────────────────────────────────────────
         // STEP 4: Update courier location
@@ -180,7 +175,7 @@ class CourierControllerTests {
             .cookie("auth_token", courierInfo.token)
             .bodyValue(
                 LocationUpdateInputModel(
-                    courierTokenResult.value.courierId,
+                    courier.value.courierId,
                     LocationDTO(38.73538, -9.145238)
                 )
             )
@@ -293,9 +288,24 @@ class CourierControllerTests {
         // STEP 12: Simulate drop-off
         // ─────────────────────────────────────────────────────────────
 
-
-
+        courierWebTest.post()
+            .uri("/deliveredOrder")
+            .cookie("auth_token", courierInfo.token)
+            .bodyValue(
+                DeliverOrderInputModel(
+                    request.value.requestId,
+                    courierInfo.courierId,
+                    request.value.dropOffCode,
+                    5.6
+                )
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
     }
+
+
+
 
 
 
