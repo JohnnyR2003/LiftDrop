@@ -8,11 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import liftdrop.repository.TransactionManager
-import pt.isel.liftdrop.Address
-import pt.isel.liftdrop.Client
-import pt.isel.liftdrop.LocationDTO
-import pt.isel.liftdrop.MakeRequestReturn
-import pt.isel.liftdrop.UserRole
+import pt.isel.liftdrop.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.google.GeocodingServices
@@ -181,12 +177,12 @@ class ClientService(
                     "drop-off location ID: $dropOffLocationId",
             )
 
-            CoroutineScope(Dispatchers.Default).launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 assignmentServices.handleCourierAssignment(
                     restaurantLocation.second.latitude,
                     restaurantLocation.second.longitude,
                     requestId,
-                    deliveryKind = "DEFAULT",
+                    deliveryKind = DeliveryKind.DEFAULT,
                 )
             }
 

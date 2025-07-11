@@ -58,7 +58,7 @@ class AssignmentServices(
         initialMaxDistance: Double = INITIAL_DISTANCE,
         maxDistanceIncrement: Double = MAX_DISTANCE_INCREMENT,
         maxAllowedDistance: Double = MAX_ALLOWED_DISTANCE,
-        deliveryKind: String,
+        deliveryKind: DeliveryKind = DeliveryKind.DEFAULT,
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
         GlobalLogger.log("Fetching ranked couriers for request ID: $requestId with maxDistance: $currentMaxDistance")
@@ -103,7 +103,7 @@ class AssignmentServices(
                             item = requestDetails.item,
                             quantity = requestDetails.quantity,
                             deliveryEarnings = formattedEarnings,
-                            deliveryKind = deliveryKind,
+                            deliveryKind = deliveryKind.name,
                         ),
                     )
                 }
@@ -284,12 +284,12 @@ class AssignmentServices(
 
             GlobalLogger.log("Reassigning delivery with status $deliveryStatus and kind ${deliveryStatus.toDeliveryKind().name}")
 
-            CoroutineScope(Dispatchers.Default).launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 if (handleCourierAssignment(
                         pickupLat = pickupLat,
                         pickupLon = pickupLon,
                         requestId = requestId,
-                        deliveryKind = deliveryStatus.toDeliveryKind().name,
+                        deliveryKind = deliveryStatus.toDeliveryKind(),
                     )
                 ) {
                     if (deliveryStatus == DeliveryStatus.HEADING_TO_DROPOFF) {
