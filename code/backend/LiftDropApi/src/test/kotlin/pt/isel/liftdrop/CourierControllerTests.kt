@@ -209,16 +209,6 @@ class CourierControllerTests {
         // ─────────────────────────────────────────────────────────────
         // STEP 6: Client places order
         // ─────────────────────────────────────────────────────────────
-//        val requestResponse = clientWebTest.post()
-//            .uri("/makeOrder")
-//            .cookie("auth_token", clientToken)
-//            .bodyValue(RequestInputModel("MC DONALDS Saldanha", "Big Mac"))
-//            .exchange()
-//            .expectStatus().isOk
-//            .expectBody<Int>()  // Expect a String body
-//            .returnResult()
-//
-//        val requestId = requestResponse.responseBody
 
         println("Client ID: $clientId")
         val client =
@@ -305,6 +295,198 @@ class CourierControllerTests {
     }
 
 
+    @Test
+    fun `testing order by which couriers are chosen`() {
+        // Setup WebTestClients
+        val courierWebTest = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 1: Register and login courier
+        // ─────────────────────────────────────────────────────────────
+        val registerCourier = RegisterCourierInputModel(
+            name = "b",
+            email = "courier@gmail.com",
+            password = "randomPassword"
+        )
+
+        courierWebTest.post()
+            .uri("/register")
+            .bodyValue(registerCourier)
+            .exchange()
+            .expectStatus().isOk
+
+        val loginCourier = LoginInputModel(email = "courier@gmail.com", password = "randomPassword")
+        val courier = courierService.loginCourier(loginCourier.email, loginCourier.password)
+        assertIs<Success<UserDetails>>(courier)
+        val courierInfo = courier.value
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 2: Register and login courier
+        // ─────────────────────────────────────────────────────────────
+        val registerCourier2 = RegisterCourierInputModel(
+            name = "c",
+            email = "courier2@gmail.com",
+            password = "randomPassword"
+        )
+
+        courierWebTest.post()
+            .uri("/register")
+            .bodyValue(registerCourier2)
+            .exchange()
+            .expectStatus().isOk
+
+        val loginCourier2 = LoginInputModel(email = registerCourier2.email, password = registerCourier2.password)
+        val courier2 = courierService.loginCourier(loginCourier2.email, loginCourier2.password)
+        assertIs<Success<UserDetails>>(courier2)
+        val courierInfo2 = courier2.value
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 3: Connect courier 1 to WebSocket
+        // ─────────────────────────────────────────────────────────────
+        val handler = TestWebSocketHandler()
+        val webSocketClient = StandardWebSocketClient()
+        val headers = WebSocketHttpHeaders().apply {
+            add("Authorization", "Bearer ${courierInfo.token}")
+        }
+        val uri = URI("ws://localhost:$port/ws/courier")
+        webSocketClient.execute(handler, headers, uri).get()
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 4: Connect courier 2 to WebSocket
+        // ─────────────────────────────────────────────────────────────
+        val handler2 = TestWebSocketHandler()
+        val webSocketClient2 = StandardWebSocketClient()
+        val headers2 = WebSocketHttpHeaders().apply {
+            add("Authorization", "Bearer ${courierInfo2.token}")
+        }
+        val uri2 = URI("ws://localhost:$port/ws/courier")
+        webSocketClient2.execute(handler2, headers2, uri2).get()
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 5: Register and login client
+        // ─────────────────────────────────────────────────────────────
+        val registerClient = RegisterClientInputModel(
+            name = "a",
+            email = "a@gmail.com",
+            password = "password",
+            address = AddressInputModel(
+                street = "R. Bernardim Ribeiro",
+                city = "Odivelas",
+                country = "Portugal",
+                zipcode = "2620-266",
+                streetNumber = "5",
+                floor = null
+            )
+        )
+        val clientId = createClient(registerClient)
+
+        val clientTokenResult = clientService.loginClient(registerClient.email, registerClient.password)
+        assertIs<Success<String>>(clientTokenResult)
+
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 6: Update courier 1 location
+        // ─────────────────────────────────────────────────────────────
+        courierWebTest.post()
+            .uri("/updateLocation")
+            .cookie("auth_token", courierInfo.token)
+            .bodyValue(
+                LocationUpdateInputModel(
+                    courier.value.courierId,
+                    LocationDTO(38.73538, -9.145238)
+                )
+            )
+            .exchange()
+            .expectStatus().isOk
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 7: Update courier 2 location
+        // ─────────────────────────────────────────────────────────────
+        courierWebTest.post()
+            .uri("/updateLocation")
+            .cookie("auth_token", courierInfo2.token)
+            .bodyValue(
+                LocationUpdateInputModel(
+                    courier2.value.courierId,
+                    LocationDTO(38.734573,-9.144732)
+                )
+            )
+            .exchange()
+            .expectStatus().isOk
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 8: Toggle Availability of courier 1
+        // ─────────────────────────────────────────────────────────────
+
+        handler.sendMessage("{\"type\": \"READY\"}")
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 9: Toggle Availability of courier 2
+        // ─────────────────────────────────────────────────────────────
+
+        handler2.sendMessage("{\"type\": \"READY\"}")
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 10: Add pickup location
+        // ─────────────────────────────────────────────────────────────
+        locationServices.addPickUpLocation(
+            Address(
+                country = "PORTUGAL",
+                city = "Lisbon",
+                street = "Avenida da República",
+                streetNumber = "12",
+                floor = null,
+                zipCode = "1050-191"
+            ),
+            "Big Mac",
+            "MC DONALDS Saldanha",
+            price = 10.0,
+            eta = 15L
+        )
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 11: Client places order
+        // ─────────────────────────────────────────────────────────────
+
+        val client =
+            clientService.getClientById(clientId)
+        assertIs<Either.Right<Client>>(client)
+
+
+        val request =
+            clientService.makeRequest(
+                client = client.value,
+                description = "Big Mac",
+                restaurantName = "MC DONALDS Saldanha",
+                quantity = 1,
+                dropOffAddress = null,
+            )
+
+        assertIs<Success<MakeRequestReturn>>(request)
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 12: Assert WebSocket received order
+        // ─────────────────────────────────────────────────────────────
+        assertTrue(handler.waitForMessage(5000))
+        assertNotNull(handler.lastMessage)
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 13: Courier 1 declines the order
+        // ─────────────────────────────────────────────────────────────
+
+        handler.sendMessage(
+            json = "{\"type\": \"DECISION\", " +
+                    "\"requestId\": ${request.value.requestId}, " +
+                    "\"decision\": \"DECLINE\"}"
+        )
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 14: Courier 2 receives the order
+        // ─────────────────────────────────────────────────────────────
+
+        assertTrue(handler2.waitForMessage(5000))
+        assertNotNull(handler2.lastMessage)
+    }
 
 
 
