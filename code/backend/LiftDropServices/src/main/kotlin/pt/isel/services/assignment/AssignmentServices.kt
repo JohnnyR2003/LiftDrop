@@ -54,15 +54,15 @@ class AssignmentServices(
     suspend fun handleCourierAssignment(
         pickupLat: Double,
         pickupLon: Double,
-        requestId: Int,
+        request: RequestDetailsDTO,
         initialMaxDistance: Double = INITIAL_DISTANCE,
         maxDistanceIncrement: Double = MAX_DISTANCE_INCREMENT,
         maxAllowedDistance: Double = MAX_ALLOWED_DISTANCE,
         deliveryKind: DeliveryKind = DeliveryKind.DEFAULT,
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
-        GlobalLogger.log("Fetching ranked couriers for request ID: $requestId with maxDistance: $currentMaxDistance")
-        val rankedCouriers = fetchRankedCouriersByTravelTime(pickupLat, pickupLon, requestId, currentMaxDistance)
+        GlobalLogger.log("Fetching ranked couriers for request ID: $request with maxDistance: $currentMaxDistance")
+        val rankedCouriers = fetchRankedCouriersByTravelTime(pickupLat, pickupLon, request.requestId, currentMaxDistance)
         GlobalLogger.log("Ranked couriers: $rankedCouriers")
 
         if (rankedCouriers is Either.Right) {
@@ -70,21 +70,15 @@ class AssignmentServices(
 
             for (courier in couriers) {
                 println("Sent assignment request to courier: ${courier.courierId}")
-                val deferredResponse = AssignmentCoordinator.register(requestId)
+                val deferredResponse = AssignmentCoordinator.register(request.requestId)
 
                 transactionManager.run { it ->
-                    val requestDetails = it.requestRepository.getRequestForCourierById(requestId)
-
-                    if (requestDetails == null) {
-                        GlobalLogger.log("Request details not found for request ID: $requestId")
-                        return@run false
-                    }
 
                     val estimatedEarnings =
                         estimateCourierEarnings(
                             distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
-                            itemValue = requestDetails.price.toDouble(),
-                            quantity = requestDetails.quantity,
+                            itemValue = request.price.toDouble(),
+                            quantity = request.quantity,
                         )
 
                     val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
@@ -92,23 +86,23 @@ class AssignmentServices(
                     courierWebSocketHandler.sendMessageToCourier(
                         courier.courierId,
                         DeliveryRequestMessage(
-                            requestId = requestId,
+                            requestId = request.requestId,
                             courierId = courier.courierId,
-                            pickupLatitude = requestDetails.pickupLocation.latitude,
-                            pickupLongitude = requestDetails.pickupLocation.longitude,
-                            pickupAddress = requestDetails.pickupAddress,
-                            dropoffLatitude = requestDetails.dropoffLocation.latitude,
-                            dropoffLongitude = requestDetails.dropoffLocation.longitude,
-                            dropoffAddress = requestDetails.dropoffAddress,
-                            item = requestDetails.item,
-                            quantity = requestDetails.quantity,
+                            pickupLatitude = request.pickupLocation.latitude,
+                            pickupLongitude = request.pickupLocation.longitude,
+                            pickupAddress = request.pickupAddress,
+                            dropoffLatitude = request.dropoffLocation.latitude,
+                            dropoffLongitude = request.dropoffLocation.longitude,
+                            dropoffAddress = request.dropoffAddress,
+                            item = request.item,
+                            quantity = request.quantity,
                             deliveryEarnings = formattedEarnings,
                             deliveryKind = deliveryKind.name,
                         ),
                     )
                 }
 
-                // Wait for the courier’s response or timeout (e.g., 15s)
+                // Wait for the courier’s response or timeout (e.g., 20s)
                 val accepted =
                     try {
                         withTimeout(20_000) {
@@ -127,7 +121,7 @@ class AssignmentServices(
             return handleCourierAssignment(
                 pickupLat,
                 pickupLon,
-                requestId,
+                request,
                 minOf(currentMaxDistance + maxDistanceIncrement, maxAllowedDistance),
                 maxDistanceIncrement,
                 maxAllowedDistance,
@@ -139,7 +133,7 @@ class AssignmentServices(
             return handleCourierAssignment(
                 pickupLat,
                 pickupLon,
-                requestId,
+                request,
                 minOf(currentMaxDistance + maxDistanceIncrement, maxAllowedDistance),
                 maxDistanceIncrement,
                 maxAllowedDistance,
@@ -261,8 +255,8 @@ class AssignmentServices(
     ): Boolean {
         return transactionManager.run {
             val requestRepository = it.requestRepository
-            val requestDetails = requestRepository.getRequestForCourierById(requestId)
-            if (requestDetails == null) {
+            val request = requestRepository.getRequestForCourierById(requestId)
+            if (request == null) {
                 GlobalLogger.log("Request details not found for request ID: $requestId")
                 return@run false
             }
@@ -270,10 +264,10 @@ class AssignmentServices(
             val (pickupLat, pickupLon) =
                 when (deliveryStatus) {
                     DeliveryStatus.HEADING_TO_PICKUP ->
-                        requestDetails.pickupLocation.latitude to requestDetails.pickupLocation.longitude
+                        request.pickupLocation.latitude to request.pickupLocation.longitude
                     DeliveryStatus.HEADING_TO_DROPOFF ->
-                        (pickupLocationDTO?.latitude ?: requestDetails.pickupLocation.latitude) to
-                            (pickupLocationDTO?.longitude ?: requestDetails.pickupLocation.longitude)
+                        (pickupLocationDTO?.latitude ?: request.pickupLocation.latitude) to
+                            (pickupLocationDTO?.longitude ?: request.pickupLocation.longitude)
                 }
 
             val pickupPin =
@@ -288,7 +282,7 @@ class AssignmentServices(
                 if (handleCourierAssignment(
                         pickupLat = pickupLat,
                         pickupLon = pickupLon,
-                        requestId = requestId,
+                        request = request,
                         deliveryKind = deliveryStatus.toDeliveryKind(),
                     )
                 ) {

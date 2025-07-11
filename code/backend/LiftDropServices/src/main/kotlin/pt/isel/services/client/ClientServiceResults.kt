@@ -12,6 +12,8 @@ sealed class RequestCreationError {
     data object InvalidAddress : RequestCreationError()
 
     data object InvalidLocation : RequestCreationError()
+
+    data object RequestDetailsNotFound : RequestCreationError()
 }
 
 sealed class ClientCreationError {

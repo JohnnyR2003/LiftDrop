@@ -4,9 +4,7 @@ import com.example.utils.Either
 import com.example.utils.failure
 import com.example.utils.success
 import jakarta.inject.Named
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.*
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
@@ -177,11 +175,15 @@ class ClientService(
                     "drop-off location ID: $dropOffLocationId",
             )
 
+            val request =
+                requestRepository.getRequestForCourierById(requestId)
+                    ?: return@run failure(RequestCreationError.RequestDetailsNotFound)
+
             CoroutineScope(Dispatchers.IO).launch {
                 assignmentServices.handleCourierAssignment(
                     restaurantLocation.second.latitude,
                     restaurantLocation.second.longitude,
-                    requestId,
+                    request,
                     deliveryKind = DeliveryKind.DEFAULT,
                 )
             }
