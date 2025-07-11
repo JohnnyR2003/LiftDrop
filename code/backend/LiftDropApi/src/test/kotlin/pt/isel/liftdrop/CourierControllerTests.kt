@@ -486,6 +486,49 @@ class CourierControllerTests {
 
         assertTrue(handler2.waitForMessage(5000))
         assertNotNull(handler2.lastMessage)
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 15: Courier 2 accepts the order
+        // ─────────────────────────────────────────────────────────────
+        handler2.sendMessage(
+            json = "{\"type\": \"DECISION\", " +
+                    "\"requestId\": ${request.value.requestId}, " +
+                    "\"decision\": \"ACCEPT\"}"
+        )
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 16: Simulate pickup by courier 2
+        // ─────────────────────────────────────────────────────────────
+
+        courierWebTest
+            .post()
+            .uri("/pickedUpOrder")
+            .cookie("auth_token", courierInfo2.token)
+            .bodyValue(
+                PickupOrderInputModel(request.value.requestId, courierInfo2.courierId, request.value.pickupCode, "DEFAULT")
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+        // ─────────────────────────────────────────────────────────────
+        // STEP 17: Courier 2 cancels the order
+        // ─────────────────────────────────────────────────────────────
+
+        courierWebTest.post()
+            .uri("/cancelDelivery")
+            .cookie("auth_token", courierInfo2.token)
+            .bodyValue(
+                CancelDeliveryInputModel(
+                    courierInfo2.courierId,
+                    request.value.requestId,
+                    "HEADING_TO_DROPOFF",
+                    LocationDTO(38.734573,-9.144732)
+                )
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
     }
 
 
