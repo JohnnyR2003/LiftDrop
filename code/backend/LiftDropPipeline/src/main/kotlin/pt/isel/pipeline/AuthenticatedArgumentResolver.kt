@@ -20,7 +20,6 @@ class AuthenticatedCourierArgumentResolver : HandlerMethodArgumentResolver {
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?,
     ): Any {
-        println("[3]I'm here")
         val request =
             webRequest.getNativeRequest(HttpServletRequest::class.java)
                 ?: throw IllegalStateException("Does not have a HttpServletRequest")
@@ -31,15 +30,15 @@ class AuthenticatedCourierArgumentResolver : HandlerMethodArgumentResolver {
     companion object {
         private const val KEY = "AuthenticatedCourierArgumentResolver"
 
-        fun addCourierTo(
-            courier: AuthenticatedCourier,
-            request: HttpServletRequest,
-        ) = request.setAttribute(KEY, courier)
+        fun addCourierTo(courier: AuthenticatedCourier, request: HttpServletRequest) {
+            println("[ADD] Courier: $courier to request: $request with hashCode: ${request.hashCode()}")
+            request.setAttribute(KEY, courier)
+        }
 
-        fun getCourierFrom(request: HttpServletRequest): AuthenticatedCourier? =
-            request.getAttribute(KEY)?.let {
-                it as? AuthenticatedCourier
-            }
+        fun getCourierFrom(request: HttpServletRequest): AuthenticatedCourier? {
+            println("[GET] Trying to get courier from request: $request with hashCode: ${request.hashCode()}")
+            return request.getAttribute(KEY) as? AuthenticatedCourier
+        }
     }
 }
 

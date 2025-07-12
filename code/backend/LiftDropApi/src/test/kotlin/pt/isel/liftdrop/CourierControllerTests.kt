@@ -296,12 +296,12 @@ class CourierControllerTests {
 
 
     @Test
-    fun `testing order by which couriers are chosen`() {
+    fun `testing decline and cancel order by which couriers are chosen`() {
         // Setup WebTestClients
         val courierWebTest = WebTestClient.bindToServer().baseUrl("http://localhost:$port/api/courier").build()
 
         // ─────────────────────────────────────────────────────────────
-        // STEP 1: Register and login courier
+        // STEP 1: Register and login courier 1
         // ─────────────────────────────────────────────────────────────
         val registerCourier = RegisterCourierInputModel(
             name = "b",
@@ -321,7 +321,7 @@ class CourierControllerTests {
         val courierInfo = courier.value
 
         // ─────────────────────────────────────────────────────────────
-        // STEP 2: Register and login courier
+        // STEP 2: Register and login courier 2
         // ─────────────────────────────────────────────────────────────
         val registerCourier2 = RegisterCourierInputModel(
             name = "c",

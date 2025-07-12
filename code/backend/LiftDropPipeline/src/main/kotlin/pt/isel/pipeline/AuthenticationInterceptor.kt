@@ -17,11 +17,7 @@ class AuthenticationInterceptor(
         response: HttpServletResponse,
         handler: Any,
     ): Boolean {
-        if (handler is HandlerMethod &&
-            handler.methodParameters.any {
-                it.parameterType == AuthenticatedClient::class.java
-            }
-        ) {
+        if (handler is HandlerMethod) {
             val authCookie = request.cookies?.find { it.name == "auth_token" }
 
             // Check for AuthorizedClient
@@ -29,42 +25,39 @@ class AuthenticationInterceptor(
                     it.parameterType == AuthenticatedClient::class.java
                 }
             ) {
-                val client =
-                    authorizationHeaderProcessor
-                        .processClientAuthorizationHeaderValue(authCookie?.value)
+                val client = authorizationHeaderProcessor
+                    .processClientAuthorizationHeaderValue(authCookie?.value)
 
-                return if (client == null) {
+                if (client == null) {
                     response.status = 401
                     response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
-                    false
+                    return false
                 } else {
                     AuthenticatedClientArgumentResolver.addClientTo(client, request)
-                    true
                 }
             }
 
             // Check for AuthorizedCourier
-            else if (handler.methodParameters.any {
+            if (handler.methodParameters.any {
                     it.parameterType == AuthenticatedCourier::class.java
                 }
             ) {
-                val courier =
-                    authorizationHeaderProcessor
-                        .processCourierAuthorizationHeaderValue(authCookie?.value)
+                val courier = authorizationHeaderProcessor
+                    .processCourierAuthorizationHeaderValue(authCookie?.value)
 
-                return if (courier == null) {
+                if (courier == null) {
                     response.status = 401
                     response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
-                    false
+                    return false
                 } else {
                     AuthenticatedCourierArgumentResolver.addCourierTo(courier, request)
-                    true
                 }
             }
         }
 
         return true
     }
+
 
     companion object {
         private const val NAME_WWW_AUTHENTICATE_HEADER = "WWW-Authenticate"
