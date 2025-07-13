@@ -54,10 +54,8 @@ class HomeViewModel(
         get() = _dailyEarnings.asStateFlow()
 
     init {
-        // Start tracking previous screen state
         viewModelScope.launch {
             _stateFlow
-                .drop(1) // Skip initial Idle state if needed
                 .scan(_previousState.value to _stateFlow.value) { acc, new ->
                     acc.second to new
                 }
@@ -670,6 +668,10 @@ class HomeViewModel(
                     requestDetails = requestDetails,
                     dailyEarnings = state.dailyEarnings
                 )
+            }
+
+            is HomeScreenState.RequestDeclined, is HomeScreenState.RequestAccepted -> {
+                state
             }
 
             else -> {

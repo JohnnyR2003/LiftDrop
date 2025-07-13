@@ -42,8 +42,19 @@ class ClientController(
         return when (requestCreationResult) {
             is Success -> {
                 val result = requestCreationResult.value
-                GlobalLogger.log("Order created successfully with ID: $result")
-                ResponseEntity.ok(result.requestId)
+                GlobalLogger.log("Order created successfully with ID: ${result.requestId}")
+
+                // Return 202 Accepted with Location header
+                ResponseEntity
+                    .accepted()
+                    .header(HttpHeaders.LOCATION, "/api/client/getRequestStatus/${result.requestId}")
+                    .body(
+                        mapOf(
+                            "requestId" to result.requestId,
+                            "status" to "processing",
+                            "tracking_endpoint" to "/api/client/getRequestStatus/${result.requestId}",
+                        ),
+                    )
             }
             is Failure -> {
                 GlobalLogger.log("Failed to create order: ${requestCreationResult.value}")

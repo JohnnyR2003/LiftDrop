@@ -44,15 +44,7 @@ class CourierWebSocketHandler(
         val json = jacksonObjectMapper().readTree(message.payload)
         when (json.get("type").asText()) {
             "DECISION" -> handleCourierDecision(session, json)
-            "READY", "NOT_READY" -> toggleCourierAvailability(session)
             else -> println("Unknown message type")
-        }
-    }
-
-    private fun toggleCourierAvailability(session: WebSocketSession) {
-        val courierId = getCourierIdBySession(session)
-        if (courierId != null) {
-            courierService.startListening(courierId)
         }
     }
 
@@ -139,12 +131,11 @@ class CourierWebSocketHandler(
         session: WebSocketSession,
         status: CloseStatus,
     ) {
-        sessions.entries.removeIf { it.value == session }
-
         val authHeader = session.handshakeHeaders["Authorization"]?.firstOrNull()
 
         val token = authHeader?.removePrefix("Bearer ")?.trim()
         if (!token.isNullOrBlank()) {
+            sessions.entries.removeIf { it.value == session }
             val id = userService.getCourierIdByToken(token)
             if (id is Either.Right) courierService.stopListening(id.value)
         }

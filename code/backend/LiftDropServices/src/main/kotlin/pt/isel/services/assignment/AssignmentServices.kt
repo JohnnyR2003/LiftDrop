@@ -28,6 +28,8 @@ import java.util.*
 const val INITIAL_DISTANCE = 1000.0 // Initial max distance in meters
 const val MAX_DISTANCE_INCREMENT = 1000.0 // Incremental distance in meters
 const val MAX_ALLOWED_DISTANCE = 4000.0 // Maximum allowed distance in meters
+const val COURIER_RESPONSE_TIMEOUT_SECONDS = 20L // Timeout for assignment response
+const val DELIVERY_RETRY_DELAY_SECONDS = 10L // Delay before retrying delivery assignment
 
 @Named("AssignmentServices")
 class AssignmentServices(
@@ -72,40 +74,36 @@ class AssignmentServices(
                 println("Sent assignment request to courier: ${courier.courierId}")
                 val deferredResponse = AssignmentCoordinator.register(request.requestId)
 
-                transactionManager.run { it ->
-
-                    val estimatedEarnings =
-                        estimateCourierEarnings(
-                            distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
-                            itemValue = request.price.toDouble(),
-                            quantity = request.quantity,
-                        )
-
-                    val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
-                    // Send the assignment request via WebSocket
-                    courierWebSocketHandler.sendMessageToCourier(
-                        courier.courierId,
-                        DeliveryRequestMessage(
-                            requestId = request.requestId,
-                            courierId = courier.courierId,
-                            pickupLatitude = request.pickupLocation.latitude,
-                            pickupLongitude = request.pickupLocation.longitude,
-                            pickupAddress = request.pickupAddress,
-                            dropoffLatitude = request.dropoffLocation.latitude,
-                            dropoffLongitude = request.dropoffLocation.longitude,
-                            dropoffAddress = request.dropoffAddress,
-                            item = request.item,
-                            quantity = request.quantity,
-                            deliveryEarnings = formattedEarnings,
-                            deliveryKind = deliveryKind.name,
-                        ),
+                val estimatedEarnings =
+                    estimateCourierEarnings(
+                        distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
+                        itemValue = request.price.toDouble(),
+                        quantity = request.quantity,
                     )
-                }
 
-                // Wait for the courier’s response or timeout (e.g., 20s)
+                val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
+                // Send the assignment request via WebSocket
+                courierWebSocketHandler.sendMessageToCourier(
+                    courier.courierId,
+                    DeliveryRequestMessage(
+                        requestId = request.requestId,
+                        courierId = courier.courierId,
+                        pickupLatitude = request.pickupLocation.latitude,
+                        pickupLongitude = request.pickupLocation.longitude,
+                        pickupAddress = request.pickupAddress,
+                        dropoffLatitude = request.dropoffLocation.latitude,
+                        dropoffLongitude = request.dropoffLocation.longitude,
+                        dropoffAddress = request.dropoffAddress,
+                        item = request.item,
+                        quantity = request.quantity,
+                        deliveryEarnings = formattedEarnings,
+                        deliveryKind = deliveryKind.name,
+                    ),
+                )
+
                 val accepted =
                     try {
-                        withTimeout(20_000) {
+                        withTimeout(COURIER_RESPONSE_TIMEOUT_SECONDS) {
                             deferredResponse.await()
                         }
                     } catch (e: TimeoutCancellationException) {
@@ -129,7 +127,7 @@ class AssignmentServices(
             )
         } else {
             GlobalLogger.log("No couriers found. Retrying in 5 seconds...")
-            delay(10_000) // Wait for 10 seconds before retrying
+            delay(DELIVERY_RETRY_DELAY_SECONDS) // Wait for 10 seconds before retrying
             return handleCourierAssignment(
                 pickupLat,
                 pickupLon,

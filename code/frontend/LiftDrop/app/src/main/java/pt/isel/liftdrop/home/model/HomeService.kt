@@ -73,8 +73,9 @@ class RealHomeService(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                onFailure(t)
+                webSocket.close(1002, "Error: ${t.message}")
                 isConnected = false
+                onFailure(t)
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
