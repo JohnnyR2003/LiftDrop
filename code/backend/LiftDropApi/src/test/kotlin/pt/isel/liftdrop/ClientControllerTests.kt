@@ -231,7 +231,7 @@ class ClientControllerTests {
                 ),
             ).exchange()
             .expectStatus()
-            .isOk
+            .isAccepted
     }
 
     private fun createClient(registerClient: RegisterClientInputModel) {
