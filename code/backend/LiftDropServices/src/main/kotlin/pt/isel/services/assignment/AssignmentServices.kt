@@ -28,8 +28,8 @@ import java.util.*
 const val INITIAL_DISTANCE = 1000.0 // Initial max distance in meters
 const val MAX_DISTANCE_INCREMENT = 1000.0 // Incremental distance in meters
 const val MAX_ALLOWED_DISTANCE = 4000.0 // Maximum allowed distance in meters
-const val COURIER_RESPONSE_TIMEOUT_SECONDS = 20L // Timeout for assignment response
-const val DELIVERY_RETRY_DELAY_SECONDS = 10L // Delay before retrying delivery assignment
+const val COURIER_RESPONSE_TIMEOUT_SECONDS = 20_000L // Timeout for assignment response
+const val DELIVERY_RETRY_DELAY_SECONDS = 10_000L // Delay before retrying delivery assignment
 
 @Named("AssignmentServices")
 class AssignmentServices(
@@ -60,7 +60,7 @@ class AssignmentServices(
         initialMaxDistance: Double = INITIAL_DISTANCE,
         maxDistanceIncrement: Double = MAX_DISTANCE_INCREMENT,
         maxAllowedDistance: Double = MAX_ALLOWED_DISTANCE,
-        deliveryKind: DeliveryKind = DeliveryKind.DEFAULT,
+        deliveryKind: DeliveryKind,
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
         GlobalLogger.log("Fetching ranked couriers for request ID: $request with maxDistance: $currentMaxDistance")
@@ -74,33 +74,43 @@ class AssignmentServices(
                 println("Sent assignment request to courier: ${courier.courierId}")
                 val deferredResponse = AssignmentCoordinator.register(request.requestId)
 
-                val estimatedEarnings =
-                    estimateCourierEarnings(
-                        distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
-                        itemValue = request.price.toDouble(),
-                        quantity = request.quantity,
+                transactionManager.run { it ->
+                    val requestDetails = it.requestRepository.getRequestForCourierById(request.requestId)
+
+                    if (requestDetails == null) {
+                        GlobalLogger.log("Request details not found for request ID: $request")
+                        return@run false
+                    }
+
+                    val estimatedEarnings =
+                        estimateCourierEarnings(
+                            distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
+                            itemValue = requestDetails.price.toDouble(),
+                            quantity = requestDetails.quantity,
+                        )
+
+                    val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
+                    // Send the assignment request via WebSocket
+                    courierWebSocketHandler.sendMessageToCourier(
+                        courier.courierId,
+                        DeliveryRequestMessage(
+                            requestId = request.requestId,
+                            courierId = courier.courierId,
+                            pickupLatitude = requestDetails.pickupLocation.latitude,
+                            pickupLongitude = requestDetails.pickupLocation.longitude,
+                            pickupAddress = requestDetails.pickupAddress,
+                            dropoffLatitude = requestDetails.dropoffLocation.latitude,
+                            dropoffLongitude = requestDetails.dropoffLocation.longitude,
+                            dropoffAddress = requestDetails.dropoffAddress,
+                            item = requestDetails.item,
+                            quantity = requestDetails.quantity,
+                            deliveryEarnings = formattedEarnings,
+                            deliveryKind = deliveryKind.name,
+                        ),
                     )
+                }
 
-                val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
-                // Send the assignment request via WebSocket
-                courierWebSocketHandler.sendMessageToCourier(
-                    courier.courierId,
-                    DeliveryRequestMessage(
-                        requestId = request.requestId,
-                        courierId = courier.courierId,
-                        pickupLatitude = request.pickupLocation.latitude,
-                        pickupLongitude = request.pickupLocation.longitude,
-                        pickupAddress = request.pickupAddress,
-                        dropoffLatitude = request.dropoffLocation.latitude,
-                        dropoffLongitude = request.dropoffLocation.longitude,
-                        dropoffAddress = request.dropoffAddress,
-                        item = request.item,
-                        quantity = request.quantity,
-                        deliveryEarnings = formattedEarnings,
-                        deliveryKind = deliveryKind.name,
-                    ),
-                )
-
+                // Wait for the courier’s response or timeout (e.g., 15s)
                 val accepted =
                     try {
                         withTimeout(COURIER_RESPONSE_TIMEOUT_SECONDS) {
@@ -126,7 +136,7 @@ class AssignmentServices(
                 deliveryKind,
             )
         } else {
-            GlobalLogger.log("No couriers found. Retrying in 5 seconds...")
+            GlobalLogger.log("No couriers found. Retrying in 10 seconds...")
             delay(DELIVERY_RETRY_DELAY_SECONDS) // Wait for 10 seconds before retrying
             return handleCourierAssignment(
                 pickupLat,
@@ -231,9 +241,7 @@ class AssignmentServices(
         val ranked =
             couriers.sortedBy { courier ->
                 val normTime =
-                    if (maxTime >
-                        minTime
-                    ) {
+                    if (maxTime > minTime) {
                         ((courier.estimatedTravelTime ?: 0L) - minTime).toDouble() / (maxTime - minTime)
                     } else {
                         0.0
@@ -241,7 +249,6 @@ class AssignmentServices(
                 val normRating = if (maxRating > minRating) ((courier.rating ?: 0.0) - minRating) / (maxRating - minRating) else 0.0
                 alpha * normTime + beta * (1 - normRating)
             }
-
         return ranked
     }
 
@@ -322,7 +329,7 @@ class AssignmentServices(
         }
     }
 
-    fun estimateCourierEarnings(
+    private fun estimateCourierEarnings(
         distanceKm: Double,
         itemValue: Double,
         quantity: Int,
