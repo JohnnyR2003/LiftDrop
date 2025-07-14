@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit
 
 
 const val TAG = "LiftDropApp"
-//const val HOST = "https://two025-lift-drop.onrender.com"
-const val HOST = "https://new-evolving-piranha.ngrok-free.app"
+const val HOST = "https://two025-lift-drop.onrender.com"
+//const val HOST = "https://new-evolving-piranha.ngrok-free.app"
 val ApplicationJsonType = "application/json".toMediaType()
 
 
