@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import pt.isel.liftdrop.AuthenticatedCourier
 import pt.isel.liftdrop.DeliveryKind
 import pt.isel.liftdrop.DeliveryStatus
 import pt.isel.liftdrop.Uris
@@ -140,6 +141,7 @@ class CourierController(
     @PostMapping(Uris.Courier.UPDATE_LOCATION)
     fun updateCourierLocation(
         @RequestBody input: LocationUpdateInputModel,
+        courier: AuthenticatedCourier,
     ): ResponseEntity<Any> {
         val address =
             geocodingServices.reverseGeocode(
@@ -185,7 +187,10 @@ class CourierController(
     }
 
     @PostMapping(Uris.Courier.WAITING_ORDERS)
-    fun startListening(input: StartListeningInputModel): ResponseEntity<Any> {
+    fun startListening(
+        input: StartListeningInputModel,
+        courier: AuthenticatedCourier,
+    ): ResponseEntity<Any> {
         val request = courierService.stopListening(input.courierId)
         return when (request) {
             is Success -> {
@@ -208,6 +213,7 @@ class CourierController(
     @PostMapping(Uris.Courier.TRY_PICKUP)
     fun isPickupSpotValid(
         @RequestBody input: PickupSpotInputModel,
+        courier: AuthenticatedCourier,
     ): ResponseEntity<Any> {
         val request =
             courierService.checkCourierPickup(
@@ -235,6 +241,7 @@ class CourierController(
     @PostMapping(Uris.Courier.PICKED_UP_ORDER)
     fun pickUpOrder(
         @RequestBody input: PickupOrderInputModel,
+        courier: AuthenticatedCourier,
     ): ResponseEntity<Any> {
         println("Received pickup request: $input")
         val request =
@@ -273,6 +280,7 @@ class CourierController(
     @PostMapping(Uris.Courier.TRY_DELIVERY)
     fun isDropOffSpotValid(
         @RequestBody input: DropOffSpotInputModel,
+        courier: AuthenticatedCourier,
     ): ResponseEntity<Any> {
         val request =
             courierService.checkCourierDropOff(
@@ -300,6 +308,7 @@ class CourierController(
     @PostMapping(Uris.Courier.DELIVERED_ORDER)
     fun deliverOrder(
         @RequestBody input: DeliverOrderInputModel,
+        courier: AuthenticatedCourier,
     ): ResponseEntity<Any> {
         val request =
             courierService.deliver(
@@ -332,6 +341,7 @@ class CourierController(
     @PostMapping(Uris.Courier.CANCEL_DELIVERY)
     fun cancelDelivery(
         @RequestBody input: CancelDeliveryInputModel,
+        courier: AuthenticatedCourier,
     ): ResponseEntity<Any> {
         val request =
             courierService.cancelDelivery(
@@ -373,6 +383,7 @@ class CourierController(
     @GetMapping(Uris.Courier.FETCH_DAILY_EARNINGS)
     fun fetchDailyEarnings(
         @PathVariable courierId: Int,
+        courier: AuthenticatedCourier,
     ): ResponseEntity<Any> =
         when (val request = courierService.fetchDailyEarnings(courierId)) {
             is Either.Right -> ResponseEntity.ok(request.value)
