@@ -21,6 +21,7 @@ class HttpService(
             val request = Request.Builder()
                 .url("$baseUrl$url")
                 .addHeader("Authorization", "Bearer $token")
+                .addHeader("Cookie", "auth_token=$token")
                 .build()
 
             client.newCall(request).enqueue(object : Callback {
@@ -63,6 +64,7 @@ class HttpService(
             .url("$baseUrl$url")
             .addHeader("Content-Type", "application/json")
             .addHeader("Authorization", "Bearer $token")
+            .addHeader("Cookie", "auth_token=$token")
             .post(body)
             .build()
 
@@ -106,6 +108,7 @@ class HttpService(
         val request = Request.Builder()
             .url("$baseUrl$url")
             .addHeader("Authorization", "Bearer $token")
+            .addHeader("Cookie", "auth_token=$token")
             .delete()
             .build()
 
