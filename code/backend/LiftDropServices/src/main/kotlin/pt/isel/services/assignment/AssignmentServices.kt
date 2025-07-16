@@ -74,41 +74,32 @@ class AssignmentServices(
                 println("Sent assignment request to courier: ${courier.courierId}")
                 val deferredResponse = AssignmentCoordinator.register(request.requestId)
 
-                transactionManager.run { it ->
-                    val requestDetails = it.requestRepository.getRequestForCourierById(request.requestId)
-
-                    if (requestDetails == null) {
-                        GlobalLogger.log("Request details not found for request ID: $request")
-                        return@run false
-                    }
-
-                    val estimatedEarnings =
-                        estimateCourierEarnings(
-                            distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
-                            itemValue = requestDetails.price.toDouble(),
-                            quantity = requestDetails.quantity,
-                        )
-
-                    val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
-                    // Send the assignment request via WebSocket
-                    courierWebSocketHandler.sendMessageToCourier(
-                        courier.courierId,
-                        DeliveryRequestMessage(
-                            requestId = request.requestId,
-                            courierId = courier.courierId,
-                            pickupLatitude = requestDetails.pickupLocation.latitude,
-                            pickupLongitude = requestDetails.pickupLocation.longitude,
-                            pickupAddress = requestDetails.pickupAddress,
-                            dropoffLatitude = requestDetails.dropoffLocation.latitude,
-                            dropoffLongitude = requestDetails.dropoffLocation.longitude,
-                            dropoffAddress = requestDetails.dropoffAddress,
-                            item = requestDetails.item,
-                            quantity = requestDetails.quantity,
-                            deliveryEarnings = formattedEarnings,
-                            deliveryKind = deliveryKind.name,
-                        ),
+                val estimatedEarnings =
+                    estimateCourierEarnings(
+                        distanceKm = courier.distanceMeters / 3600.0, // Convert seconds to hours
+                        itemValue = request.price.toDouble(),
+                        quantity = request.quantity,
                     )
-                }
+
+                val formattedEarnings = String.format(Locale.US, "%.2f", estimatedEarnings)
+                // Send the assignment request via WebSocket
+                courierWebSocketHandler.sendMessageToCourier(
+                    courier.courierId,
+                    DeliveryRequestMessage(
+                        requestId = request.requestId,
+                        courierId = courier.courierId,
+                        pickupLatitude = request.pickupLocation.latitude,
+                        pickupLongitude = request.pickupLocation.longitude,
+                        pickupAddress = request.pickupAddress,
+                        dropoffLatitude = request.dropoffLocation.latitude,
+                        dropoffLongitude = request.dropoffLocation.longitude,
+                        dropoffAddress = request.dropoffAddress,
+                        item = request.item,
+                        quantity = request.quantity,
+                        deliveryEarnings = formattedEarnings,
+                        deliveryKind = deliveryKind.name,
+                    ),
+                )
 
                 // Wait for the courier’s response or timeout (e.g., 15s)
                 val accepted =
