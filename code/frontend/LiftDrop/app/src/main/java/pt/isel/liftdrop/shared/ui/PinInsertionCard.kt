@@ -43,7 +43,6 @@ fun PinInsertionCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if(orderNumber != null) {
-                // Novo bloco: título e número da encomenda
             Text(
                 text = "O seu número de encomenda",
                 fontSize = 18.sp,
@@ -111,7 +110,6 @@ fun PinInsertionCard(
                             fontSize = 22.sp,
                             textAlign = TextAlign.Center
                         ),
-                        visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.NumberPassword
                         ),

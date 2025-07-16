@@ -24,37 +24,49 @@ class HttpService(
                 .addHeader("Cookie", "auth_token=$token")
                 .build()
 
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    continuation.resume(Result.Error(
-                        Problem(
-                            type = "NetworkError",
-                            title = "Network Failure",
-                            status = 500,
-                            detail = e.message)
-                    ))
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    val responseBody = response.body?.string()
-                    if (responseBody != null) {
-                        if (!response.isSuccessful) {
-                            val problem = gson.fromJson(responseBody, Problem::class.java)
-                            continuation.resume(Result.Error(problem))
-                        } else {
-                            val result = gson.fromJson<T>(responseBody, object : TypeToken<T>() {}.type)
-                            continuation.resume(Result.Success(result))
-                        }
-                    } else {
-                        continuation.resume(Result.Error(
-                            Problem(
-                                type = "EmptyResponse",
-                                title = "No Content",
-                                status = 204,
-                                detail = "Response body is null")))
+            client.newCall(request).let { call ->
+                call.enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        continuation.resume(
+                            Result.Error(
+                                Problem(
+                                    type = "NetworkError",
+                                    title = "Network Failure",
+                                    status = 500,
+                                    detail = e.message
+                                )
+                            )
+                        )
                     }
-                }
-            })
+
+                    override fun onResponse(call: Call, response: Response) {
+                        val responseBody = response.body?.string()
+                        if (responseBody != null) {
+                            if (!response.isSuccessful) {
+                                val problem = gson.fromJson(responseBody, Problem::class.java)
+                                continuation.resume(Result.Error(problem))
+                            } else {
+                                val result =
+                                    gson.fromJson<T>(responseBody, object : TypeToken<T>() {}.type)
+                                continuation.resume(Result.Success(result))
+                            }
+                        } else {
+                            continuation.resume(
+                                Result.Error(
+                                    Problem(
+                                        type = "EmptyResponse",
+                                        title = "No Content",
+                                        status = 204,
+                                        detail = "Response body is null"
+                                    )
+                                )
+                            )
+                        }
+                    }
+                 }
+                )
+                continuation.invokeOnCancellation { call.cancel() }
+            }
         }
 
     suspend inline fun <reified T, reified R> post(url: String, data: T, token: String): Result<R> {
@@ -69,38 +81,49 @@ class HttpService(
             .build()
 
         return suspendCancellableCoroutine { continuation ->
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    continuation.resume(Result.Error(
-                        Problem(
-                            type = "NetworkError",
-                            title = "Network Failure",
-                            status = 500,
-                            detail = e.message)
-                    ))
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    val responseBody = response.body?.string()
-                    if (responseBody != null) {
-                        if (!response.isSuccessful) {
-                            val problem = gson.fromJson(responseBody, Problem::class.java)
-                            continuation.resume(Result.Error(problem))
-                        } else {
-                            val result = gson.fromJson<R>(responseBody, object : TypeToken<R>() {}.type)
-                            continuation.resume(Result.Success(result))
-                        }
-                    } else {
-                        continuation.resume(Result.Error(
-                            Problem(
-                                type = "EmptyResponse",
-                                title = "No Content",
-                                status = 204,
-                                detail = "Response body is null")
-                        ))
+            client.newCall(request).let { call ->
+                call.enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        continuation.resume(
+                            Result.Error(
+                                Problem(
+                                    type = "NetworkError",
+                                    title = "Network Failure",
+                                    status = 500,
+                                    detail = e.message
+                                )
+                            )
+                        )
                     }
-                }
-            })
+
+                    override fun onResponse(call: Call, response: Response) {
+                        val responseBody = response.body?.string()
+                        if (responseBody != null) {
+                            if (!response.isSuccessful) {
+                                val problem = gson.fromJson(responseBody, Problem::class.java)
+                                continuation.resume(Result.Error(problem))
+                            } else {
+                                val result =
+                                    gson.fromJson<R>(responseBody, object : TypeToken<R>() {}.type)
+                                continuation.resume(Result.Success(result))
+                            }
+                        } else {
+                            continuation.resume(
+                                Result.Error(
+                                    Problem(
+                                        type = "EmptyResponse",
+                                        title = "No Content",
+                                        status = 204,
+                                        detail = "Response body is null"
+                                    )
+                                )
+                            )
+                        }
+                    }
+                 }
+                )
+                continuation.invokeOnCancellation { call.cancel() }
+            }
         }
     }
 
@@ -113,39 +136,49 @@ class HttpService(
             .build()
 
         return suspendCancellableCoroutine { continuation ->
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    continuation.resume(Result.Error(
-                        Problem(
-                            type = "NetworkError",
-                            title = "Network Failure",
-                            status = 500,
-                            detail = e.message)
-                    ))
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    val responseBody = response.body?.string()
-                    if (responseBody != null) {
-                        if (!response.isSuccessful) {
-                            val problem = gson.fromJson(responseBody, Problem::class.java)
-                            continuation.resume(Result.Error(problem))
-                        } else {
-                            val result = gson.fromJson<T>(responseBody, object : TypeToken<T>() {}.type)
-                            continuation.resume(Result.Success(result))
-                        }
-                    } else {
-                        continuation.resume(Result.Error(
-                            Problem(
-                                type = "EmptyResponse",
-                                title = "No Content",
-                                status = 204,
-                                detail = "Response body is null"
+            client.newCall(request).let { call ->
+                call.enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        continuation.resume(
+                            Result.Error(
+                                Problem(
+                                    type = "NetworkError",
+                                    title = "Network Failure",
+                                    status = 500,
+                                    detail = e.message
+                                )
                             )
-                        ))
+                        )
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        val responseBody = response.body?.string()
+                        if (responseBody != null) {
+                            if (!response.isSuccessful) {
+                                val problem = gson.fromJson(responseBody, Problem::class.java)
+                                continuation.resume(Result.Error(problem))
+                            } else {
+                                val result =
+                                    gson.fromJson<T>(responseBody, object : TypeToken<T>() {}.type)
+                                continuation.resume(Result.Success(result))
+                            }
+                        } else {
+                            continuation.resume(
+                                Result.Error(
+                                    Problem(
+                                        type = "EmptyResponse",
+                                        title = "No Content",
+                                        status = 204,
+                                        detail = "Response body is null"
+                                    )
+                                )
+                            )
+                        }
                     }
                 }
-            })
+                )
+                continuation.invokeOnCancellation { call.cancel() }
+            }
         }
     }
 }
