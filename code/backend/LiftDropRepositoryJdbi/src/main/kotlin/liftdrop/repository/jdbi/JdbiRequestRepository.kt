@@ -135,6 +135,18 @@ class JdbiRequestRepository(
             .mapTo<Request>()
             .list()
 
+    override fun getPickupCodeForRequest(requestId: Int): String =
+        handle
+            .createQuery(
+                """
+        SELECT pickup_code
+        FROM liftdrop.request
+        WHERE request_id = :request_id
+        """,
+            ).bind("request_id", requestId)
+            .mapTo<String>()
+            .one()
+
     override fun getPickupCodeForCancelledRequest(requestId: Int): String =
         handle
             .createQuery(

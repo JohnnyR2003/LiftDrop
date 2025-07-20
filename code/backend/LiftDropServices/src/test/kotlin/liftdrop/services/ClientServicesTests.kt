@@ -14,6 +14,7 @@ import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.MakeRequestReturn
 import pt.isel.liftdrop.User
 import pt.isel.liftdrop.UserRole
+import pt.isel.services.AssignmentCoordinator
 import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.client.ClientService
@@ -44,6 +45,8 @@ class ClientServiceTest {
 
         private val courierWebSocketHandler = createCourierWebSocketHandler()
 
+        private val assignmentCoordinator = createAssignmentCoordinator()
+
         private val geocodingServices = createGeocodingService()
 
         private val assignmentServices = createAssignmentService()
@@ -61,9 +64,12 @@ class ClientServiceTest {
 
         private fun createCourierService(): CourierService = CourierService(transactionManager)
 
+        private fun createAssignmentCoordinator(): AssignmentCoordinator = AssignmentCoordinator
+
         private fun createCourierWebSocketHandler(): CourierWebSocketHandler = CourierWebSocketHandler(courierService, userService)
 
-        private fun createAssignmentService(): AssignmentServices = AssignmentServices(transactionManager, courierWebSocketHandler)
+        private fun createAssignmentService(): AssignmentServices =
+            AssignmentServices(transactionManager, courierWebSocketHandler, assignmentCoordinator)
 
         private fun createGeocodingService(): GeocodingServices = GeocodingServices()
 

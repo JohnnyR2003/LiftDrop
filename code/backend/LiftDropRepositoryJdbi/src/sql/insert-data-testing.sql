@@ -19,7 +19,12 @@ VALUES ('PORTUGAL', 'Lisbon', 'Avenida de Roma', '15', 'RC', '1000-264'),
        ('PORTUGAL', 'Lisbon', 'Rua Albert Einstein', '1', '2', '1500-676'),
        ('PORTUGAL', 'Lisbon', 'Avenida Dom João II', '40', '3', '1990-094'),
        ('PORTUGAL', 'Lisbon', 'Avenida da Liberdade', '2', 'RC', '1250-113'),
-       ('PORTUGAL', 'Odivelas', 'Av. Prof. Dr. Augusto Abreu Lopes', '2', 'RC', '2675-462');
+       ('PORTUGAL', 'Odivelas', 'Av. Prof. Dr. Augusto Abreu Lopes', '2', 'RC', '2675-462'),
+       ('PORTUGAL', 'Lisbon', 'Rua do Ouro', '100', 'RC', '1100-060'),
+       ('PORTUGAL', 'Lisbon', 'Rua Augusta', '200', '1', '1100-053'),
+       ('PORTUGAL', 'Lisbon', 'Praça do Comércio', '1', 'RC', '1100-148'),
+       ('PORTUGAL', 'Lisbon', 'Avenida Almirante Reis', '50', '2', '1150-019'),
+       ('PORTUGAL', 'Lisbon', 'Rua Garrett', '120', '3', '1200-205');
 
 -- Insert locations next (no dependencies)
 INSERT INTO liftdrop."location" (location_id, latitude, longitude, address, name)
@@ -29,7 +34,12 @@ VALUES (1, 38.743424, -9.138986, 1, 'Avenida de Roma'),
        (4, 38.75504773230685, -9.188669486292124 , 4, 'Centro Colombo'),
        (5, 38.768230407427936, -9.09637567868234, 5, 'Centro Comercial Vasco da Gama'),
        (6, 38.716107488039675, -9.142992520654982, 6, 'Avenida da Liberdade'),
-       (7, 38.794485074412876, -9.181222211849477, 7, 'McDonalds Odivelas');
+       (7, 38.794485074412876, -9.181222211849477, 7, 'McDonalds Odivelas'),
+       (8, 38.7101, -9.1387, 8, 'Rua do Ouro'),
+       (9, 38.7105, -9.1372, 9, 'Rua Augusta'),
+       (10, 38.7078, -9.1366, 10, 'Praça do Comércio'),
+       (11, 38.7262, -9.1342, 11, 'Avenida Almirante Reis'),
+       (12, 38.7109, -9.1431, 12, 'Rua Garrett');
 
 -- Insert clients (depends on Users)
 INSERT INTO liftdrop."client" (client_id, address)
@@ -69,7 +79,12 @@ VALUES
     (4, 'KFC COLOMBO', 4, 'Chick & Share 9 Tenders', 7.49, 3000),
     (5, 'TACO BELL VASCO DA GAMA', 5, 'Crunchwrap Supreme', 6.29, 2500),
     (6, 'SUBWAY AVENIDA DA LIBERDADE', 6, 'Turkey Sub', 6.89, 1200),
-    (7, 'MC DONALDS Odivelas', 7, 'Big Mac', 5.99, 1800);
+    (7, 'MC DONALDS Odivelas', 7, 'Big Mac', 5.99, 1800),
+    (8, 'PIZZA HUT BAIXA', 8, 'Pepperoni Pizza', 8.99, 1600),
+    (9, 'NANDOS AUGUSTA', 9, 'Peri-Peri Chicken', 9.49, 1700),
+    (10, 'TIME OUT MARKET', 10, 'Bacalhau à Brás', 12.00, 2000),
+    (11, 'DOMINOS ALMIRANTE REIS', 11, 'Margherita Pizza', 7.99, 1500),
+    (12, 'A PADARIA PORTUGUESA', 12, 'Pastel de Nata', 1.20, 600);
 
 -- Insert deliveries
 INSERT INTO liftdrop."delivery" (delivery_id, courier_id, request_id, started_at, completed_at, ETA, delivery_status)

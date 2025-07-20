@@ -1,9 +1,11 @@
 package pt.isel.services
 
 import kotlinx.coroutines.CompletableDeferred
+import org.springframework.stereotype.Component
 import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger.Companion.log
 import java.util.concurrent.ConcurrentHashMap
 
+@Component
 object AssignmentCoordinator {
     private val pendingResponses = ConcurrentHashMap<Int, CompletableDeferred<Boolean>>()
 

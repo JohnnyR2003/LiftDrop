@@ -32,6 +32,8 @@ interface RequestRepository {
 
     fun getRequestById(requestId: Int): Request?
 
+    fun getPickupCodeForRequest(requestId: Int): String
+
     fun getPickupCodeForCancelledRequest(requestId: Int): String
 
     fun getRequestForCourierById(requestId: Int): RequestDetailsDTO?

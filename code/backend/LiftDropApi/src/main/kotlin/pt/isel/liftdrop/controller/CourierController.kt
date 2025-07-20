@@ -64,7 +64,6 @@ class CourierController(
         val courierLoginResult = courierService.loginCourier(input.email, input.password)
         return when (courierLoginResult) {
             is Success -> {
-                GlobalLogger.log("Client logged in successfully with token: ${courierLoginResult.value}")
                 val token = courierLoginResult.value.token
                 val cookie =
                     ResponseCookie
@@ -158,7 +157,6 @@ class CourierController(
                     )
                 when (updateLocationResult) {
                     is Success -> {
-                        GlobalLogger.log("Courier location updated successfully")
                         ResponseEntity.ok(true)
                     }
                     is Failure -> {
@@ -186,30 +184,6 @@ class CourierController(
         }
     }
 
-    @PostMapping(Uris.Courier.WAITING_ORDERS)
-    fun startListening(
-        input: StartListeningInputModel,
-        courier: AuthenticatedCourier,
-    ): ResponseEntity<Any> {
-        val request = courierService.stopListening(input.courierId)
-        return when (request) {
-            is Success -> {
-                println("Courier is now available for orders")
-                ResponseEntity.ok("Courier is now available for orders")
-            }
-            is Failure -> {
-                val errorResponseMap =
-                    mapOf(
-                        StateUpdateError.CourierWasAlreadyListening::class to {
-                            Problem.courierNotFound().response(HttpStatus.NOT_FOUND)
-                        },
-                    )
-                errorResponseMap[request.value::class]?.invoke()
-                    ?: Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
-            }
-        }
-    }
-
     @PostMapping(Uris.Courier.TRY_PICKUP)
     fun isPickupSpotValid(
         @RequestBody input: PickupSpotInputModel,
@@ -222,7 +196,6 @@ class CourierController(
             )
         return when (request) {
             is Success -> {
-                println("Pickup spot is valid")
                 ResponseEntity.ok(true)
             }
             is Failure -> {
@@ -243,7 +216,6 @@ class CourierController(
         @RequestBody input: PickupOrderInputModel,
         courier: AuthenticatedCourier,
     ): ResponseEntity<Any> {
-        println("Received pickup request: $input")
         val request =
             courierService.pickupDelivery(
                 requestId = input.requestId,
@@ -289,7 +261,6 @@ class CourierController(
             )
         return when (request) {
             is Success -> {
-                println("Drop-off spot is valid")
                 ResponseEntity.ok(true)
             }
             is Failure -> {
@@ -319,7 +290,6 @@ class CourierController(
             )
         return when (request) {
             is Success -> {
-                println("Order delivered successfully")
                 ResponseEntity.ok(true)
             }
             is Failure -> {
@@ -351,7 +321,6 @@ class CourierController(
         val deliveryStatus = DeliveryStatus.fromString(input.deliveryStatus)
         return when (request) {
             is Success -> {
-                GlobalLogger.log("Courier cancelled delivery while heading to dropoff")
                 val reassignResult =
                     assignmentServices.handleRequestReassignment(
                         input.requestId,
@@ -363,7 +332,6 @@ class CourierController(
                     GlobalLogger.log("Failed to reassign request ${input.requestId}")
                     Problem.internalServerError().response(HttpStatus.INTERNAL_SERVER_ERROR)
                 } else {
-                    GlobalLogger.log("Request ${input.requestId} reassigned successfully")
                     ResponseEntity.ok(true)
                 }
             }

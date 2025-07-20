@@ -6,6 +6,7 @@ import org.jdbi.v3.core.Jdbi
 import org.postgresql.ds.PGSimpleDataSource
 import pt.isel.liftdrop.Address
 import pt.isel.liftdrop.LocationDTO
+import pt.isel.services.AssignmentCoordinator
 import pt.isel.services.CourierWebSocketHandler
 import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.client.ClientService
@@ -35,10 +36,13 @@ object ServicesTestUtils {
             JdbiTransactionManager(jdbi),
         )
 
+    fun createAssignmentCoordinator() = AssignmentCoordinator
+
     fun createAssignmentService() =
         AssignmentServices(
             JdbiTransactionManager(jdbi),
             createCourierWebSocketHandler(),
+            createAssignmentCoordinator(),
         )
 
     fun createGeocodingService() = GeocodingServices()

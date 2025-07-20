@@ -12,7 +12,6 @@ import pt.isel.liftdrop.AuthenticatedClient
 import pt.isel.liftdrop.Client
 import pt.isel.liftdrop.Uris
 import pt.isel.liftdrop.model.*
-import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.client.*
 
 /**
@@ -42,8 +41,6 @@ class ClientController(
         return when (requestCreationResult) {
             is Success -> {
                 val result = requestCreationResult.value
-                GlobalLogger.log("Order created successfully with ID: ${result.requestId}")
-
                 // Return 202 Accepted with Location header
                 ResponseEntity
                     .accepted()
@@ -57,7 +54,6 @@ class ClientController(
                     )
             }
             is Failure -> {
-                GlobalLogger.log("Failed to create order: ${requestCreationResult.value}")
                 val errorResponseMap =
                     mapOf(
                         RequestCreationError.RestaurantNotFound::class to {
@@ -135,7 +131,6 @@ class ClientController(
         val clientLoginResult = clientService.loginClient(input.email, input.password)
         return when (clientLoginResult) {
             is Success -> {
-                GlobalLogger.log("Client logged in successfully with token: ${clientLoginResult.value}")
                 val token = clientLoginResult.value
                 val cookie =
                     ResponseCookie
@@ -222,7 +217,6 @@ class ClientController(
             )
         return when (result) {
             is Success -> {
-                println("Drop-off location added successfully with ID: ${result.value}")
                 ResponseEntity.ok(result.value)
             }
             is Failure -> {
@@ -247,7 +241,13 @@ class ClientController(
         @PathVariable requestId: Int,
     ): ResponseEntity<Any> =
         when (val result = clientService.getRequestStatus(client.client.user.id, requestId)) {
-            is Success -> ResponseEntity.ok(mapOf("ETA" to result.value.first, "status" to result.value.second))
+            is Success ->
+                ResponseEntity.ok(
+                    mapOf(
+                        "ETA" to result.value.first,
+                        "status" to result.value.second,
+                    ),
+                )
             is Failure -> {
                 val errorResponseMap =
                     mapOf(
@@ -272,7 +272,6 @@ class ClientController(
             )
         return when (result) {
             is Success -> {
-                println("Classification given successfully")
                 ResponseEntity.ok("Classification given successfully")
             }
             is Failure -> {

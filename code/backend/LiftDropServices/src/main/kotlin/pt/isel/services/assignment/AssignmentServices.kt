@@ -35,6 +35,7 @@ const val DELIVERY_RETRY_DELAY_SECONDS = 10_000L // Delay before retrying delive
 class AssignmentServices(
     private val transactionManager: TransactionManager,
     private val courierWebSocketHandler: CourierWebSocketHandler,
+    private val assignmentCoordinator: AssignmentCoordinator,
 ) {
     val httpClient =
         HttpClient(CIO) {
@@ -63,16 +64,13 @@ class AssignmentServices(
         deliveryKind: DeliveryKind,
     ): Boolean {
         val currentMaxDistance = minOf(initialMaxDistance, maxAllowedDistance)
-        GlobalLogger.log("Fetching ranked couriers for request ID: $request with maxDistance: $currentMaxDistance")
         val rankedCouriers = fetchRankedCouriersByTravelTime(pickupLat, pickupLon, request.requestId, currentMaxDistance)
-        GlobalLogger.log("Ranked couriers: $rankedCouriers")
 
         if (rankedCouriers is Either.Right) {
             val couriers = rankedCouriers.value
 
             for (courier in couriers) {
-                println("Sent assignment request to courier: ${courier.courierId}")
-                val deferredResponse = AssignmentCoordinator.register(request.requestId)
+                val deferredResponse = assignmentCoordinator.register(request.requestId)
 
                 val estimatedEarnings =
                     estimateCourierEarnings(
@@ -127,7 +125,6 @@ class AssignmentServices(
                 deliveryKind,
             )
         } else {
-            GlobalLogger.log("No couriers found. Retrying in 10 seconds...")
             delay(DELIVERY_RETRY_DELAY_SECONDS) // Wait for 10 seconds before retrying
             return handleCourierAssignment(
                 pickupLat,
@@ -153,7 +150,6 @@ class AssignmentServices(
                 courierRepository.getClosestCouriersAvailable(pickupLat, pickupLon, requestId, maxDistance)
             }
 
-        GlobalLogger.log("Nearby couriers by direct distance: $nearbyCouriers")
         if (nearbyCouriers.isEmpty()) {
             return failure(CourierError.NoAvailableCouriers)
         }
@@ -165,7 +161,6 @@ class AssignmentServices(
                 pickupLon,
             )
 
-        GlobalLogger.log("Ranked couriers by travel time: $couriersWithTravelTime")
         if (couriersWithTravelTime.isEmpty()) {
             return failure(CourierError.NoAvailableCouriers)
         }
@@ -175,7 +170,6 @@ class AssignmentServices(
                 couriersWithTravelTime,
             )
 
-        GlobalLogger.log("Ranked couriers by combined score: $ranked")
         return success(ranked)
     }
 
@@ -184,7 +178,6 @@ class AssignmentServices(
         destinationLat: Double,
         destinationLon: Double,
     ): List<CourierWithLocation> {
-        GlobalLogger.log("Ranking couriers by travel time to destination: ($destinationLat, $destinationLon)")
         val origins =
             couriers.joinToString("|") {
                 "${it.latitude},${it.longitude}"
@@ -272,8 +265,6 @@ class AssignmentServices(
                     DeliveryStatus.HEADING_TO_DROPOFF -> requestRepository.getPickupCodeForCancelledRequest(requestId)
                 }
 
-            GlobalLogger.log("Reassigning delivery with status $deliveryStatus and kind ${deliveryStatus.toDeliveryKind().name}")
-
             CoroutineScope(Dispatchers.IO).launch {
                 if (handleCourierAssignment(
                         pickupLat = pickupLat,
@@ -291,8 +282,6 @@ class AssignmentServices(
                                     pinCode = pickupPin ?: "",
                                 ),
                         )
-                    } else {
-                        GlobalLogger.log("Courier $courierId reassigned to request $requestId")
                     }
                 }
             }

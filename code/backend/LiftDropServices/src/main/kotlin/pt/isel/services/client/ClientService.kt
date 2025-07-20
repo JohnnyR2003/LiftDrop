@@ -7,7 +7,6 @@ import jakarta.inject.Named
 import kotlinx.coroutines.*
 import liftdrop.repository.TransactionManager
 import pt.isel.liftdrop.*
-import pt.isel.pipeline.pt.isel.liftdrop.GlobalLogger
 import pt.isel.services.assignment.AssignmentServices
 import pt.isel.services.google.GeocodingServices
 import pt.isel.services.utils.Codify.encodePassword
@@ -169,12 +168,6 @@ class ClientService(
                 dropoffLocationId = dropOffLocationId,
             )
 
-            GlobalLogger.log(
-                "Request created with ID: $requestId, " +
-                    "pickup location ID: $pickupLocationId, " +
-                    "drop-off location ID: $dropOffLocationId",
-            )
-
             val request =
                 requestRepository.getRequestForCourierById(requestId)
                     ?: return@run failure(RequestCreationError.RequestDetailsNotFound)
@@ -224,22 +217,25 @@ class ClientService(
     fun getRequestStatus(
         clientId: Int,
         requestId: Int,
-    ): Either<ClientGetRequestStatusError, Pair<String, String>> =
+    ): Either<ClientGetRequestStatusError, Triple<String, String, String>> =
         transactionManager.run {
             val clientRepository = it.clientRepository
+            val requestRepository = it.requestRepository
+
+            val requestPin = requestRepository.getPickupCodeForRequest(requestId)
             val status =
                 clientRepository.getRequestStatus(clientId, requestId)
                     ?: return@run failure(ClientGetRequestStatusError.RequestNotFound)
 
             if (status.second == "PENDING" || status.second == "PENDING_REASSIGNMENT") {
-                return@run success(Pair("N/A", status.second))
+                return@run success(Triple("N/A", status.second, requestPin))
             } else {
                 // Convert eta from seconds to minutes and seconds
                 val etaMinutes = status.first.toInt() / 60
                 val etaSeconds = status.first.toInt() % 60
                 val formattedEta = String.format("%02d:%02d", etaMinutes, etaSeconds)
 
-                return@run success(Pair(formattedEta, status.second))
+                return@run success(Triple(formattedEta, status.second, requestPin))
             }
         }
 
