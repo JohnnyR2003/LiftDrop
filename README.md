@@ -72,3 +72,6 @@
 
 - [Miguel Gamboa](https://github.com/fmcarvalho)
 - [Diogo Silva](https://www.linkedin.com/in/diogofdsilva/)
+
+> **Note**: This is a mirror of a project developed for [isel-sw-projects].  
+> Original private repository: `isel-sw-projects/2025-lift-drop` (access restricted).
