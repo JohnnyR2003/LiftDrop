@@ -53,6 +53,7 @@
    
    - Already deployed at https://two025-lift-drop.onrender.com
    - Allow 20-30s for cold start if instance is inactive
+   - If for some reason the server is not responding, contact me via [email](mailto:johnnyr06.business@gmail.com)
 
 
 ## Technologies
